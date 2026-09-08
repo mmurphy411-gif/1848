@@ -14,6 +14,7 @@ uniform float normal_strength : hint_range(0.0, 1.0) = 0.35;
 uniform float wave_amplitude : hint_range(0.0, 0.1) = 0.03;
 uniform float flow_speed_multiplier = 1.0;
 uniform float refraction_strength : hint_range(0.0, 0.04) = 0.015;
+uniform vec4 shin_contacts[2];
 varying vec3 world_position;
 varying vec4 flow_data;
 
@@ -67,13 +68,23 @@ void fragment() {
 	float broken_foam = smoothstep(0.51, 0.61, breakup);
 	// Rock faces and legs hold a denser collar; gently sloped shallows stay clear.
 	float foam = contact * mix(broken_foam, 0.9 + 0.1 * broken_foam, sqrt(obstacle));
+	float shin_foam = 0.0;
+	for (int i=0;i<2;i++) {
+		if (shin_contacts[i].w>0.5) {
+			float radius=length(world_position.xz-shin_contacts[i].xy);
+			float collar=smoothstep(0.065,0.09,radius)*(1.0-smoothstep(0.15,0.21,radius));
+			shin_foam=max(shin_foam,collar*(0.85+0.15*broken_foam));
+		}
+	}
+	foam=max(foam,shin_foam);
 	float fresnel = 0.064 + 0.936 * pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 5.0);
-	ALBEDO = vec3(0.85, 0.90, 0.88) * foam;
+	// White foam stays readable around the miner's much narrower shins.
+	ALBEDO = vec3(0.95, 0.98, 0.96) * foam;
 	// The screen sample is already lit. Emission here transports bed light;
 	// foam uses ordinary diffuse lighting and has no emissive contribution.
 	EMISSION = through_water * (1.0 - fresnel) * (1.0 - foam);
 	ROUGHNESS = mix(0.06, 0.85, foam);
 	METALLIC = 0.0;
 	SPECULAR = mix(0.8, 0.25, foam);
-	ALPHA = smoothstep(0.0, 0.05, min(vertical_depth, flow_data.a * 5.0));
+	ALPHA = max(shin_foam,smoothstep(0.0, 0.05, min(vertical_depth, flow_data.a * 5.0)));
 }

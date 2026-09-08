@@ -18,22 +18,26 @@ def foliage_atlas(species,index):
     # One leaf/needle is instanced by Geometry Nodes onto seeded botanical sprays.
     if index==3:
         outline=[(0,0),(-.22,.18),(-.13,.30),(-.35,.42),(-.21,.55),(-.36,.66),(-.19,.79),(0,1),(.19,.79),(.36,.66),(.21,.55),(.35,.42),(.13,.30),(.22,.18)]
+        # Rounded lobes in the atlas source; this adds no runtime triangles.
+        for refinement in range(2):
+            outline=[((1-t)*a[0]+t*b[0],(1-t)*a[1]+t*b[1])
+                     for a,b in zip(outline,outline[1:]+outline[:1]) for t in (.22,.78)]
     elif index==0: outline=[(-.008,0),(-.015,.4),(0,1),(.015,.4),(.008,0)]
     else: outline=[(-.025,0),(-.05,.28),(0,1),(.05,.28),(.025,0)]
     leaf=mesh_object('Leaf source',[(x,y,.02) for x,y in outline],[tuple(range(len(outline)))],materials=[m])
     leaf.hide_render=True
     # Several asymmetric side sprays leave holes between clusters in the card.
-    for branch in range(9 if index!=0 else 6):
+    for branch in range(1 if index==3 else (9 if index!=0 else 6)):
         angle=(branch%2*2-1)*(.45+.10*branch)
-        root=Vector((0,-.88+branch*.18,0)); tip=root+Vector((math.sin(angle),math.cos(angle),0))*.8
+        root=Vector((0,-.70 if index==3 else -.88+branch*.18,0)); tip=root+Vector((math.sin(angle),math.cos(angle),0))*(1.35 if index==3 else .8)
         base=len(verts); direction=(tip-root).normalized(); side=Vector((-direction.y,direction.x,0))*.012
         verts.extend([root-side,root+side,tip+side*.2,tip-side*.2]); faces.append((base,base+1,base+2,base+3))
-        for step in range(18 if index!=3 else 7):
-            t=(step+.4)/(18 if index!=3 else 7)
+        for step in range(18 if index!=3 else 4):
+            t=(step+.4)/(18 if index!=3 else 4)
             for sign in [-1,1]:
                 p=root.lerp(tip,t)
                 a=-angle+sign*(1.0 if index!=0 else .65)+rng.uniform(-.15,.15)
-                length=(.20 if index!=3 else .33)*rng.uniform(.65,1.2)*(1-t*.45)
+                length=(.20 if index!=3 else .65)*rng.uniform(.65,1.2)*(1-t*.45)
                 if index==0: length*=1.65
                 if index==1: length*=.65
                 for needle in range(3 if index==0 else 1):
@@ -56,7 +60,7 @@ def foliage_atlas(species,index):
     mod=source.modifiers.new('Needles on seeded sprays','NODES'); mod.node_group=group
     mesh_object('Twigs',verts,faces,materials=[m])
     scene=bpy.context.scene; scene.render.engine='CYCLES'; scene.cycles.samples=1
-    scene.render.film_transparent=True; scene.render.resolution_x=1024; scene.render.resolution_y=1024; scene.render.resolution_percentage=100
+    scene.render.film_transparent=True; scene.render.resolution_x=2048; scene.render.resolution_y=2048; scene.render.resolution_percentage=100
     scene.view_settings.view_transform='Standard'
     bpy.ops.object.camera_add(location=(0,0,5)); cam=bpy.context.object; cam.rotation_euler=(0,0,0); cam.data.type='ORTHO'; cam.data.ortho_scale=2.2; scene.camera=cam
     scene.render.image_settings.file_format='PNG'; scene.render.image_settings.color_mode='RGBA'
@@ -94,7 +98,7 @@ def build_tree(species,index,atlas):
         direction=Vector(direction).normalized()
         for k in range(number):
             jitter=Vector((rng.uniform(-1,1),rng.uniform(-1,1),rng.uniform(-.5,.5)))
-            origin=Vector(center)+jitter*size*(.65 if index==3 else .32)
+            origin=Vector(center)+jitter*(1.5 if index==3 else size*.32)
             axis=(direction+jitter*(2.0 if index==3 else .65)).normalized()*size
             across=axis.cross(Vector((rng.uniform(-1,1),rng.uniform(-1,1),1))).normalized()*size
             card(verts,faces,uvs,colors,slots,origin,axis,across,min(1,origin.z/height+.2))
@@ -126,7 +130,8 @@ def build_tree(species,index,atlas):
                 for sign in [-1,1]:
                     d=(direction+Vector((rng.uniform(-.7,.7),rng.uniform(-.7,.7),.2))).normalized()
                     branch(end,d,length*.65,radius*.48,depth-1)
-            else: spray(end,direction,1.6,20)
+            else:
+                for t in [.25,.6,1.0]: spray(mid.lerp(end,t),direction,rng.uniform(.4,.6),19)
         for k in range(9):
             a=k*2.399; root=Vector((0,0,4+k*.35)); direction=Vector((math.cos(a),math.sin(a),.6)).normalized()
             branch(root,direction,4.2,.25,2)

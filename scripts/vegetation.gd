@@ -62,6 +62,18 @@ func _ready() -> void:
 		var species := "ponderosa" if p.y>45 or (far_bank and rng.randf()<.55) else ("incense_cedar" if rng.randf()<.5 else "douglas_fir")
 		placements[species].append(_transform(p, rng.randf_range(.8,1.2), .06))
 		count += 1
+	# Preserve the full seeded stream and the foreground forest. Spend the
+	# allowed 300-conifer density near the claim; retain a sample farther out
+	# for the distant skyline rather than deleting half of every local stand.
+	for species in ["ponderosa","incense_cedar","douglas_fir"]:
+		var forest: Array = placements[species]
+		forest.sort_custom(func(a: Transform3D,b: Transform3D) -> bool: return Vector2(a.origin.x,a.origin.z).length_squared()<Vector2(b.origin.x,b.origin.z).length_squared())
+		var target: int = forest.size()/2
+		var close_count: int = target*2/3
+		var retained: Array = forest.slice(0,close_count)
+		for i in target-close_count:
+			retained.append(forest[close_count+i*(forest.size()-close_count)/(target-close_count)])
+		placements[species] = retained
 	# Broad spacing leaves the playable shore, spawn and panning lanes open.
 	for x in [-25.0,-13.0,0.0,13.0,25.0]:
 		for fraction in [.60,.91]:
@@ -98,7 +110,7 @@ func _ready() -> void:
 		var p := Vector3(x,Layout.height_at(x,z),z)
 		if not clear_of_boulders(p,.15): continue
 		p.y -= .012
-		placements["cobble_%02d" % (rng.randi_range(1,3))].append(_transform(p,rng.randf_range(.025,.075)))
+		placements["cobble_%02d" % (rng.randi_range(1,3))].append(_transform(p,rng.randf_range(.04,.075)))
 	for i in 3:
 		var key := "cobble_%02d" % (i+1)
 		var mesh := Assets.mesh("res://assets/boulders/%s.glb" % key)

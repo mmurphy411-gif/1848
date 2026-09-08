@@ -3,7 +3,12 @@ extends Node
 const Layout = preload("res://scripts/claim_layout.gd")
 const GoldMap = preload("res://scripts/gold_map.gd")
 const PanResult = preload("res://scripts/pan_result.gd")
-const PAN_DURATION := 6.0
+const SWIRL_CYCLES := 3
+const PAN_DURATION := 2.0 + SWIRL_CYCLES * 2.0 + 1.5 + 1.5
+const SEGMENTS := ["pan_enter", "pan_swirl", "pan_swirl", "pan_swirl", "pan_wash", "pan_lift"]
+const LENGTHS := [2.0, 2.0, 2.0, 2.0, 1.5, 1.5]
+var segment := ""
+var segment_index := -1
 const SHOW_DURATION := 3.0
 enum State { IDLE, PANNING, SHOWING }
 
@@ -50,7 +55,10 @@ func start_pan() -> bool:
 	walker.velocity.x = 0.0
 	walker.velocity.z = 0.0
 	var direction := -Layout.inland_normal(walker.position.x)
-	walker.get_node("Visual").rotation.y = atan2(-direction.x, -direction.z)
+	walker.get_node("Visual").turn_to(atan2(-direction.x, -direction.z))
+	segment_index = 0
+	segment = SEGMENTS[0]
+	walker.get_node("Visual").play_pan(segment)
 	pan.clear()
 	pan.show()
 	return true
@@ -60,6 +68,15 @@ func _physics_process(delta: float) -> void:
 		return
 	elapsed += delta
 	if state == State.PANNING:
+		var end := 0.0
+		for i in LENGTHS.size():
+			end += LENGTHS[i]
+			if elapsed < end:
+				if segment_index != i:
+					segment_index = i
+					segment = SEGMENTS[i]
+					walker.get_node("Visual").play_pan(segment)
+				break
 		if walker.river.depth_at(walker.global_position) > 0.45:
 			_reset() # Cancel without awarding the held result.
 		elif elapsed >= PAN_DURATION:
@@ -78,6 +95,9 @@ func _finish() -> void:
 	_reset()
 
 func _reset() -> void:
+	if state != State.IDLE: walker.get_node("Visual").play_pan("pan_exit")
+	segment = ""
+	segment_index = -1
 	state = State.IDLE
 	elapsed = 0.0
 	result = {}

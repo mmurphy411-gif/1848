@@ -42,7 +42,7 @@ func _run() -> void:
 	for species in Vegetation.SPECIES:
 		_asset("res://assets/trees/%s.glb" % species,3000,6000,true)
 		var atlas: Texture2D = load("res://assets/textures/foliage_%s_albedo.png" % species)
-		_check(atlas!=null and atlas.get_size()==Vector2(1024,1024),species+" 1024 alpha atlas")
+		_check(atlas!=null and atlas.get_size()==Vector2(2048,2048),species+" 2048 alpha atlas")
 		_check(atlas.get_image().detect_alpha()!=Image.ALPHA_NONE,species+" foliage texture has alpha")
 		var height := Assets.mesh("res://assets/trees/%s.glb" % species).get_aabb().size.y
 		var limits: Vector2 = {"ponderosa":Vector2(25,35),"incense_cedar":Vector2(20,30),"douglas_fir":Vector2(25,40),"black_oak":Vector2(12,18)}[species]
@@ -51,7 +51,8 @@ func _run() -> void:
 		for suffix in ["albedo","normal","orm"]:
 			var path := "res://assets/textures/%s_%s.png" % [set_name,suffix]
 			var tex: Texture2D = load(path)
-			_check(tex!=null and tex.get_size()==Vector2(2048,2048),path+" 2048 texture")
+			var size := 2048 if set_name in ["gravel","granite"] else 1024
+			_check(tex!=null and tex.get_size()==Vector2(size,size),path+" %d texture" % size)
 	for name in ["textures","boulders","bedrock","trees","ground_cover"]:
 		_check(FileAccess.file_exists("res://blender/build_%s.py" % name) and FileAccess.file_exists("res://blender/build_%s.blend" % name),name+" script and inspectable Blender source")
 	_check(FileAccess.file_exists("res://blender/README.md"),"Blender pipeline README exists")

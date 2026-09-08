@@ -79,9 +79,10 @@ def graph(name):
         mix=node('ShaderNodeMixRGB',blend_type='MULTIPLY'); mix.inputs[0].default_value=1; l.new(albedo,mix.inputs[1]); l.new(fissure,mix.inputs[2]); albedo=mix.outputs[0]
         height=mathop('MULTIPLY',fine,fissure); rough=.85; strength=.003
     elif name=='sand':
-        ripple=mathop('SINE',mathop('ADD',mathop('MULTIPLY',v,18),mathop('MULTIPLY',macro,3)))
+        warp=mathop('ADD',mathop('MULTIPLY',macro,18),mathop('MULTIPLY',noise(3).outputs['Fac'],6))
+        ripple=mathop('SINE',mathop('ADD',mathop('MULTIPLY',v,18),warp))
         albedo=ramp(mathop('ADD',mathop('MULTIPLY',fine,.8),mathop('MULTIPLY',ripple,.12)),[(.1,(.22,.18,.12)),(.5,(.47,.40,.28)),(.9,(.62,.55,.4))])
-        height=mathop('ADD',fine,mathop('MULTIPLY',ripple,.2)); rough=.9; strength=.001
+        height=mathop('ADD',fine,mathop('MULTIPLY',ripple,.2)); rough=.9; strength=.0005
     elif name=='duff':
         streak=node('ShaderNodeTexWave'); streak.wave_type='BANDS'; streak.bands_direction='X'; streak.inputs['Scale'].default_value=45; streak.inputs['Distortion'].default_value=12; l.new(coords.outputs[0],streak.inputs['Vector'])
         height=mathop('MULTIPLY',streak.outputs['Fac'],noise(12).outputs['Fac'])
@@ -97,7 +98,8 @@ def graph(name):
     target=node('ShaderNodeTexImage'); n.active=target
     plane.data.materials.clear(); plane.data.materials.append(m)
     for suffix,source in [('albedo',albedo),('normal',None),('orm',orm.outputs[0])]:
-        image=bpy.data.images.new(name+'_'+suffix,width=2048,height=2048,alpha=False)
+        size=2048 if name in ['gravel','granite'] else 1024
+        image=bpy.data.images.new(name+'_'+suffix,width=size,height=size,alpha=False)
         image.colorspace_settings.name='sRGB' if suffix=='albedo' else 'Non-Color'
         target.image=image; n.active=target
         if source:
@@ -105,9 +107,16 @@ def graph(name):
         else: l.new(p.outputs[0],output.inputs['Surface'])
         bpy.ops.object.bake(type='EMIT' if source else 'NORMAL')
         image.filepath_raw=str(outdir/(name+'_'+suffix+'.png')); image.file_format='PNG'; image.save()
+        if suffix=='orm':
+            # All six dielectrics use constant roughness; grayscale R8 stores it.
+            from png_helpers import png
+            import numpy as np
+            png(outdir/(name+'_'+suffix+'.png'),np.full((size,size),round(rough*255),dtype=np.uint8))
     l.new(p.outputs[0],output.inputs['Surface'])
 
-for name in ['granite','talus','gravel','sand','duff','bedrock']:
+for name in ['granite','talus','sand','duff','bedrock']:
     graph(name)
+from build_gravel import build_gravel
+build_gravel(outdir)
 save('build_textures')
 print('TEXTURES_SECONDS',round(time.perf_counter()-start,2))

@@ -49,6 +49,8 @@ func apply(time: float) -> void:
 	sun.light_energy = lerpf(1.45, 1.9, warmth) * daylight
 	sun.light_angular_distance = 0.6
 	sun.shadow_enabled = true
+	sun.shadow_bias = .12
+	sun.shadow_normal_bias = 1.2
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
 	sun.directional_shadow_max_distance = 200.0
 	sun.directional_shadow_blend_splits = true

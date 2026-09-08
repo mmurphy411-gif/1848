@@ -32,5 +32,5 @@ look_down={"deadzone":0.18,"events":[Object(InputEventJoypadMotion,"axis":3,"axi
 [rendering]
 renderer/rendering_method="forward_plus"
 textures/default_filters/use_nearest_mipmap_filter=false
-anti_aliasing/quality/msaa_3d=2
+anti_aliasing/quality/msaa_3d=1
 environment/defaults/default_clear_color=Color(0.63,0.70,0.73,1)

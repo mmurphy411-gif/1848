@@ -65,7 +65,7 @@ func _run() -> void:
 		_key(KEY_E)
 		_check(panner.state == panner.State.PANNING, "Peak is accessible for pan %d" % cycle)
 		var amount: float = panner.result.get("ounces", 0.0)
-		await _frames(358)
+		await _frames(int(panner.PAN_DURATION * 60) - 2)
 		_check(panner.state == panner.State.PANNING, "Pan lasts the full six seconds (%d)" % cycle)
 		await _frames(40)
 		_check(panner.state == panner.State.SHOWING and rig.focused, "Six-second pan enters focused SHOWING (%d)" % cycle)

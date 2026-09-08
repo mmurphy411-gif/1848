@@ -6,6 +6,8 @@ func _initialize() -> void:
 	_run.call_deferred()
 
 func _run() -> void:
+	root.content_scale_size=Vector2i(1920,1080)
+	root.content_scale_mode=Window.CONTENT_SCALE_MODE_VIEWPORT
 	var claim: Node3D = load("res://scenes/claim.tscn").instantiate()
 	claim.get_node("Walker/Panner").reproducible = true
 	root.add_child(claim)
@@ -82,7 +84,7 @@ func _run() -> void:
 	panner.start_pan()
 	# A test-only injected result exercises the normal display/camera path.
 	panner.result = {"tier": 3, "ounces": 0.1}
-	for i in 400:
+	for i in int(panner.PAN_DURATION * 60) + 40:
 		await physics_frame
 	await RenderingServer.frame_post_draw
 	if panner.state != panner.State.SHOWING:

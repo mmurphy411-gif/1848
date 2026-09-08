@@ -1,21 +1,10 @@
 extends Node3D
-## Replaceable placeholder. Result logic and the camera only depend on this node's transform.
+## Result overlay follows the physical pan socket; hidden while carried.
 
 var flecks := MultiMeshInstance3D.new()
 var nugget := MeshInstance3D.new()
 
 func _ready() -> void:
-	var pan := MeshInstance3D.new()
-	var cylinder := CylinderMesh.new()
-	cylinder.top_radius = 0.22
-	cylinder.bottom_radius = 0.22
-	cylinder.height = 0.04
-	pan.mesh = cylinder
-	var dark := StandardMaterial3D.new()
-	dark.albedo_color = Color(0.055, 0.06, 0.065)
-	dark.roughness = 1.0
-	pan.material_override = dark
-	add_child(pan)
 	var gold := StandardMaterial3D.new()
 	gold.albedo_color = Color(1.0, 0.65, 0.12)
 	gold.emission_enabled = true
@@ -36,7 +25,7 @@ func _ready() -> void:
 	pea.height = 0.024
 	nugget.mesh = pea
 	nugget.material_override = gold
-	nugget.position = Vector3(0.04, 0.032, 0.14)
+	nugget.position = Vector3(0.04, 0.023, 0.14)
 	add_child(nugget)
 	clear()
 
@@ -53,14 +42,14 @@ func show_result(tier: int, visual_seed: int) -> void:
 	flecks.multimesh.instance_count = count
 	for index in count:
 		var angle := rng.randf_range(-1.05, 1.05)
-		var radius := rng.randf_range(0.145, 0.18)
+		var radius := rng.randf_range(0.145, 0.163)
 		if tier == 2:
 			angle = lerpf(-1.05, 1.05, float(index) / maxf(count - 1, 1)) + rng.randf_range(-0.025, 0.025)
-			radius = rng.randf_range(0.163, 0.169)
+			radius = rng.randf_range(0.153, 0.16)
 		if tier == 1:
 			angle = rng.randf_range(-PI, PI)
-			radius = rng.randf_range(0.05, 0.17)
+			radius = rng.randf_range(0.05, 0.16)
 		# Local +Z points back toward the miner: the low crease is this arc.
-		var point := Vector3(sin(angle) * radius, 0.024, cos(angle) * radius)
+		var point := Vector3(sin(angle) * radius, 0.014, cos(angle) * radius)
 		flecks.multimesh.set_instance_transform(index, Transform3D(Basis.IDENTITY, point))
 	nugget.visible = tier == 4

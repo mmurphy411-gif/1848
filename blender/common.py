@@ -60,7 +60,7 @@ def export(obj, relative):
     bpy.ops.export_scene.gltf(filepath=str(path), export_format='GLB', use_selection=True,
         export_yup=True, export_apply=True, export_normals=True, export_tangents=True,
         export_animations=False, export_cameras=False, export_lights=False,
-        export_materials='EXPORT', export_vertex_color='ACTIVE', export_all_vertex_colors=True)
+        export_materials='PLACEHOLDER' if relative.startswith('trees/') else 'EXPORT', export_vertex_color='ACTIVE', export_all_vertex_colors=True)
     print('EXPORTED', relative, sum(len(p.vertices)-2 for p in obj.data.polygons), 'triangles')
 
 def save(name):

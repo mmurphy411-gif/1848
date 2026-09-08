@@ -36,8 +36,10 @@ static func run(tree: SceneTree, claim: Node3D) -> bool:
 	ok = Water._check(coverage>=.30 and coverage<=.50,"Foam breakup coverage %.1f%% in contact band (30–50%%)" % (coverage*100)) and ok
 	Water._view(camera,Vector3(-34,2,4),Vector3(-45,32,61))
 	var treeline := await _save(tree,"treeline")
-	# Fixed patches are selected from the actual visible canopy, not the sky.
-	var canopy := Water._stats(treeline,Rect2i(1010,240,64,64))
+	# M6's explicit ledge geometry occludes the old (1010,240) canopy patch
+	# with granite, also with all 600 original trees. Keep this camera and
+	# sample the visible conifer crown to the left of the new rock edge.
+	var canopy := Water._stats(treeline,Rect2i(710,200,64,64))
 	var granite := Water._stats(treeline,Rect2i(1090,380,64,64))
 	ok = Water._check(canopy.y>=canopy.x*1.2,"Canopy RGB %s, G/R %.3f >= 1.2" % [canopy,canopy.y/maxf(canopy.x,.001)]) and ok
 	ok = Water._check(granite.y<granite.x*1.2,"Adjacent granite RGB %s G/R %.3f < 1.2" % [granite,granite.y/maxf(granite.x,.001)]) and ok

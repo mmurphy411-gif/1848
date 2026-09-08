@@ -12,5 +12,5 @@ void fragment(){
  vec3 nx=texture(normal_map,p.zy).xyz*2.0-1.0,ny=texture(normal_map,p.xz).xyz*2.0-1.0,nz=texture(normal_map,p.xy).xyz*2.0-1.0;
  vec3 n=normalize(vec3(nx.z*sign(normal_world.x),nx.y,nx.x)*w.x+vec3(ny.x,ny.z,-ny.y)*w.y+vec3(nz.x,nz.y,nz.z*sign(normal_world.z))*w.z);
  NORMAL=normalize((VIEW_MATRIX*vec4(normalize(mix(normal_world,n,.6*(1.0-smoothstep(40.0,70.0,distance(world,CAMERA_POSITION_WORLD))))),0)).xyz);
- vec3 orm=texture(orm_map,p.xz).rgb; ROUGHNESS=orm.g; AO=orm.r;
+ ROUGHNESS=texture(orm_map,p.xz).r; AO=.85;
 }

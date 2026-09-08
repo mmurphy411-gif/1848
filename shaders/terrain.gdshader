@@ -33,7 +33,7 @@ void vertex() {
 }
 void planar(sampler2D a,sampler2D n,sampler2D o,vec2 uv,out vec3 albedo,out vec3 normal,out vec3 orm) {
  albedo=texture(a,uv).rgb; vec3 t=texture(n,uv).xyz*2.0-1.0;
- normal=normalize(vec3(t.x,t.z,-t.y)); orm=texture(o,uv).rgb;
+ normal=normalize(vec3(t.x,t.z,-t.y)); orm=vec3(.85,texture(o,uv).r,0);
 }
 void tri(sampler2D a,sampler2D n,sampler2D o,float tile,out vec3 albedo,out vec3 normal,out vec3 orm) {
  vec3 w=pow(abs(geom_normal),vec3(4)); w/=w.x+w.y+w.z;
@@ -41,7 +41,7 @@ void tri(sampler2D a,sampler2D n,sampler2D o,float tile,out vec3 albedo,out vec3
  albedo=texture(a,p.zy).rgb*w.x+texture(a,p.xz).rgb*w.y+texture(a,p.xy).rgb*w.z;
  vec3 nx=texture(n,p.zy).xyz*2.0-1.0,ny=texture(n,p.xz).xyz*2.0-1.0,nz=texture(n,p.xy).xyz*2.0-1.0;
  normal=normalize(vec3(nx.z*sign(geom_normal.x),nx.y,nx.x)*w.x+vec3(ny.x,ny.z,-ny.y)*w.y+vec3(nz.x,nz.y,nz.z*sign(geom_normal.z))*w.z);
- vec2 uv=w.x>w.y && w.x>w.z?p.zy:(w.y>w.z?p.xz:p.xy); orm=texture(o,uv).rgb;
+ vec2 uv=w.x>w.y && w.x>w.z?p.zy:(w.y>w.z?p.xz:p.xy); orm=vec3(.85,texture(o,uv).r,0);
 }
 void fragment() {
  vec3 a,n,o;
@@ -60,16 +60,18 @@ void fragment() {
    }
    float forest=smoothstep(.82,.92,geom_normal.y)*smoothstep(.30,.65,noise(world.xz*.18));
    if(forest>.01) { vec3 da,dn,d_o;planar(duff_albedo,duff_normal,duff_orm,world.xz/2.0,da,dn,d_o);a=mix(a,da,forest);n=normalize(mix(n,dn,forest));o=mix(o,d_o,forest); }
- } else if(inland>12.0 && under_oak>noise(world.xz*1.5)*.4+.1) {
-   planar(duff_albedo,duff_normal,duff_orm,world.xz/2.0,a,n,o);
+
  } else {
    planar(gravel_albedo,gravel_normal,gravel_orm,world.xz/1.5,a,n,o);
    float sand_band=smoothstep(1.0,1.9,inland+noise(world.xz*2.0)*.5)*(1.0-smoothstep(2.6,3.3,inland+noise(world.xz*2.0)*.5));
+   sand_band=max(sand_band,smoothstep(.40,.70,noise(world.xz*.20+vec2(noise(world.xz*.13)*2.0)))*.92);
    if(sand_band>.01) { vec3 sa,sn,so; planar(sand_albedo,sand_normal,sand_orm,world.xz/2.0,sa,sn,so); a=mix(a,sa,sand_band); n=normalize(mix(n,sn,sand_band)); o=mix(o,so,sand_band); }
+   float duff=smoothstep(11.5,13.0,inland)*smoothstep(.08,.75,under_oak-noise(world.xz*1.5)*.25);
+   if(duff>.01) { vec3 da,dn,d_o;planar(duff_albedo,duff_normal,duff_orm,world.xz/2.0,da,dn,d_o);a=mix(a,da,duff);n=normalize(mix(n,dn,duff));o=mix(o,d_o,duff); }
    float wet=(1.0-smoothstep(1.0,1.5,inland))*smoothstep(-.4,-.3,world.y);
    a*=mix(1.0,.56,wet); o.g=mix(o.g,.46,wet);
  }
- ALBEDO=a*(.94+.10*macro);
+ ALBEDO=a*(kind>2.5 && kind<3.5 ? .60+.65*noise(world.xy*.09)+.17*noise(world.zy*.38) : .94+.10*macro);
  ROUGHNESS=clamp(o.g+(macro-.5)*.06,0.0,1.0); AO=o.r;
  float strength=1.0-smoothstep(40.0,70.0,distance(CAMERA_POSITION_WORLD,world));
  NORMAL=normalize((VIEW_MATRIX*vec4(normalize(mix(geom_normal,n,strength*.8)),0)).xyz);

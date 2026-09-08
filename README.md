@@ -1,7 +1,7 @@
 # 1848
 
-Milestone 5: a playable panning claim with procedural granite, gravel, forest assets,
-clear flowing water, and golden-hour light.
+Milestone 6: a playable panning claim with a rigged miner, animated panning,
+procedural canyon assets, flowing water, and golden-hour light.
 Built with **Godot 4.7.2 standard**, GDScript, and the Forward+ renderer.
 
 ## Play
@@ -10,7 +10,9 @@ On this machine, double-click **Play.cmd**. It launches directly into the claim
 using the local engine in `.tools/`. Alternatively, import `project.godot` into
 Godot 4.7.2 and press **F5**. There are no plugins or third-party dependencies.
 
-For a fresh clone, install the standard Godot build and open `project.godot`.
+For a fresh clone, install Git LFS, run `git lfs install` before cloning (or
+`git lfs pull` in an existing clone), install the standard Godot build and open
+`project.godot`.
 The Windows launcher also accepts a `GODOT_BIN` environment variable containing
 the executable's full path, or `godot.exe` on PATH. The engine is not committed.
 
@@ -28,7 +30,7 @@ Walk into the shallows to wade. Near knee depth the current slows movement and
 returns you toward the bar. The narrowing ends and rear slope redirect outward
 movement smoothly. Rocks and canyon terrain have physical collision.
 
-A pan takes six seconds, followed by a three-second close view of the pan. Walking
+A pan takes eleven seconds, followed by a three-second close view of the pan. Walking
 is held during the action; current still applies, and entering water deeper than
 0.45 m during panning cancels the pan without a result. The five visual results are
 no gold, a few specks, a thin line of color, a dense crescent, and a rare nugget.
@@ -280,3 +282,210 @@ Append `-- --assets-only` for these views, or additionally `--priority-only` for
 the gravel close-up and treeline. Review those two first. Automated gates do not
 replace the milestone's human art review; foliage and cobble appearance remain
 the first subjects for review notes.
+
+
+## Milestone 6 — miner and carried review fixes
+
+The original walker capsule and boundary controller remain unchanged. `Visual`
+now loads an 8,980-triangle, 1.780 m skinned miner, with separate 1,280-triangle
+steel pan and 276-triangle tied poke. The rig has Godot humanoid bone names,
+independent fingers, and at most two nonzero skin weights per vertex. Closed
+shirt/seat surfaces and overlapping cuffs keep the silhouette continuous.
+
+`blender/build_miner.py` builds the body, props, procedural cloth materials and
+high-resolution displaced swatches. Cycles bakes their folds onto the low mesh's
+normal atlas. `build_miner_animation.py` solves two-bone IK for hands and feet and
+bakes eight NLA clips. The BLM Alaska demonstration was watched before keyframing:
+[How to pan for gold](https://www.youtube.com/watch?v=AeaHDcDZylE), especially the
+shake, drain and final wash. The reference informed the low hands, short shakes,
+planted heels and restrained torso motion. No footage or downloaded artwork is
+included in the project.
+
+| Clip | Seconds | Playback |
+| --- | ---: | --- |
+| idle | 4 | loop, breath and weight shift |
+| walk | 1 | loop, rate follows horizontal speed / 2.4 |
+| wade | 1.2 | loop, higher recovery arc, rate follows speed / 1.05 |
+| pan_enter | 2 | crouch, transfer from left carry to two hands |
+| pan_swirl | 2 | three loops, 6 cm circular radius plus short shakes |
+| pan_wash | 1.5 | gradual 42-degree drain tilt |
+| pan_lift | 1.5 | raise and inspect |
+| pan_exit | 1 | stand and return to left carry |
+
+`miner_visual.gd` owns a manual-clock AnimationTree state machine with idle,
+walk and wade transitions and a nested pan machine. `panner.gd` still owns the
+unchanged density/yield calls, award timing and public IDLE/PANNING/SHOWING states.
+The clip table totals **11 seconds**, as the M6 amendment confirms. Only M2's
+358-frame wait changed, to `PAN_DURATION * 60 - 2`; the remaining M2 assertions
+are unchanged. SHOWING holds the lift pose for three seconds before the exit.
+The turn toward water takes 0.3 seconds.
+
+The physical pan always stays on a `BoneAttachment3D` using `pan_socket`, which
+is parented to RightHand and keyed across to the left hand for carrying. The
+existing `Visual/Pan` is now just the result layer: its transform follows the
+same socket, its flecks lie in the modeled crease, and its idle visibility still
+means that there is no displayed result. The placeholder cylinder is gone. The
+camera views the raised pan from beside the shoulder to clear the unchanged
+collision capsule. The poke observes `Sack.changed` and has five increasing
+volume keys; its hanging orientation follows gravity during the crouch.
+
+The wet-line material darkens and glosses wool and leather with a 20 cm transition,
+then dries over 60 seconds. Foot emitters run only above 5 cm depth and 0.3 m/s;
+their droplets launch in world-up and disappear at the water surface. Shadow bias
+was adjusted for the miner; the daylight clock and sound remain untouched.
+
+Part 0 replaces tiled Voronoi grout with independently placed 8–15 cm stones
+(20% coverage), 3–8 cm stones (40%), and pea gravel/sand. Tile edges wrap, rims
+are partly buried, and the terrain blends into sand over 3–8 m patches. Cobble
+instances now use the same 8–15 cm diameter class. Sand ripples have two-scale
+domain warping and half their former normal strength. Each of the seven grass
+cards carries six thinner olive blades, and oak duff fades at its edges.
+
+The cliff render mesh samples actual bench edges, with layered normal displacement
+rising from 0.5 to 2.5 m and projecting ledge lips. The original ground collision
+mesh is retained. Forty large boulders use the existing meshes at 2–5× scale on
+both cliff feet; nearby examples have convex collision. No bar boulder, boundary,
+layout constant or analytical height changed. Granite has stronger macro variation.
+Oak cards are 40–60 cm sprays of eight leaves, with 5,716 total tree triangles;
+all four foliage atlases are 2048. Foliage retains multisample alpha coverage.
+
+Terrain albedo/normal/ORM dimensions are 2048 for gravel and granite and 1024 for
+talus, sand, duff and bedrock. ORM is grayscale R8 roughness; shaders supply the
+constant dielectric metallic/AO values. `blender/optimize_textures.py` packs bakes
+as palette PNGs without changing dimensions. Tree/miner GLBs retain surface slots
+and share external textures instead of embedding duplicate copies. M5's texture
+size assertions changed under the explicit amendment; all other M5 checks remain.
+The performance fallback order reduced cliff rocks from 60 to 40, droplets from
+16 to eight per foot, and the body atlases from 2048 to 1024. The remaining
+forest cost required the permitted minimum of 300 conifers: retain the nearest
+stands and a distributed sample of the distant forest, while consuming the full
+original RNG stream to preserve oak and ground-cover positions. Foliage uses
+2x MSAA with alpha-to-coverage, matte Lambert shading, bilinear mip filtering,
+one extra mip at distance, and an orthogonal-basis wind transform. The coverage
+edge is below the alpha-scissor cutoff. A check with all 600 trees restored still
+missed the overview budget (5.64 ms p95).
+
+Git LFS now tracks PNG, GLB, BLEND and EXR, including the existing assets. A fresh
+local clone hydrates its files and passes `git lfs fsck`. Migration is forward-only:
+the automatic approval review rejected rewriting all historical commits and refs,
+so historical blobs remain in old commits. Current and future binary revisions
+are LFS objects. There is no configured remote in this repository.
+
+Two old render probes became geometrically invalid under M6. The rebuilt ledge
+covers the former treeline canopy rectangle `(1010,240,64,64)` with granite;
+restoring all 600 original trees confirmed the same occlusion. Its replacement
+`(710,200,64,64)` samples a visible conifer crown in the unchanged camera, with
+the same G/R >= 1.2 threshold and unchanged adjacent-rock control. The old water
+probe sampled the 64 cm capsule edge, now open water. It follows the right shin's
+bone axis at the surface, using matching 8-pixel patches for the narrower leg and
+its water control; the +0.1 luminance threshold remains. The depth intersection
+alone lost the thin shin collar, so two small surface rings now follow the actual
+legs. Foam is nearer white, still rough and diffuse with no emission. No earlier
+integration-test assertion was loosened.
+
+Cliff-block review exposed suspended silhouettes: blocks now sit partly buried
+in the lower apron, using vertical seating rather than an outward normal offset
+from the steep face. The oak atlas uses rounded source lobes; its eight leaves
+and runtime triangle count are unchanged.
+
+`assets/` decreased from **98,374,291 bytes (98.37 MB)** to **23,589,243 bytes
+(23.59 MB)**, including local import metadata and Godot's extracted pan map.
+All authored PNG, GLB and BLEND revisions use LFS. The source `.blend` files
+remain outside `assets/` and are also in LFS.
+
+Final checks on the RTX 5080 at a forced 1920x1080 viewport:
+
+| Check | Result |
+| --- | --- |
+| Milestone 1–6 headless suites | All six PASS |
+| Complete M1–5 capture harness | PASS: composition, water, material and frame-budget gates |
+| M6 stills and 144-frame capture | PASS: all 1080p guards, submerged pan, gravel and torso-shadow probes |
+| M6 real-time downstream, 600 warmed frames | median 3.07 ms; p95 3.30 ms |
+| M6 real-time moving wade with particles | median 3.19 ms; p95 3.47 ms |
+| M6 real-time overview | median 4.62 ms; p95 4.97 ms |
+| Idle foot placement | 0.0096 m maximum error |
+| Three swirl loops | each dips to -0.100 m; X/Z standard deviation 0.043/0.037 m |
+| Torso cast-shadow continuity | all five ray-projected samples darken against the no-shadow control |
+
+Run each `tests/milestone_N.gd` with Godot `--headless --path . --fixed-fps 60
+--script tests/milestone_N.gd`. Run `tests/capture_greybox.gd` and
+`tests/miner_performance.gd` with the graphical renderer and no fixed-FPS flag.
+Run `tests/miner_capture.gd` with `--fixed-fps 60` to record exactly five physics
+ticks per image at 12 fps. All captures use `--resolution 1920x1080` and force a
+1920x1080 content viewport, so Windows window sizing cannot shrink the output.
+Logs and review media live in ignored `artifacts/`. These checks do not replace
+the human art review requested by the milestone.
+
+### Milestone 6 visual review
+
+The entire 144-frame pan sequence was opened in six ordered contact sheets, with
+full-size checks of the crouch and lift. The twelve-second recording is under
+`artifacts/pan-sequence/`; it is intentionally ignored by Git. Review the sequence
+first, then upstream, gravel-close and oak-under. These are review notes, not a
+claim that an automated probe substitutes for the user's art review.
+`artifacts/milestone-6-pan-preview.webp` plays the same frames as a 12-second
+preview; the original PNGs remain available for full-resolution frame inspection.
+
+| Render | Demanding art-director note |
+| --- | --- |
+| pan sequence, frames 000–023 | The entry is deliberate and the heels stay planted, but the crouch is still quite deep. |
+| pan sequence, frames 024–047 | The first swirl travels in a restrained circle, though the upper arms could look less stiff. |
+| pan sequence, frames 048–071 | The second swirl holds its grip, but its repeated rhythm is easy to recognize. |
+| pan sequence, frames 072–095 | The last swirl remains economical, though a little more hand asymmetry would improve it. |
+| pan sequence, frames 096–113 | The drain tilt reads, but the scuff pattern needs more varied wear to imply a long day's work. |
+| pan sequence, frames 114–143 | The lift makes the gold readable, while the near forearm remains prominent in the focus frame. |
+| miner-standing | The hat and suspenders carry the rear silhouette, but the shoulder transitions remain simple. |
+| standing-shadow-baseline | The comparison exposes the torso's cast shadow, though the gravel's own contrast makes visual comparison less immediate. |
+| miner-walk | The feet separate at mid-stride, but the upper body's posture is still rather upright. |
+| miner-wade | Wet boots and contact foam read, but the smallest droplets are easy to miss at player distance. |
+| pan-swirl | The low pan and planted boots establish water contact, though the crouch could use more asymmetry. |
+| pan-lift | Flecks collect in the real crease, but the close view exposes simple hand anatomy. |
+| sack-stage-3 | The poke's volume increases, but it needs more fabric character to sell its weight. |
+| downstream | The miner gives the valley scale, though the far channel still feels sparse. |
+| upstream | The ledges now break the cliff into rock bands, but some upper planes remain broad and regular. |
+| oak-under | Small leaf clusters replace giant cutouts, though the crown still reveals repeated spray shapes. |
+| gravel-close | The three stone sizes break the mosaic pattern, but the largest stones still have conspicuously smooth faces. |
+
+Early M5 regression renders were also opened: gravel-close needed more mineral
+contrast; treeline showed overdraw and sparse crown holes; downstream/upstream
+exposed the reversed imported facing and rounded wall bands; boulder-close still
+has overly even mineral speckle; oak showed repeated sprays; overview exaggerated
+the regular cliff slopes; noon exposed angular shoulders; the M4 shore view still
+shows a fairly regular ripple direction. Those observations drove the facing,
+cliff, material and contrast corrections rather than moving existing probes.
+
+### Regression render review after the miner replacement
+
+All earlier-milestone views were opened in labeled contact sheets, with the
+water-wade and treeline also opened full size. M1's old diagnostic overview is
+not a hero view.
+
+| Render | Demanding art-director note |
+| --- | --- |
+| milestone-1-player | The hat and pan establish the character, but the river exit is still an abrupt horizon. |
+| milestone-1-overview | Foreground foliage crowds this old diagnostic angle and makes the claim difficult to read. |
+| milestone-2-pan | The result reads, but enlarged hands and the sleeve seam need refinement. |
+| milestone-2-density | The density pattern remains legible, though trees obscure some diagnostic cells. |
+| milestone-3-bar-downstream | The silhouette sits well against the bar, but distant atmosphere flattens the far end. |
+| milestone-3-bar-upstream | Cliff ledges improve the canyon, though their long parallel bands remain conspicuous. |
+| milestone-3-boulders | Boulder and miner establish scale, but the near rock dominates their relationship. |
+| milestone-3-overview | The bend reads, while repeated bench widths still advertise the terrain formula. |
+| milestone-3-noon | Noon exposes the rock forms, but the miner's shoulder joins become more obvious. |
+| milestone-4-water-shore | The shore stays open to view, but the ripple direction needs more local variation. |
+| milestone-4-water-glint | The reflection reads, but its narrow corridor and empty horizon feel staged. |
+| milestone-4-water-top | Bed transmission is clear, though the sand and gravel bands need less parallelism. |
+| milestone-4-water-wade | The shin collar reads, but the adjacent boulder overwhelms this test composition. |
+| milestone-4-overview | The green channel separates from its banks, but the outer river strips remain too straight. |
+| milestone-4-shadow-color | Cool shadows survive the bias change, though boulder speckle lacks mineral hierarchy. |
+| milestone-4-noon-water | The depth gradient is clear, but bright foam and gravel compete for attention. |
+| milestone-5-gravel-close | Three stone scales replace the grout mosaic, though dark stones still read flat in shadow. |
+| milestone-5-treeline | Conifer silhouettes differ, but sparse branch fans show their repeated cards. |
+| milestone-5-downstream | The pan gives the miner a purpose, while the far channel needs more natural closure. |
+| milestone-5-upstream | Talus blocks now sit in the slope, though rounded forms contrast strongly with the ledges. |
+| milestone-5-boulder-close | The rock silhouette works, but mineral speckle is too evenly distributed. |
+| milestone-5-oak | Leaf sprays are smaller and rounder, but repetition remains visible against the sky. |
+| milestone-5-overview | Canyon shape is clearer than the old smooth slopes, but strata need more interruption. |
+| milestone-5-noon | Materials separate under neutral light, though sand still has a broad uniform rhythm. |
+| foliage atlas review | Rounded oak lobes improve the spray, but conifer needle spacing still feels combed. |
+| body atlas review | Wool and linen folds bake cleanly, but repeated swatches limit garment-specific wear. |
+| pan scuff atlas review | Scratches interrupt the steel, but their similar width needs more age variation. |

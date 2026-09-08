@@ -51,9 +51,17 @@ static func run(tree: SceneTree, claim: Node3D) -> bool:
 	walker.show()
 	_view(camera, Vector3(13, 2.4, -6.6), Vector3(10, 0, -8.4))
 	var wade := await _save(tree, "water-wade")
-	var contact_point := Vector3(10.3, 0, walker.position.z + 0.18)
-	var ring := _patch(wade, camera, contact_point)
-	var nearby := _patch(wade, camera, contact_point + Vector3.RIGHT)
+	# M6 replaces the 32 cm capsule with two narrow legs. Follow the visible
+	# right shin's surface collar; the former capsule-edge pixel is open water.
+	var skeleton: Skeleton3D = walker.get_node("Visual").skeleton
+	var knee := (skeleton.global_transform*skeleton.get_bone_global_pose(skeleton.find_bone("RightLowerLeg"))).origin
+	var ankle := (skeleton.global_transform*skeleton.get_bone_global_pose(skeleton.find_bone("RightFoot"))).origin
+	var shin := ankle.lerp(knee,clampf(-ankle.y/(knee.y-ankle.y),0,1))
+	var toward_camera := Vector3(camera.position.x-shin.x,0,camera.position.z-shin.z).normalized()
+	var contact_point := Vector3(shin.x,0,shin.z)+toward_camera*.13
+	# Half-width sample matches the ~14 cm shin versus the old 64 cm capsule.
+	var ring := _patch(wade, camera, contact_point,8)
+	var nearby := _patch(wade, camera, contact_point + Vector3.RIGHT,8)
 	ok = _check(_luma(ring) >= _luma(nearby) + 0.1, "Wade contact luminance %.3f >= nearby %.3f + 0.1" % [_luma(ring), _luma(nearby)]) and ok
 	walker.set_physics_process(true)
 	walker.hide()

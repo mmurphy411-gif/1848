@@ -61,7 +61,11 @@ func _process(delta: float) -> void:
 
 func focus(pan_transform: Transform3D) -> void:
 	focused = true
-	var camera_point := pan_transform * Vector3(0, 0.424264, 0.424264)
+	# Look across the raised pan from beside the shoulder. The socket's bone
+	# basis is not a camera frame; using it can aim through the miner's capsule.
+	var forward := Vector3(pan_transform.origin.x-target.global_position.x,0,pan_transform.origin.z-target.global_position.z).normalized()
+	var right := forward.cross(Vector3.UP)
+	var camera_point := pan_transform.origin + right*.50 + Vector3.UP*.30 - forward*.15
 	_focus_transform = Transform3D(Basis.IDENTITY, camera_point).looking_at(pan_transform.origin, Vector3.UP)
 
 func release_focus() -> void:

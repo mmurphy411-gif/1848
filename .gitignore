@@ -15,6 +15,7 @@ mono_crash.*.json
 __pycache__/
 # Godot extracts these copies from tree GLBs; authored atlases live in textures/.
 /assets/trees/*_foliage_*_albedo.png*
+/assets/miner/pan_pan_scuffs.png*
 
 # OS / editors
 Thumbs.db
