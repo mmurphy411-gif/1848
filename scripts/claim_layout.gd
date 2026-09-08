@@ -7,6 +7,19 @@ const WATER_LEVEL := 0.0
 const HALF_LENGTH := 42.0
 const BAR_WIDTH := 38.0
 const RIVER_WIDTH := 25.0
+## X/Z center, horizontal radius, vertical radius. Downstream is always +X.
+const BOULDERS := [
+	Vector4(-27, 2.5, 3.4, 2.8), Vector4(-14, -4.3, 2.7, 2.0),
+	Vector4(7, -5.0, 3.6, 3.0), Vector4(23, 0.5, 2.8, 2.5),
+	Vector4(-8, 22, 4.2, 3.2), Vector4(20, 17, 3.5, 3.8),
+	Vector4(-31, 13, 2.4, 2.1),
+]
+## X/Z center, X/Z slab size. Downstream edges reinforce two boulder lees.
+const BEDROCK := [Vector4(-13.5, -6.806, 3.0, 1.2), Vector4(7.5, -8.208, 3.0, 1.2)]
+
+static func boulder_lee(boulder: Vector4) -> Vector2:
+	var x := boulder.x + 2.0
+	return Vector2(x, minf(boulder.y - boulder.z * 0.78 - 0.4, shore_z(x) + 0.5))
 
 static func shore_z(x: float) -> float:
 	return -6.0 + 0.0075 * x * x

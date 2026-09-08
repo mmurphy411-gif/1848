@@ -10,10 +10,13 @@ const GRAVITY := 18.0
 @export var camera_rig: Node3D
 @export var river: Area3D
 @onready var visual: Node3D = $Visual
+@onready var panner: Node = $Panner
 var water_depth := 0.0
 
 func _physics_process(delta: float) -> void:
 	var axes := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	if panner.state != panner.State.IDLE:
+		axes = Vector2.ZERO # Current and gravity remain active during the pan.
 	var direction := Basis(Vector3.UP, camera_rig.rotation.y) * Vector3(axes.x, 0, axes.y)
 	water_depth = river.depth_at(global_position)
 	var speed := lerpf(WALK_SPEED, WADE_SPEED, smoothstep(0.0, 0.45, water_depth))

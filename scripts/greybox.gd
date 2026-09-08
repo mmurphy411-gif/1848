@@ -3,17 +3,12 @@ extends Node3D
 ## Deterministic blockout, also visible when the main scene is opened in the editor.
 
 const Layout = preload("res://scripts/claim_layout.gd")
-const BOULDERS := [
-	Vector4(-27, 2.5, 3.4, 2.8), Vector4(-14, -4.3, 2.7, 2.0),
-	Vector4(7, -5.0, 3.6, 3.0), Vector4(23, 0.5, 2.8, 2.5),
-	Vector4(-8, 22, 4.2, 3.2), Vector4(20, 17, 3.5, 3.8),
-	Vector4(-31, 13, 2.4, 2.1),
-]
 
 func _ready() -> void:
 	_build_ground()
 	_build_river()
 	_build_boulders()
+	_build_bedrock()
 
 func _build_ground() -> void:
 	var surface := SurfaceTool.new()
@@ -95,8 +90,8 @@ func _build_river() -> void:
 
 func _build_boulders() -> void:
 	var material := _material(Color(0.62, 0.63, 0.60))
-	for index in BOULDERS.size():
-		var data: Vector4 = BOULDERS[index]
+	for index in Layout.BOULDERS.size():
+		var data: Vector4 = Layout.BOULDERS[index]
 		var rock := MeshInstance3D.new()
 		rock.name = "Boulder%02d" % (index + 1)
 		var mesh := SphereMesh.new()
@@ -118,6 +113,22 @@ func _build_boulders() -> void:
 		rock.rotation.y = index * 1.71
 		add_child(rock)
 		rock.create_convex_collision(true, true)
+
+func _build_bedrock() -> void:
+	for index in Layout.BEDROCK.size():
+		var data: Vector4 = Layout.BEDROCK[index]
+		var slab := MeshInstance3D.new()
+		slab.name = "Bedrock%02d" % (index + 1)
+		var mesh := BoxMesh.new()
+		mesh.size = Vector3(data.z, 0.12, data.w)
+		slab.mesh = mesh
+		slab.material_override = _material(Color(0.13, 0.15, 0.15))
+		slab.position = Vector3(data.x, Layout.height_at(data.x, data.y) - 0.025, data.y)
+		# Match the shallow gravel slope so only 3.5 cm of the slab shows.
+		var normal := Vector3(0.015 * data.x * 0.18, 1.0, -0.18).normalized()
+		slab.quaternion = Quaternion(Vector3.UP, normal)
+		add_child(slab)
+		slab.create_trimesh_collision()
 
 func _material(color: Color) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()

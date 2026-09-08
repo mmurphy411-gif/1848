@@ -1,9 +1,11 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/greybox.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/walker.tscn" id="2"]
 [ext_resource type="Script" path="res://scripts/orbit_camera.gd" id="3"]
 [ext_resource type="Script" path="res://scripts/river.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/hud.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/density_debug.gd" id="6"]
 [sub_resource type="ProceduralSkyMaterial" id="SkyMaterial"]
 sky_top_color = Color(0.36, 0.50, 0.62, 1)
 sky_horizon_color = Color(0.74, 0.78, 0.78, 1)
@@ -64,3 +66,9 @@ fov = 65.0
 near = 0.1
 far = 400.0
 attributes = SubResource("CameraAttributes")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("5")
+
+[node name="DensityDebug" type="Node3D" parent="."]
+script = ExtResource("6")
