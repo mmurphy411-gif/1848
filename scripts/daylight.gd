@@ -97,9 +97,9 @@ func _configure_indirect_light() -> void:
 	environment.glow_bloom = 0.0
 
 func _configure_fog(warmth: float) -> void:
-	var tint := Color(0.72, 0.80, 0.90).lerp(Color(0.86, 0.83, 0.77), warmth)
+	var tint := Color(0.60, 0.76, 0.95).lerp(Color(0.52, 0.68, 0.90), warmth)
 	environment.volumetric_fog_enabled = true
-	environment.volumetric_fog_density = 0.01
+	environment.volumetric_fog_density = 0.004
 	environment.volumetric_fog_albedo = tint
 	environment.volumetric_fog_emission = Color.BLACK
 	# Godot 4.7 calls volumetric sun scattering 'anisotropy'.
@@ -109,9 +109,9 @@ func _configure_fog(warmth: float) -> void:
 	environment.volumetric_fog_ambient_inject = 0.3
 	environment.fog_enabled = true
 	environment.fog_mode = Environment.FOG_MODE_DEPTH
-	environment.fog_depth_begin = 75.0
-	environment.fog_depth_end = 450.0
-	environment.fog_depth_curve = 1.4
+	environment.fog_depth_begin = 140.0
+	environment.fog_depth_end = 900.0
+	environment.fog_depth_curve = 1.0
 	# In depth mode density is maximum opacity, not extinction per meter.
 	environment.fog_density = 1.0
 	environment.fog_light_color = tint
@@ -126,7 +126,7 @@ func _configure_fog(warmth: float) -> void:
 	mist.material.edge_fade = 0.5
 	# Subtract most global fog above 10 m, with a soft transition. Dense air
 	# stays in the channel; the higher cliff bands retain contrast against the sky.
-	rim_air.material.density = -0.009
+	rim_air.material.density = -0.003
 	rim_air.material.albedo = tint
 	rim_air.material.emission = Color.BLACK
 	rim_air.material.edge_fade = 0.02

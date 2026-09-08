@@ -8,6 +8,11 @@ func _run() -> void:
 	var claim: Node3D = load("res://scenes/claim.tscn").instantiate()
 	claim.get_node("Walker/Panner").reproducible = true
 	root.add_child(claim)
+	if "--water-only" in OS.get_cmdline_user_args():
+		var success: bool = await load("res://tests/water_capture.gd").run(self, claim)
+		await _release_scene(claim)
+		quit(0 if success else 1)
+		return
 	if "--lighting-only" in OS.get_cmdline_user_args():
 		var success: bool = await load("res://tests/lighting_capture.gd").run(self, claim)
 		quit(0 if success else 1)
@@ -124,5 +129,12 @@ func _run() -> void:
 	root.get_texture().get_image().save_png("res://artifacts/milestone-2-density.png")
 	print("Saved player, overview, tier 3 pan, and F3 density renders to artifacts/.")
 	var success: bool = await load("res://tests/lighting_capture.gd").run(self, claim)
+	success = await load("res://tests/water_capture.gd").run(self, claim) and success
 	print("CAPTURE SUITE: %s" % ("PASS" if success else "FAIL: frame budget"))
+	await _release_scene(claim)
 	quit(0 if success else 1)
+
+func _release_scene(claim: Node3D) -> void:
+	claim.queue_free()
+	for i in 10:
+		await process_frame

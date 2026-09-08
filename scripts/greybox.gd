@@ -41,6 +41,7 @@ func _build_ground() -> void:
 	ground.name = "CanyonAndGravelBar"
 	var mesh := ArrayMesh.new()
 	for surface in surfaces:
+		surface.index()
 		surface.generate_normals()
 		surface.commit(mesh)
 	ground.mesh = mesh
@@ -50,10 +51,15 @@ func _build_ground() -> void:
 
 func _cross_section(x: float) -> PackedFloat32Array:
 	var section := PackedFloat32Array()
-	for offset in [-720.0, -600.0, -450.0, -300.0, -200.0, -140.0, -110.0, -90.0, -80.0, -72.0, -64.0, -56.0, -52.0, -48.0, -44.0, -40.0, -36.0, -32.0, -28.0, -27.27619, -25.0, -20.0, -12.0, -5.0, -4.0, -3.0, -2.0, -0.666667, 0.0]:
+	for offset in [-720.0, -600.0, -450.0, -300.0, -200.0, -140.0, -110.0, -90.0, -80.0, -72.0, -64.0, -56.0, -52.0, -48.0, -44.0, -40.0, -36.0, -32.0, -28.0, -27.27619, -25.0, -20.0, -12.0, -5.0, -4.0, -3.0, -2.333333, -2.0, -0.666667, 0.0]:
 		section.append(Layout.canyon_shore_z(x) + offset - Layout.canyon_far_offset(x) * smoothstep(5.0, 25.0, -offset))
-	for step in range(1, 20):
-		section.append(Layout.canyon_shore_z(x) + Layout.canyon_width_at(x) * step / 19.0)
+	# Exact material boundaries keep sand and wet gravel from zigzagging
+	# across alternating triangles, including where the bar tapers away.
+	var width := Layout.canyon_width_at(x)
+	section.append(Layout.canyon_shore_z(x) + minf(1.5, width))
+	section.append(Layout.canyon_shore_z(x) + minf(3.0, width))
+	for step in range(1, 18):
+		section.append(Layout.canyon_shore_z(x) + minf(3.0, width) + maxf(width - 3.0, 0) * step / 17.0)
 	for offset in [2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0, 24.0, 28.0, 34.0, 40.0, 52.0, 64.0, 80.0, 110.0, 140.0, 200.0, 300.0, 450.0, 600.0, 720.0]:
 		section.append(Layout.canyon_shore_z(x) + Layout.canyon_width_at(x) + offset)
 	return section
@@ -76,7 +82,7 @@ func _triangle(surfaces: Array[SurfaceTool], a: Vector3, b: Vector3, c: Vector3)
 	var kind := 0
 	if inland > Layout.canyon_width_at(center.x) + 0.1 or inland < -27.0 - Layout.canyon_far_offset(center.x):
 		kind = 3
-	elif inland < -1.5:
+	elif center.y < -0.3:
 		kind = 4
 	elif inland < 1.5:
 		kind = 2
@@ -84,8 +90,7 @@ func _triangle(surfaces: Array[SurfaceTool], a: Vector3, b: Vector3, c: Vector3)
 		kind = 1
 	var surface := surfaces[kind]
 	var color: Color = ALBEDOS[kind]
-	var variation := sin(center.x * 1.73 + center.z * 3.19) * 0.008
-	surface.set_color(color.lightened(variation))
+	surface.set_color(color)
 	for point in [a, b, c]:
 		surface.add_vertex(point)
 
@@ -101,8 +106,16 @@ func _build_river() -> void:
 		var b := Vector3(next_x, 0, Layout.canyon_shore_z(next_x) - 0.666667)
 		var c := Vector3(x, 0, Layout.canyon_shore_z(x) - 27.27619 - Layout.canyon_far_offset(x))
 		var d := Vector3(next_x, 0, Layout.canyon_shore_z(next_x) - 27.27619 - Layout.canyon_far_offset(next_x))
-		for point in [a, c, b, b, c, d]:
-			surface.add_vertex(point)
+		var steps := ceili(maxf(a.distance_to(c), b.distance_to(d)))
+		for row in steps:
+			var t0 := float(row) / steps
+			var t1 := float(row + 1) / steps
+			for point in [a.lerp(c, t0), a.lerp(c, t1), b.lerp(d, t0), b.lerp(d, t0), a.lerp(c, t1), b.lerp(d, t1)]:
+				var across := inverse_lerp(Layout.canyon_shore_z(point.x) - 0.666667, Layout.canyon_shore_z(point.x) - 27.27619 - Layout.canyon_far_offset(point.x), point.z)
+				var flow := Vector2(1, 0.015 * clampf(point.x, -42, 42)).normalized()
+				var speed := 0.2 + 0.8 * sin(PI * clampf(across, 0, 1))
+				surface.set_color(Color(flow.x * 0.5 + 0.5, flow.y * 0.5 + 0.5, speed, clampf(-Layout.height_at(point.x, point.z) / 5.0, 0, 1)))
+				surface.add_vertex(point)
 		var volume := CollisionShape3D.new()
 		var shape := ConvexPolygonShape3D.new()
 		var points := PackedVector3Array([a, b, c, d])
@@ -111,16 +124,27 @@ func _build_river() -> void:
 		shape.points = points
 		volume.shape = shape
 		river.add_child(volume)
+	surface.index()
 	surface.generate_normals()
 	var water := MeshInstance3D.new()
 	water.name = "WaterSurface"
+	# Exclude the screen-reading water from its own reflection capture.
+	water.layers = 8
 	water.mesh = surface.commit()
-	var material := _material(Color(0.20, 0.40, 0.39, 0.68))
-	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	material.roughness = 0.35
-	water.material_override = material
+	water.set_script(preload("res://scripts/water_surface.gd"))
 	water.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	river.add_child(water)
+	var probe := ReflectionProbe.new()
+	probe.name = "RiverReflection"
+	probe.position = Vector3(0, 4, -12)
+	probe.size = Vector3(110, 24, 50)
+	probe.origin_offset = Vector3(0, 2, 0)
+	probe.update_mode = ReflectionProbe.UPDATE_ONCE
+	probe.interior = false
+	probe.box_projection = true
+	probe.cull_mask = 1
+	probe.max_distance = 250
+	add_child(probe)
 
 func _build_boulders() -> void:
 	var material := _material(Color(0.50, 0.50, 0.48))
