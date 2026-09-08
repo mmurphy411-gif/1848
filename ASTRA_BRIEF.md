@@ -186,3 +186,17 @@ The claim boundary is the landscape, not a fence:
 - Do not add features not in this brief, even if they seem obvious
 - If a milestone cannot be reached, stop and explain what blocked it instead of working around it with something out of scope
 - When generating assets in Blender, export to `assets/` as `.glb` and keep the `.blend` source in `blender/`
+- Each `MILESTONE_N.md` narrows this brief for one milestone. Where they conflict, the milestone file wins. Earlier test suites pass unchanged unless the milestone file names the exact assertion that may change
+- When a spec is self-contradictory, pick the interpretation that honors its intent and write the reasoning in the README, as was done for the gold-map pocket count
+
+## Standing rules learned from milestones 1 to 5
+
+These come from review of what was shipped. They apply to every milestone from now on.
+
+- **Look at every render before committing.** Tests and pixel probes are regression gates. They do not judge whether a picture is good. For each render you produce, open it and write one sentence in the README review section saying what a demanding art director would send back. If you cannot name anything, look again. Milestone 3 shipped an overview that was solid fog, milestone 4 shipped a hero shot that was 60 percent boulder, and milestone 5 shipped canyon walls that read as sand dunes. All three passed their tests.
+- **Uniformity is the tell of procedural work.** Anything repeated must vary in size, spacing, and orientation. Same-size Voronoi cobbles read as a mosaic. Evenly spaced joint cracks read as a soccer ball. Regular ripple marks read as stripes. Mix three scales and break every regular pattern with a second noise.
+- **Shape before surface.** A texture cannot fix a silhouette. If a wall looks like a dune, it needs rock geometry, not a better granite map.
+- **Every player-camera render passes the composition guard** (nothing within 2 m of the camera along its forward ray). This is already in the harness. Keep it there.
+- **Foliage cards are judged from underneath.** A card that reads at 20 m is not done until it reads at 2 m. Use leaf clusters, not single giant leaves, and alpha-to-coverage rather than hard scissor edges.
+- **Repository hygiene.** Binary files over 1 MB go through git LFS. Textures are baked at the smallest resolution that holds up at the distance they are seen. Do not commit 87 MB of PNGs again.
+- **Do not move a probe to make it pass** unless the spec change made the old location meaningless, and then say so in the README, as was done for the water transmission probe in milestone 5.
