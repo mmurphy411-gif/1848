@@ -230,3 +230,20 @@ the motion. Do not commit it; `artifacts/` is ignored.
   the Part 0 fixes with before and after sizes, and the art-director sentence
   for every render.
 - Commit as `Complete milestone 6 miner`.
+
+## Amendments (after Astra's read of this spec)
+
+Two conflicts were raised before work started. Both are real. Rulings:
+
+1. **Pan duration.** The clip table sums to 11 s with three swirl cycles
+   (2.0 + 3 × 2.0 + 1.5 + 1.5), not the 10 s stated in Part 3. The table is
+   authoritative. `PAN_DURATION` is 11 s, which is inside the 8 to 12 s band.
+   The "10 s" was an arithmetic error in the spec.
+
+2. **Milestone 5 texture size assertions.** Part 0 item 1 changes bake sizes,
+   which conflicts with the milestone 5 test's checks that every terrain map is
+   2048 and every foliage atlas is 1024. Those size assertions, and only those,
+   may be updated in `tests/milestone_5.gd` to match the new sizes: 2048 for
+   gravel and granite, 1024 for the other terrain sets, and whatever the oak and
+   conifer atlases are re-baked at. Every other assertion in that suite stays
+   unchanged. Record the new sizes in the README.
