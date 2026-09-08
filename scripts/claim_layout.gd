@@ -33,20 +33,49 @@ static func back_z(x: float) -> float:
 static func inland_normal(x: float) -> Vector3:
 	return Vector3(-0.015 * x, 0.0, 1.0).normalized()
 
+static func canyon_shore_z(x: float) -> float:
+	# Outside the playable bend the valley continues along X, rather than
+	# extending the shore parabola into a closed bowl. Claim geometry is unchanged.
+	return shore_z(clampf(x, -HALF_LENGTH, HALF_LENGTH))
+
+static func canyon_width_at(x: float) -> float:
+	return width_at(x) + maxf(absf(x) - HALF_LENGTH, 0.0) * 0.2
+
+static func canyon_far_offset(x: float) -> float:
+	return maxf(absf(x) - HALF_LENGTH, 0.0) * 0.45
+
+static func canyon_wall(x: float, distance: float, far_bank: bool) -> float:
+	# 44-degree talus, then 66-degree cliff bands separated by 15-degree benches.
+	var apron := 8.0 + 2.0 * sin(x * 0.055)
+	var remaining := maxf(distance, 0.0)
+	var height := minf(remaining, apron) * 0.97
+	remaining = maxf(remaining - apron, 0.0)
+	var band_width := (7.0 if far_bank else 5.0) + 2.0 * sin(x * 0.04)
+	if far_bank:
+		# A distinct downstream saddle breaks the taller far rim.
+		band_width *= 1.0 - 0.55 * exp(-pow((x - 64.0) / 22.0, 2.0))
+	var bands := 3 if far_bank else 2
+	for index in bands:
+		height += minf(remaining, band_width) * 2.2
+		remaining = maxf(remaining - band_width, 0.0)
+		if index < bands - 1:
+			height += minf(remaining, 3.0) * 0.27
+			remaining = maxf(remaining - 3.0, 0.0)
+	# The rim never levels off. Extended terrain disappears into distance haze.
+	return height + remaining * 0.34
+
 static func height_at(x: float, z: float) -> float:
-	var inland := z - shore_z(x)
-	var width := width_at(x)
+	var inland := z - canyon_shore_z(x)
+	var width := canyon_width_at(x)
+	var far_offset := canyon_far_offset(x)
 	if inland > width:
-		# A continuous, unclimbable canyon slope, not a vertical collision fence.
-		var rise := inland - width
-		var ridge := 24.0 + 4.0 * sin(x * 0.065) + 2.0 * cos(x * 0.18)
-		return 0.12 + width * 0.035 + minf(rise * 1.65, ridge) + maxf(rise - 22.0, 0.0) * 0.06
+		return 0.12 + width * 0.035 + canyon_wall(x, inland - width, false)
 	if inland >= 0.0:
 		return 0.12 + inland * 0.035
 	if inland > -5.0:
 		return 0.12 + inland * 0.18
-	if inland > -RIVER_WIDTH:
+	if inland > -RIVER_WIDTH - far_offset:
 		return -0.78 - minf((-inland - 5.0) * 0.42, 4.0)
-	# Far canyon bank rises out of deep water.
-	var far_ridge := 33.0 + 7.0 * sin(x * 0.055 + 0.8) + 3.0 * cos(x * 0.14)
-	return -4.78 + minf((-inland - RIVER_WIDTH) * 2.1, far_ridge)
+	if inland > -27.27619 - far_offset:
+		return -4.78 + (-inland - RIVER_WIDTH - far_offset) * 2.1
+	return canyon_wall(x, -inland - 27.27619 - far_offset, true)

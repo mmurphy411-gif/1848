@@ -8,6 +8,10 @@ func _run() -> void:
 	var claim: Node3D = load("res://scenes/claim.tscn").instantiate()
 	claim.get_node("Walker/Panner").reproducible = true
 	root.add_child(claim)
+	if "--lighting-only" in OS.get_cmdline_user_args():
+		var success: bool = await load("res://tests/lighting_capture.gd").run(self, claim)
+		quit(0 if success else 1)
+		return
 	# Mouse capture is unavailable in headless mode, so verify it in this harness.
 	var rig: Node3D = claim.get_node("CameraRig")
 	var original_yaw: float = rig.yaw
@@ -119,4 +123,6 @@ func _run() -> void:
 	await RenderingServer.frame_post_draw
 	root.get_texture().get_image().save_png("res://artifacts/milestone-2-density.png")
 	print("Saved player, overview, tier 3 pan, and F3 density renders to artifacts/.")
-	quit()
+	var success: bool = await load("res://tests/lighting_capture.gd").run(self, claim)
+	print("CAPTURE SUITE: %s" % ("PASS" if success else "FAIL: frame budget"))
+	quit(0 if success else 1)

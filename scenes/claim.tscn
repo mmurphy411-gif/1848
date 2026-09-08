@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/greybox.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/walker.tscn" id="2"]
@@ -6,20 +6,7 @@
 [ext_resource type="Script" path="res://scripts/river.gd" id="4"]
 [ext_resource type="Script" path="res://scripts/hud.gd" id="5"]
 [ext_resource type="Script" path="res://scripts/density_debug.gd" id="6"]
-[sub_resource type="ProceduralSkyMaterial" id="SkyMaterial"]
-sky_top_color = Color(0.36, 0.50, 0.62, 1)
-sky_horizon_color = Color(0.74, 0.78, 0.78, 1)
-ground_bottom_color = Color(0.28, 0.29, 0.27, 1)
-ground_horizon_color = Color(0.74, 0.78, 0.78, 1)
-[sub_resource type="Sky" id="Sky"]
-sky_material = SubResource("SkyMaterial")
-[sub_resource type="Environment" id="Environment"]
-background_mode = 2
-sky = SubResource("Sky")
-ambient_light_source = 2
-ambient_light_color = Color(0.83, 0.85, 0.86, 1)
-ambient_light_energy = 0.5
-tonemap_mode = 2
+[ext_resource type="Script" path="res://scripts/daylight.gd" id="7"]
 [sub_resource type="SphereShape3D" id="CameraShape"]
 radius = 0.22
 [sub_resource type="CameraAttributesPractical" id="CameraAttributes"]
@@ -34,15 +21,22 @@ collision_layer = 4
 collision_mask = 2
 script = ExtResource("4")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
-environment = SubResource("Environment")
+[node name="Daylight" type="Node3D" parent="."]
+script = ExtResource("7")
+camera_attributes = SubResource("CameraAttributes")
 
-[node name="Sun" type="DirectionalLight3D" parent="."]
-rotation_degrees = Vector3(-48, -32, 0)
-light_color = Color(1, 0.96, 0.88, 1)
-light_energy = 1.2
-shadow_enabled = true
-directional_shadow_max_distance = 150.0
+[node name="Sun" type="DirectionalLight3D" parent="Daylight"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Daylight"]
+camera_attributes = SubResource("CameraAttributes")
+
+[node name="RiverMist" type="FogVolume" parent="Daylight"]
+position = Vector3(0, 2, -8)
+size = Vector3(1000, 18, 55)
+
+[node name="ClearRimAir" type="FogVolume" parent="Daylight"]
+position = Vector3(0, 360, 0)
+size = Vector3(1500, 700, 1500)
 
 [node name="Walker" parent="." node_paths=PackedStringArray("camera_rig", "river") instance=ExtResource("2")]
 position = Vector3(0, 0.7, 6)
@@ -64,7 +58,7 @@ collision_mask = 1
 current = true
 fov = 65.0
 near = 0.1
-far = 400.0
+far = 600.0
 attributes = SubResource("CameraAttributes")
 
 [node name="HUD" type="CanvasLayer" parent="."]

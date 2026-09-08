@@ -3,6 +3,8 @@ extends Node3D
 ## Deterministic blockout, also visible when the main scene is opened in the editor.
 
 const Layout = preload("res://scripts/claim_layout.gd")
+const ALBEDOS := [Color(0.40, 0.37, 0.32), Color(0.48, 0.44, 0.37), Color(0.28, 0.26, 0.23), Color(0.50, 0.50, 0.48), Color(0.30, 0.32, 0.28)]
+const ROUGHNESS := [0.95, 0.9, 0.5, 0.85, 0.7]
 
 func _ready() -> void:
 	_build_ground()
@@ -11,49 +13,78 @@ func _ready() -> void:
 	_build_bedrock()
 
 func _build_ground() -> void:
-	var surface := SurfaceTool.new()
-	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var surfaces: Array[SurfaceTool] = []
+	for index in ALBEDOS.size():
+		var surface := SurfaceTool.new()
+		surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+		var material := _material(Color.WHITE)
+		material.vertex_color_use_as_albedo = true
+		material.vertex_color_is_srgb = true
+		material.roughness = ROUGHNESS[index]
+		surface.set_material(material)
+		surfaces.append(surface)
 	# Strips follow the bend and waterline, avoiding sawtooth intersections.
-	for x in range(-110, 110, 2):
+	var columns := _columns()
+	for column in columns.size() - 1:
+		var x: float = columns[column]
+		var next_x: float = columns[column + 1]
 		var left := _cross_section(x)
-		var right := _cross_section(x + 2)
+		var right := _cross_section(next_x)
 		for row in left.size() - 1:
 			var a := Vector3(x, Layout.height_at(x, left[row]), left[row])
-			var b := Vector3(x + 2, Layout.height_at(x + 2, right[row]), right[row])
+			var b := Vector3(next_x, Layout.height_at(next_x, right[row]), right[row])
 			var c := Vector3(x, Layout.height_at(x, left[row + 1]), left[row + 1])
-			var d := Vector3(x + 2, Layout.height_at(x + 2, right[row + 1]), right[row + 1])
-			_triangle(surface, a, b, c)
-			_triangle(surface, b, d, c)
-	surface.generate_normals()
+			var d := Vector3(next_x, Layout.height_at(next_x, right[row + 1]), right[row + 1])
+			_triangle(surfaces, a, b, c)
+			_triangle(surfaces, b, d, c)
 	var ground := MeshInstance3D.new()
 	ground.name = "CanyonAndGravelBar"
-	ground.mesh = surface.commit()
-	var material := _material(Color.WHITE)
-	material.vertex_color_use_as_albedo = true
-	ground.material_override = material
+	var mesh := ArrayMesh.new()
+	for surface in surfaces:
+		surface.generate_normals()
+		surface.commit(mesh)
+	ground.mesh = mesh
+	ground.gi_mode = GeometryInstance3D.GI_MODE_STATIC
 	add_child(ground)
 	ground.create_trimesh_collision()
 
 func _cross_section(x: float) -> PackedFloat32Array:
 	var section := PackedFloat32Array()
-	for offset in [-72.0, -52.0, -44.0, -40.0, -36.0, -32.0, -28.0, -27.27619, -25.0, -20.0, -12.0, -5.0, -4.0, -3.0, -2.0, -0.666667, 0.0]:
-		section.append(Layout.shore_z(x) + offset)
+	for offset in [-720.0, -600.0, -450.0, -300.0, -200.0, -140.0, -110.0, -90.0, -80.0, -72.0, -64.0, -56.0, -52.0, -48.0, -44.0, -40.0, -36.0, -32.0, -28.0, -27.27619, -25.0, -20.0, -12.0, -5.0, -4.0, -3.0, -2.0, -0.666667, 0.0]:
+		section.append(Layout.canyon_shore_z(x) + offset - Layout.canyon_far_offset(x) * smoothstep(5.0, 25.0, -offset))
 	for step in range(1, 20):
-		section.append(Layout.shore_z(x) + Layout.width_at(x) * step / 19.0)
-	for offset in [2.0, 4.0, 8.0, 12.0, 16.0, 20.0, 26.0, 36.0, 52.0, 72.0]:
-		section.append(Layout.back_z(x) + offset)
+		section.append(Layout.canyon_shore_z(x) + Layout.canyon_width_at(x) * step / 19.0)
+	for offset in [2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0, 24.0, 28.0, 34.0, 40.0, 52.0, 64.0, 80.0, 110.0, 140.0, 200.0, 300.0, 450.0, 600.0, 720.0]:
+		section.append(Layout.canyon_shore_z(x) + Layout.canyon_width_at(x) + offset)
 	return section
 
-func _triangle(surface: SurfaceTool, a: Vector3, b: Vector3, c: Vector3) -> void:
+func _columns() -> PackedFloat32Array:
+	var columns := PackedFloat32Array()
+	for x in range(-710, -110, 20):
+		columns.append(x)
+	for x in range(-110, 111, 2):
+		columns.append(x)
+	for x in range(130, 711, 20):
+		columns.append(x)
+	return columns
+
+func _triangle(surfaces: Array[SurfaceTool], a: Vector3, b: Vector3, c: Vector3) -> void:
 	if (b - a).cross(c - a).length_squared() < 0.000001:
 		return
 	var center := (a + b + c) / 3.0
-	var color := Color(0.56, 0.53, 0.46)
-	if center.z > Layout.back_z(center.x) + 0.4 or center.z < Layout.shore_z(center.x) - 27.0:
-		color = Color(0.49, 0.51, 0.50)
-	elif center.y < 0.1:
-		color = Color(0.37, 0.39, 0.35)
-	var variation := sin(center.x * 1.73 + center.z * 3.19) * 0.025
+	var inland := center.z - Layout.canyon_shore_z(center.x)
+	var kind := 0
+	if inland > Layout.canyon_width_at(center.x) + 0.1 or inland < -27.0 - Layout.canyon_far_offset(center.x):
+		kind = 3
+	elif inland < -1.5:
+		kind = 4
+	elif inland < 1.5:
+		kind = 2
+	elif inland < 3.0:
+		kind = 1
+	var surface := surfaces[kind]
+	var color: Color = ALBEDOS[kind]
+	var variation := sin(center.x * 1.73 + center.z * 3.19) * 0.008
 	surface.set_color(color.lightened(variation))
 	for point in [a, b, c]:
 		surface.add_vertex(point)
@@ -62,11 +93,14 @@ func _build_river() -> void:
 	var river: Area3D = $River
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for x in range(-110, 110, 2):
-		var a := Vector3(x, 0, Layout.shore_z(x) - 0.666667)
-		var b := Vector3(x + 2, 0, Layout.shore_z(x + 2) - 0.666667)
-		var c := Vector3(x, 0, Layout.shore_z(x) - 27.27619)
-		var d := Vector3(x + 2, 0, Layout.shore_z(x + 2) - 27.27619)
+	var columns := _columns()
+	for column in columns.size() - 1:
+		var x: float = columns[column]
+		var next_x: float = columns[column + 1]
+		var a := Vector3(x, 0, Layout.canyon_shore_z(x) - 0.666667)
+		var b := Vector3(next_x, 0, Layout.canyon_shore_z(next_x) - 0.666667)
+		var c := Vector3(x, 0, Layout.canyon_shore_z(x) - 27.27619 - Layout.canyon_far_offset(x))
+		var d := Vector3(next_x, 0, Layout.canyon_shore_z(next_x) - 27.27619 - Layout.canyon_far_offset(next_x))
 		for point in [a, c, b, b, c, d]:
 			surface.add_vertex(point)
 		var volume := CollisionShape3D.new()
@@ -89,7 +123,8 @@ func _build_river() -> void:
 	river.add_child(water)
 
 func _build_boulders() -> void:
-	var material := _material(Color(0.62, 0.63, 0.60))
+	var material := _material(Color(0.50, 0.50, 0.48))
+	material.roughness = 0.85
 	for index in Layout.BOULDERS.size():
 		var data: Vector4 = Layout.BOULDERS[index]
 		var rock := MeshInstance3D.new()
@@ -109,6 +144,7 @@ func _build_boulders() -> void:
 		baked.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, source)
 		rock.mesh = baked
 		rock.material_override = material
+		rock.gi_mode = GeometryInstance3D.GI_MODE_STATIC
 		rock.position = Vector3(data.x, Layout.height_at(data.x, data.y) + data.w * 0.35, data.y)
 		rock.rotation.y = index * 1.71
 		add_child(rock)
@@ -122,7 +158,9 @@ func _build_bedrock() -> void:
 		var mesh := BoxMesh.new()
 		mesh.size = Vector3(data.z, 0.12, data.w)
 		slab.mesh = mesh
-		slab.material_override = _material(Color(0.13, 0.15, 0.15))
+		slab.material_override = _material(Color(0.16, 0.18, 0.18))
+		slab.material_override.roughness = 0.6
+		slab.gi_mode = GeometryInstance3D.GI_MODE_STATIC
 		slab.position = Vector3(data.x, Layout.height_at(data.x, data.y) - 0.025, data.y)
 		# Match the shallow gravel slope so only 3.5 cm of the slab shows.
 		var normal := Vector3(0.015 * data.x * 0.18, 1.0, -0.18).normalized()
