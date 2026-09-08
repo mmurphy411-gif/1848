@@ -20,6 +20,8 @@ var elapsed := 0.0
 var sampled_density := 0.0
 var result: Dictionary = {}
 var rng := RandomNumberGenerator.new()
+var speed_scale := 1.0
+const ConditionModel=preload("res://scripts/condition_model.gd")
 
 func _ready() -> void:
 	rng.seed = hash(walker.position)
@@ -38,6 +40,10 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 func can_pan() -> bool:
+	var fisher := walker.get_node_or_null("Fisher")
+	if fisher and fisher.state!=0: return false
+	var activities := walker.get_parent().get_node_or_null("Activities")
+	if activities and (activities.busy or activities.ui_open()): return false
 	var point := walker.global_position
 	var inland := point.z - Layout.shore_z(point.x)
 	var depth: float = walker.river.depth_at(point)
@@ -52,6 +58,13 @@ func start_pan() -> bool:
 	elapsed = 0.0
 	sampled_density = GoldMap.density_at(walker.position.x, walker.position.z)
 	result = PanResult.roll(sampled_density, rng)
+	var condition: float=get_node("/root/GameState").condition
+	speed_scale=ConditionModel.speed(condition)
+	var demoted := ConditionModel.demote(result.tier,condition,rng.randf() if condition<40 else 1.0)
+	if demoted!=result.tier:
+		result.tier=demoted
+		var yields := [Vector2.ZERO,PanResult.SPECKS,PanResult.COLOR,PanResult.GOOD]
+		result.ounces=rng.randf_range(yields[demoted].x,yields[demoted].y)
 	walker.velocity.x = 0.0
 	walker.velocity.z = 0.0
 	var direction := -Layout.inland_normal(walker.position.x)
@@ -67,7 +80,7 @@ func start_pan() -> bool:
 func _physics_process(delta: float) -> void:
 	if state == State.IDLE:
 		return
-	elapsed += delta
+	elapsed += delta*(speed_scale if state==State.PANNING else 1.0)
 	if state == State.PANNING:
 		var end := 0.0
 		for i in LENGTHS.size():

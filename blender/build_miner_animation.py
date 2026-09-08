@@ -8,6 +8,7 @@ from common import *
 from mathutils import Matrix
 CLIPS={'idle':4.0,'walk':1.0,'wade':1.2,'pan_enter':2.0,'pan_swirl':2.0,'pan_wash':1.5,'pan_lift':1.5,'pan_exit':1.0}
 CLIPS.update({'pan_swirl_2':2.0,'pan_swirl_3':2.0})
+CLIPS.update({'fish_idle':3.,'cast':1.2,'fish_wait':4.,'strike':.4,'fight':1.,'land':2.,'gather':2.,'tend_fire':2.,'eat':3.,'lie_down':2.})
 def smooth(t):return max(0,min(1,t))**2*(3-2*max(0,min(1,t)))
 def ik(root,target,l1,l2,pole):
     delta=target-root;d=max(.0001,min(delta.length,l1+l2-.0001));axis=delta.normalized()
@@ -27,8 +28,13 @@ def animate(rig,body,joints):
         if swirl or clip in ['pan_wash','pan_lift']:crouch=1.;pan_t=1.
         if clip=='pan_lift':lift=smooth(t/1.5)
         if clip=='pan_exit':crouch=1-smooth(t);pan_t=crouch;lift=crouch
+        if clip in ['gather','tend_fire']:crouch=math.sin(math.pi*t/2)**2
+        if clip=='eat':crouch=.9
+        if clip=='lie_down':crouch=smooth(t/2)
         lean=math.radians(43)*crouch-math.radians(33)*lift
         hip=Vector((.006*math.sin(t*math.pi*.5)*(1-crouch),.10*crouch,.94-.42*crouch))
+        if clip=='eat':lean=.08;hip=Vector((0,.25,.32))
+        if clip=='lie_down':lean=-math.pi*.48*smooth(t/2);hip=Vector((0,.7*smooth(t/2),.94-.72*smooth(t/2)))
         moving=clip in ['walk','wade']
         if moving:hip.z+=.018*math.cos(phase*2);hip.x=.022*math.sin(phase)
         rotation=Matrix.Rotation(lean,4,'X')
@@ -70,6 +76,7 @@ def animate(rig,body,joints):
             # Foot stance: forward travel equals 2.4m per walk cycle. Only
             # the planted half is linear; the recovery arc raises the toe.
             ankle=Vector((sign*.11,.02,.11));foot_tilt=0.
+            if clip=='eat':ankle.y=-.30
             if moving:
                 u=(t/(1.2 if clip=='wade' else 1.0)+(0 if sign<0 else .5))%1
                 stride=.56 if clip=='walk' else .31
@@ -87,6 +94,15 @@ def animate(rig,body,joints):
                 carried_hand.y+=sign*.16*math.sin(phase);carried_hand.x+=sign*(.065 if clip=='wade' else .015)
             target=carried_hand.lerp(pan_matrix@Vector((sign*.242,0,.185)),pan_t)
             if side=='Left':target=target.lerp(pan_matrix@Vector((.275,0,.08)),1-pan_t)
+            if clip in ['fish_idle','fish_wait','cast','strike','fight','land']:
+                target=Vector((sign*.22,-.26,1.0+.008*math.sin(t*2)))
+                if clip=='cast' and side=='Right':target+=Vector((0,-.24*math.sin(t/1.2*math.pi),-.25*math.cos(t/1.2*math.pi)))
+                if clip=='strike' and side=='Right':target.z+=.32*smooth(t/.3)
+                if clip=='fight':target+=Vector((0,.06*math.cos(t*math.tau+sign),.10*math.sin(t*math.tau+sign)))
+                if clip=='land' and side=='Right':target=target.lerp(Vector((-.20,-.35,1.35)),smooth(t/2))
+            if clip in ['gather','tend_fire']:target=Vector((sign*.22,-.36,.8-.65*crouch))
+            if clip=='eat':target=Vector((sign*.20,-.30,.62+(.47*max(0,math.sin(t*math.tau/1.5)) if side=='Right' else 0)))
+            if clip=='lie_down':target=Vector((sign*.3,0,.75-.5*crouch))
             # Keep elbows close to the ribs, with a slight outward pole so the
             # forearms do not intersect during circular shaking.
             l1=(Vector(joints[side+'UpperArm'][1])-Vector(joints[side+'UpperArm'][0])).length
@@ -105,7 +121,7 @@ def animate(rig,body,joints):
                     relaxed=matrices[side+'Hand']@rest[side+'Hand'].inverted()@rest[name]
                     grip=pan_t
                     # Left hand hooks over the upper lip in the side carry.
-                    if side=='Left':
+                    if side=='Left' and clip not in ['fish_idle','fish_wait','cast','strike','fight','land','gather','tend_fire','eat','lie_down']:
                         carry_points=[Vector((.225-.011*k,(-.045+f*.021),.105-.01*k)) for k in range(4)]
                         start=pan_matrix@carry_points[j];end=pan_matrix@carry_points[j+1]
                         start=start.lerp(pan_matrix@points[j],pan_t);end=end.lerp(pan_matrix@points[j+1],pan_t)

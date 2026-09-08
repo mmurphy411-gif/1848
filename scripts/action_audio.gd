@@ -47,6 +47,10 @@ func stop() -> void:
 	set_physics_process(false)
 	for voice in [step,pan,swirl]: voice.stop()
 
+func twitch() -> void:
+	step.stream=preload("res://assets/audio/line_twitch.wav")
+	step.play()
+
 func _physics_process(delta: float) -> void:
 	var traveled := Vector2(walker.global_position.x-last_position.x,walker.global_position.z-last_position.z).length()
 	last_position = walker.global_position

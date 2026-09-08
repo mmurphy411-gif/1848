@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=21 format=3]
 
 [ext_resource type="Script" path="res://scripts/greybox.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/walker.tscn" id="2"]
@@ -11,6 +11,13 @@
 [ext_resource type="Script" path="res://scripts/day_clock.gd" id="9"]
 [ext_resource type="Script" path="res://scripts/claim.gd" id="10"]
 [ext_resource type="Script" path="res://scripts/soundscape.gd" id="11"]
+[ext_resource type="Script" path="res://scripts/fish_school.gd" id="12"]
+[ext_resource type="Script" path="res://scripts/bait_sources.gd" id="13"]
+[ext_resource type="Script" path="res://scripts/camp.gd" id="14"]
+[ext_resource type="Script" path="res://scripts/activities.gd" id="15"]
+[ext_resource type="Script" path="res://scripts/ledger.gd" id="16"]
+[ext_resource type="Script" path="res://scripts/sandbox.gd" id="17"]
+[ext_resource type="Script" path="res://scripts/rain.gd" id="18"]
 [sub_resource type="SphereShape3D" id="CameraShape"]
 radius = 0.22
 [sub_resource type="CameraAttributesPractical" id="CameraAttributes"]
@@ -83,3 +90,24 @@ script = ExtResource("5")
 
 [node name="DensityDebug" type="Node3D" parent="."]
 script = ExtResource("6")
+
+[node name="FishSchool" type="Node3D" parent="."]
+script = ExtResource("12")
+
+[node name="BaitSources" type="Node" parent="."]
+script = ExtResource("13")
+
+[node name="Camp" type="Node3D" parent="."]
+script = ExtResource("14")
+
+[node name="Activities" type="Node" parent="."]
+script = ExtResource("15")
+
+[node name="Ledger" type="CanvasLayer" parent="."]
+script = ExtResource("16")
+
+[node name="Sandbox" type="CanvasLayer" parent="."]
+script = ExtResource("17")
+
+[node name="Rain" type="Node3D" parent="."]
+script = ExtResource("18")

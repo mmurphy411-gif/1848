@@ -7,7 +7,7 @@ where godot.exe >nul 2>&1
 if errorlevel 1 goto missing
 set "TASK_GODOT=godot.exe"
 :play
-start "1848" "%TASK_GODOT%" --path "%~dp0."
+start "1848" "%TASK_GODOT%" --path "%~dp0." -- %*
 exit /b 0
 :missing
 echo Godot was not found. Open project.godot in Godot 4.7.2 and press F5,

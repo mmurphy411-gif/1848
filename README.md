@@ -1,8 +1,8 @@
 # 1848
 
-Milestones 7 and 8: a playable panning claim with a rigged miner, animated panning,
-procedural canyon assets, flowing water, a day/night cycle, spatial sound, and
-polished pan results, sack growth, camera transitions and wind.
+Phase 2, milestone 9 review build: hand-line fishing, visible river fish, bait
+gathering, camp cooking and sleep, condition, weather, a written ledger and a
+development sandbox, built on the completed panning prototype.
 Built with **Godot 4.7.2 standard**, GDScript, and the Forward+ renderer.
 
 ## Play
@@ -928,3 +928,222 @@ texture RID warnings remain in graphical shutdown logs. Validation files are
 `artifacts/m8-milestone_*.log`, `milestone-8-probes.json`,
 `milestone-8-capture-final.log`, `milestone-8-performance.log` and
 `milestone-8-launch.log`. No earlier milestone assertion was weakened in this pass.
+
+## Phase 2 — Milestone 9 review build
+
+Phase 1 is the completed prototype baseline. The current scope is defined by
+`PHASE2_BRIEF.md` and `MILESTONE_9.md`: a day now includes gathering, hand-line
+fishing, cooking, eating, and sleeping. This implementation is a **review candidate**;
+the memo's ordered human review and live playtest have not happened. The historical
+Phase 1 review notes above are retained as development records.
+
+### Play the new loop
+
+- **F / gamepad Y:** enter a fishing stance at the water's edge, then cast. During
+  drift it brings the line back for a recast. Strike after the line jerks, then hold
+  to pull and release when the fish surges. Escape leaves the stance or ends a reveal.
+- **G / gamepad X:** gather on eligible ground; interact with camp props. In a fishing
+  stance it cycles available bait. Mouse wheel also cycles bait.
+- **At camp:** the ring takes three driftwood to light, then one per extension. G at
+  the skillet offers frying; F confirms. G at the rack hangs a fish. G at the cache
+  stores carried fish or retrieves them. The bedroll ends the day; the crate opens
+  the ledger. G also eats a carried cooked portion or smoked fish when away from a
+  more specific interaction. Escape or G closes the ledger.
+- **F4, debug builds:** open the season sandbox. Apply seed, date, hour, condition,
+  dollars, gold, gear, bait, and fish counts; override weather or fire. Dawn, Dusk,
+  Next day, Sleep and Refresh fish exercise the real scene. Movement is held while
+  a panel is open. Idle away from an interaction, only the gold readout remains.
+
+Examples (the launcher forwards arguments; the optional extra `--` is harmless):
+
+```bat
+Play.cmd -- day=20 hour=18.5 hooks=20 bait.grasshopper=6 firewood=10
+Play.cmd -- day=95 hour=6
+Play.cmd -- hooks=0
+Play.cmd -- day=120 weather=frost hour=7
+```
+
+The first example supplies a dusk test kit. Walk toward the downstream side of the
+boulder at X = -14; aim into its pool. The camp is under the central oak, inland of
+the spawn. A September/October dawn scenario starts beside the head riffle so the
+salmon are immediately reachable. Hooks cannot be bought yet: the store is milestone
+10. There is no save system. Sandbox counts are test fixtures, not earned supplies.
+
+### Models and ownership
+
+`GameState` owns seed, day, dollars, condition and inventory. Gold remains exclusively
+in the unchanged `Sack` autoload. Journal entries, catch totals, cached fish, meals
+and daily-check flags live inside the inventory. Start hour and weather override
+are scenario configuration. Applying an hour is an exact snapshot, not a simulation
+of skipped meals; it marks the midday checkpoint according to the selected hour.
+Changing counts preserves existing fish records and only adds/removes the difference.
+
+`Calendar` starts June 26, 1848 at day 0; day 132 is November 5. The clock keeps its
+1,200-second day and 180-second night. Every wrap emits one day-end signal, including
+multiple wraps in a large advance; posing the hour emits none. Sleep fades out,
+ends the day, then returns the miner to the bedroll at dawn.
+
+Pure static models cover calendar, weather, condition, cooking, fishery and fight.
+Actions own their seeded random generators; the fish map has no mutable RNG.
+Weather is mixed from integer seed/day inputs and does not depend on call order.
+
+| Period | Clear | Hot | Rain | Frost |
+| --- | ---: | ---: | ---: | ---: |
+| June / July | 65% | 33% | 2% | 0% |
+| August | 60% | 35% | 5% | 0% |
+| September | 80% | 8% | 12% | 0% |
+| October 1–15 | 72% | 0% | 28% | 0% |
+| October 16–31 | 60% | 0% | 25% | 15% |
+| November | 45% | 0% | 15% | 40% |
+
+Rain increases bite rates, removes grasshoppers, drives camera-following particles
+that expire at the ground/water, and blends overcast over 30 seconds. Frost triples
+morning river mist before 09:00 and fades it by 10:00. The water shader and water level
+are unchanged. Hot weather applies haze and reduces midday trout presence.
+
+### The fish map
+
+Four boulder pools use the same obstacles as the gold map: their downstream wakes
+slow the current and shelter trout. Two slab seams represent insect-rich edges;
+the head riffle holds the seasonal salmon run; the deep runs suit larger resident
+fish, and the tail-out suits bottom-feeding suckers. No gold-map, pan-result, layout
+or boundary values were changed.
+
+| Species | Weight | Habitat / bait |
+| --- | --- | --- |
+| Rainbow trout | 0.3–1.8 lb; 3% up to 3 lb | Pools, seams, riffle; grasshopper, hellgrammite, worm |
+| Sacramento sucker | 1–3 lb | Run, flat, pool bottom; worm, pork |
+| Sacramento pikeminnow | 1–4 lb | Runs at midday; pork, hellgrammite |
+| Hardhead | 1–3 lb | Runs at midday; hellgrammite, worm |
+| Fall-run Chinook | 10–20 lb | Riffle, days 81–127; visible, not line-catchable |
+
+Trout peak at dawn and dusk; salmon intensity peaks on day 99, October 3. Population
+rounding reserves capacity for salmon before filling resident habitats and caps the
+stable population at 24. Ordinary fish meshes hold upstream, dart, flee and return;
+populations crossfade over two seconds. Body sway runs in a vertex shader. An opaque
+dither fade is essential: alpha-blended fish were incorrectly drawn over the water
+instead of appearing in its refraction/depth snapshot.
+
+The hand-line state machine is IDLE → STANCE → CAST → DRIFT → BITE → FIGHT → LAND →
+SHOWING → STANCE, with a SNAGGED branch. One bait is reserved on casting. Recasting,
+early strikes and cancellation retain it; a stolen bait or landed fish consumes it.
+The strike window is 0.15–0.75 seconds. Fish approach for two seconds before a bite.
+Drift reads the existing water mesh's flow colors once per second. A 12-segment ribbon
+joins the winder and bait. Runs have a visible 0.4-second approach cue; holding through
+a run breaks the line. Snags near boulders/slabs have a 25% chance, with a 50% failed
+freeing attempt. Each lost hook also costs two metres of line. Fishing and panning
+are mutually exclusive, and camp actions require both idle.
+
+### Camp, food and condition
+
+Camp uses the existing black oak nearest X = 0 at least ten metres inland. Its center
+is three metres riverward of that trunk. The lean-to, bedroll, ring, skillet, pot,
+rack, crate, cache and driftwood are imported props with terrain-layer collision.
+A duff patch follows the existing ground. Driftwood has three visible stock sizes.
+The fire burns two game hours, then one hour of embers; added wood extends burning
+up to four hours. Firelight is warm, shadowed and spatially audible.
+
+Gathering takes two seconds. Bait has a 70% success chance, driftwood always succeeds.
+Daily attempt budgets are six grasshoppers, four hellgrammites, four worms and ten
+wood. Grasshoppers follow actual grass placements, worms follow oak duff, and wet
+rock bait follows the shared boulders/slabs. Budgets reset on the day tick.
+
+A fried fish takes twenty game minutes and gives +20 condition, capped at 100. A fish
+of at least two pounds leaves a cooked second portion, usable that day. Smoking needs
+four hours of burning fire and pauses without fire; unfinished rack fish spoil at
+day end. Smoked fish keeps and gives +15 without a fire. Fresh fish survives the next
+morning and spoils the following one. The cache follows the same spoilage rules.
+Missing the midday or evening meal costs 15; the floor is 5. At 70+ condition, pan
+and wade speeds are unchanged; at 40 they reach 0.77 playback and 0.8 m/s. Below 40,
+25% of pans lose one tier and bank the reduced yield, never the original yield.
+
+The ledger has two scrolling written pages: today's state/events and season totals.
+Its script face is Cedarville Cursive, distributed under the SIL Open Font License;
+the license is in `assets/fonts/OFL.txt`, with the font from
+[Google Fonts](https://github.com/google/fonts/tree/main/ofl/cedarvillecursive).
+Paper/canvas and all fish/camp assets are authored in the Blender builders. Audio is
+original deterministic synthesis in `audio/build_phase2_audio.py`.
+
+### Explicit interpretations and tuning
+
+- The slab-relative seam coordinates in the memo fall shallower than its required
+  depth. Only fish positions are projected onto the 0.7 m contour; slab positions,
+  terrain and water remain untouched.
+- The exact original fight rates conflict with the 3–8 second trout target: seven
+  stamina plus mandatory releases produced a 10.38-second 1 lb fight. Pull fatigue
+  is tuned to 1.4 units/second, recovery stays 0.4, and runs stay 0.8 seconds. The
+  tested 1 lb fight is now 7.07 seconds. This is a disclosed balance change.
+- Overcast sun attenuation uses a smooth nonlinear curve with the specified end
+  points, so 0.8 rain also satisfies the memo's at-most-55% sun gate. The 17:00 rain
+  beauty view is separate from the unchanged transmission probe's 19:15 pose.
+  Moving that probe to 17:00 had put its dry reference in a boulder shadow.
+- The simulation supplies diagnostic hook/line stock, as F4 does. Four starting hooks
+  cannot exercise a required 8–20 seasonal losses without the unbuilt store. Its
+  careful policy places 16% of casts in the snag-risk band, then uses the live 25%
+  snag / 50% failed-free rules. That exposure is a policy assumption, not a hidden
+  global snag probability in the game.
+
+### Automated evidence
+
+`tests/milestone_9_models.gd` checks the pure models before scene integration.
+`tests/milestone_9.gd` exercises the real season state, clock, action exclusions,
+strike branches, line break, successful landing, exactly-once award, fire, frying,
+smoking, spoilage, ledger and sandbox rebuild. Existing suites 1–8 and 6 notes pass
+unchanged at default condition. Use `--headless --fixed-fps 60 --script tests/...`
+with the local Godot executable for fast regression runs.
+
+`tests/simulate_season.gd` writes `artifacts/season-careful.csv` and
+`artifacts/season-careless.csv`. For seed 1848, the careful policy takes 573 trout,
+loses 14 hooks, has 189 smoked fish on November 1, and stays at 60+ condition on all
+130 days. It respects gathering success, daily bait attempts, the single rack and
+nine fire-hours available from ten wood. It discards unsmoked excess. The careless
+policy reaches 5 within seven days. Two identical seeds produce identical ledgers;
+seed + 1 differs. August rain across 50 seeds is 4.32%. Mean seeded dusk trout wait
+is 16.18 seconds; rain has 1.5 times the rate. Salmon sightings span days 81–127.
+
+The warmed 1080p heavy-scene measurement was 3.08 ms median / 3.30 ms p95 on the local
+RTX 5080, with fire shadows, rain and the fish population active. This is local GPU
+evidence, not a claim about unspecified mid-range hardware. Final numerical render
+results are in `artifacts/milestone-9-capture.json`; logs are `artifacts/m9-*.log`.
+The world anchors for the old water transmission probe remain unchanged.
+`tests/fishing_launch.gd` also passes a main-scene launch and graceful quit. The
+previously isolated seven reflection-atlas texture RID warnings remain at renderer
+shutdown; no new application object or audio-playback leaks appeared in the final
+integration run.
+
+### Visual review — send-back notes
+
+Every saved beauty view was opened; masks are diagnostic coverage evidence.
+
+| Render | Art-director note |
+| --- | --- |
+| milestone-9-trout-holding.png | The two trout are readable through the river, but the telephoto framing compresses the bank and their flanks still look too broad. |
+| milestone-9-cast.png | The underhand cast reads, but the thin line can disappear against bright reflections. |
+| milestone-9-wait.png | The approach is present, but a moving player may miss it behind the shoulder. |
+| milestone-9-fight.png | The line and fish movement communicate the pull, but the run cue needs the live timing review. |
+| milestone-9-landed.png | The fish occupies the close view properly, but the miner's grip is stiff and the head silhouette needs softer shaping. |
+| milestone-9-salmon-riffle.png | Individual salmon bodies are visible, though several overlap into a crowded group. |
+| milestone-9-camp-dusk.png | The seated pose and warm clearing read as camp; the lean-to's cloth and the duff patch edge could be less regular. |
+| milestone-9-camp-night.png | The fire is the warm point across the bar, but the distant shelter silhouette could read more clearly. |
+| milestone-9-rain-pool.png | The river remains legible under lower light; the small streaks still need a live rain review. |
+| milestone-9-rain-transmission.png | The submerged gravel retains contrast, but the overhead diagnostic angle is not a player-facing beauty shot. |
+| milestone-9-ledger.png | The writing is readable, but the paper needs more convincing page edges and a stronger center fold. |
+| milestone-9-sandbox.png | Every field is accessible, but the long plain developer panel requires scrolling on smaller windows. |
+
+The catch sequence is 120 frames and the camp sequence 144 frames at 12 fps, stored
+in `artifacts/catch-sequence/` and `artifacts/camp-sequence/`. The catch is an
+instrumented successful playthrough using the real state machine and release logic;
+the camp sequence lights the fire and eats a stored fish. The longer fry is tested
+separately at its full game-time duration. These are not human playtest approval.
+The sequence harness checks a fishable starting position and requires `SHOWING`;
+it records at a matching 12 Hz physics tick so scripted releases cannot miss a run
+between captured frames. Terrain-height placement keeps the camp actor grounded.
+The catch's approach and thin line remain subtle from the player camera; the lift
+and close-up read clearly, with a stiff hand grip still visible. The camp's fire
+transition and seated meal read, but the eating gesture is repetitive. Contact
+sheets and animated previews are in `artifacts/review/` and remain uncommitted.
+
+**Acceptance remains open for the memo's human review:** bank trout, catch flip
+sequence, camp at dusk, ledger, then a live dusk catch → fry → sleep → morning ledger.
+The code is checkpointed as a review candidate. The final completion message
+`Complete milestone 9 fishing and camp` is reserved for acceptance after that review.

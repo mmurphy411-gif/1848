@@ -25,6 +25,8 @@ var _transition_arm := Vector3.ZERO
 var _transition_length := 0.0
 var _transition_margin := 0.0
 var _transition_fov := 65.0
+var fish_focus := false
+var focus_point := Vector3.ZERO
 
 func _ready() -> void:
 	rotation = Vector3(pitch, yaw, 0)
@@ -72,14 +74,14 @@ func _process(delta: float) -> void:
 	arm.margin = lerpf(_transition_margin, 0.0 if held else _spring_margin, weight)
 	_focus_blend = 1.0 if held else 1.0-weight
 	if held:
-		var pan: Vector3 = target.get_node("Visual").pan_attachment.global_position
+		var pan: Vector3 = focus_point if focused else target.get_node("Visual").pan_attachment.global_position
 		# Sphere sweep remains active during the dolly as well as the held shot.
 		var camera: Camera3D = arm.get_node("Camera3D")
 		var desired := global_transform * arm.transform * Vector3(0,0,arm.spring_length)
 		var safe := _safe_position(pan, desired)
 		if safe.distance_to(desired) > .001:
 			global_position += safe-desired
-		camera.fov = lerpf(_transition_fov, 38.0 if focused else 65.0, weight)
+		camera.fov = lerpf(_transition_fov, (32.0 if fish_focus else 38.0) if focused else 65.0, weight)
 	else:
 		var camera: Camera3D = arm.get_node("Camera3D")
 		camera.fov = lerpf(_transition_fov,65.0,weight)
@@ -124,16 +126,18 @@ func _update_side() -> void:
 			safe = alternative_safe
 	_focus_transform = Transform3D(Basis.IDENTITY,safe).looking_at(pan,Vector3.UP)
 
-func focus(pan_transform: Transform3D) -> void:
+func focus(pan_transform: Transform3D, fish := false) -> void:
 	if not focused: _begin_transition()
 	focused = true
+	fish_focus=fish
 	panning = false
 	var forward: Vector3 = -target.get_node("Visual").global_basis.z.normalized()
 	# The imported socket is at the bowl bottom. Frame the opening's centre,
 	# whose 8 cm rim offset follows the pan tilt, rather than its underside.
-	var centre := pan_transform * Vector3(0,.08,0)
-	var camera_point := _safe_position(centre,centre+forward*.55+Vector3.UP*.35)
-	_focus_transform = Transform3D(Basis.IDENTITY, camera_point).looking_at(centre+Vector3.UP*.025, Vector3.UP)
+	var centre := pan_transform.origin if fish else pan_transform * Vector3(0,.08,0)
+	focus_point=centre
+	var camera_point := _safe_position(centre,centre+forward*(.44 if fish else .55)+Vector3.UP*(.18 if fish else .35))
+	_focus_transform = Transform3D(Basis.IDENTITY, camera_point).looking_at(centre+Vector3.UP*(0.0 if fish else .025), Vector3.UP)
 
 func release_focus() -> void:
 	if focused or panning: _begin_transition()

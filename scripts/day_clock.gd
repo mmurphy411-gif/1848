@@ -2,6 +2,7 @@
 extends Node
 ## Unequal day/night lengths expressed in elapsed real seconds, independent of FPS.
 signal advanced(hour: float)
+signal day_ended
 const DAWN := 4.75
 const DUSK := 20.5
 const DAY_SECONDS := 1200.0
@@ -24,8 +25,16 @@ func start(hour := DAWN) -> void:
 
 func advance(delta: float) -> void:
 	if not running: return
-	elapsed = fposmod(elapsed+maxf(delta,0.0),CYCLE_SECONDS)
+	var total := elapsed+maxf(delta,0.0)
+	for i in int(total/CYCLE_SECONDS): day_ended.emit()
+	elapsed = fposmod(total,CYCLE_SECONDS)
 	advanced.emit(hour_at(elapsed))
+
+func end_day() -> void:
+	elapsed=0.0
+	day_ended.emit()
+	running=true
+	advanced.emit(DAWN)
 
 func _process(delta: float) -> void:
 	advance(delta)

@@ -18,6 +18,8 @@ signal time_changed(hour: float, daylight: float)
 var environment: Environment
 var sky_material: PhysicalSkyMaterial
 var sun_elevation := 0.0
+var overcast := 0.0
+var current_hour := 19.25
 var sun_azimuth := 0.0
 var _reflection_elapsed := 0.0
 var stars = preload("res://scripts/night_sky.gd").new()
@@ -56,6 +58,7 @@ func _refresh_reflection() -> void:
 
 func _update_light(time: float) -> void:
 	var h := fposmod(time, 24.0)
+	current_hour=h
 	# Late-June daylight, oriented so northwest/sunset is downstream (+X).
 	# Direction is continuous through midnight and both horizon crossings.
 	if h >= 4.75 and h <= 20.5:
@@ -119,6 +122,14 @@ func _update_light(time: float) -> void:
 		environment.volumetric_fog_density = lerpf(.004,.006,night)
 		mist.material.density = lerpf(mist.material.density,.008,night)
 		mist.material.albedo = mist.material.albedo.lerp(Color(.25,.35,.55),night)
+	sun.light_energy*=lerpf(1.0,.5,pow(overcast,.4))
+	environment.ambient_light_energy*=lerpf(1.0,1.3,overcast)
+	environment.volumetric_fog_density*=1.0+overcast
+	sky_material.turbidity=lerpf(sky_material.turbidity,6.0,overcast)
+	if not Engine.is_editor_hint():
+		var state := get_node_or_null("/root/GameState")
+		if state and state.weather()=="hot": sky_material.turbidity=lerpf(sky_material.turbidity,5.0,clampf(overcast/.35,0,1))
+		if state and state.weather()=="frost": mist.material.density*=lerpf(3.0,1.0,smoothstep(9,10,h))
 	time_changed.emit(h,daylight)
 
 func _configure_indirect_light() -> void:

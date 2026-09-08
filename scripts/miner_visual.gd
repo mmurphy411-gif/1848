@@ -1,6 +1,15 @@
 extends Node3D
 ## Visual-only rig. The parent remains the original capsule-based controller.
-const CLIPS := {"idle":4.0,"walk":1.0,"wade":1.2,"pan_enter":2.0,"pan_swirl":2.0,"pan_wash":1.5,"pan_lift":1.5,"pan_exit":1.0}
+const CLIPS := {"idle":4.0,"walk":1.0,"wade":1.2,"pan_enter":2.0,"pan_swirl":2.0,"pan_wash":1.5,"pan_lift":1.5,"pan_exit":1.0,"fish_idle":3.0,"cast":1.2,"fish_wait":4.0,"strike":.4,"fight":1.0,"land":2.0,"gather":2.0,"tend_fire":2.0,"eat":3.0,"lie_down":2.0}
+const FISH_CLIPS := ["fish_idle","cast","fish_wait","strike","fight","land"]
+const CAMP_CLIPS := ["gather","tend_fire","eat","lie_down"]
+var activity_clip := ""
+var activity_rate := 1.0
+var handline_attachment: BoneAttachment3D
+var right_hand: BoneAttachment3D
+var handline: Node3D
+var physical_pan: Node3D
+var eating_pan: MeshInstance3D
 const SWIRL_VARIANTS := ["pan_swirl", "pan_swirl_2", "pan_swirl_3"]
 var miner: Node3D
 var skeleton: Skeleton3D
@@ -39,7 +48,7 @@ func _ready() -> void:
 	for name in CLIPS:
 		var animation := player.get_animation(name)
 		animation.length = CLIPS[name]
-		animation.loop_mode = Animation.LOOP_LINEAR if name in ["idle","walk","wade","pan_swirl"] else Animation.LOOP_NONE
+		animation.loop_mode = Animation.LOOP_LINEAR if name in ["idle","walk","wade","pan_swirl","fish_idle","fish_wait","fight"] else Animation.LOOP_NONE
 	for name in SWIRL_VARIANTS.slice(1):
 		player.get_animation(name).length = 2.0
 		player.get_animation(name).loop_mode = Animation.LOOP_LINEAR
@@ -62,8 +71,13 @@ func _ready() -> void:
 			node.set_surface_override_material(s,m)
 			wet_materials.append(m)
 	pan_attachment = _attachment("PanSocket","pan_socket")
-	var physical_pan: Node3D = preload("res://assets/miner/pan.glb").instantiate()
+	physical_pan = preload("res://assets/miner/pan.glb").instantiate()
 	pan_attachment.add_child(physical_pan)
+	handline_attachment=_attachment("HandlineSocket","LeftHand")
+	right_hand=_attachment("FishSocket","RightHand")
+	handline=preload("res://assets/miner/handline.glb").instantiate()
+	handline_attachment.add_child(handline)
+	handline.hide()
 	sack_attachment = _attachment("SackSocket","Hips")
 	sack_visual = preload("res://assets/miner/sack.glb").instantiate()
 	sack_attachment.add_child(sack_visual)
@@ -103,8 +117,15 @@ func _build_tree() -> void:
 		clip.animation = name
 		pan_machine.add_node(name,clip)
 	root_machine.add_node("pan",pan_machine)
-	for a in ["idle","walk","wade","pan"]:
-		for b in ["idle","walk","wade","pan"]:
+	for group in ["fishing","camp"]:
+		var machine := AnimationNodeStateMachine.new()
+		for name in FISH_CLIPS if group=="fishing" else CAMP_CLIPS:
+			var clip := AnimationNodeAnimation.new()
+			clip.animation=name
+			machine.add_node(name,clip)
+		root_machine.add_node(group,machine)
+	for a in ["idle","walk","wade","pan","fishing","camp"]:
+		for b in ["idle","walk","wade","pan","fishing","camp"]:
 			if a==b: continue
 			var transition := AnimationNodeStateMachineTransition.new()
 			transition.xfade_time = .15
@@ -153,15 +174,18 @@ func _physics_process(delta: float) -> void:
 	if active_pan=="pan_exit":
 		exit_elapsed+=delta
 		if exit_elapsed>=1.0: active_pan=""
-	if active_pan.is_empty():
+	if not activity_clip.is_empty():
+		tree.advance(delta*activity_rate)
+	elif active_pan.is_empty():
 		var next := "idle" if speed<.06 else "wade" if depth>.05 else "walk"
 		if playback.get_current_node()!=next: playback.travel(next)
 		locomotion_rate = 1.0 if next=="idle" else speed/(1.05 if next=="wade" else 2.4)
 		tree.advance(delta*locomotion_rate)
 	else:
-		tree.advance(delta)
+		tree.advance(delta*walker.panner.speed_scale)
 	_update_shin_foam(depth)
 	$Pan.global_transform = pan_attachment.global_transform
+	if is_instance_valid(eating_pan) and eating_pan.visible: eating_pan.global_rotation=Vector3.ZERO
 	# The fabric poke hangs under gravity rather than rotating with pelvic bend.
 	sack_time += delta*locomotion_rate
 	sack_sway = move_toward(sack_sway,minf(speed/2.4,1.0),delta*3.0)
@@ -182,6 +206,31 @@ func _sack_changed(_ounces: float) -> void:
 	var stage: int = get_node("/root/Sack").stage()
 	sack_visual.scale = Vector3(.65+.12*stage,.85+.075*stage,.28+.20*stage)
 	sack_material.set_shader_parameter("growth",sack_visual.scale)
+
+func play_activity(clip: String) -> void:
+	activity_clip=clip
+	activity_rate=1.0
+	var group := "fishing" if clip in FISH_CLIPS else "camp"
+	playback.start(group,true)
+	var machine: AnimationNodeStateMachinePlayback=tree.get("parameters/%s/playback" % group)
+	machine.start(clip,true)
+	physical_pan.hide()
+	handline.visible=group=="fishing"
+	if clip=="eat" and eating_pan==null:
+		var prop: MeshInstance3D=walker.get_parent().get_node("Camp").props.Skillet.get_child(0)
+		eating_pan=MeshInstance3D.new();eating_pan.mesh=prop.mesh
+		handline_attachment.add_child(eating_pan)
+		eating_pan.position=Vector3(0,.015,0)
+	if eating_pan: eating_pan.visible=clip=="eat"
+	tree.advance(0)
+
+func stop_activity() -> void:
+	activity_clip=""
+	active_pan=""
+	handline.hide()
+	physical_pan.show()
+	if eating_pan: eating_pan.hide()
+	playback.start("idle",true)
 
 func _splash(side: String) -> void:
 	var foot := _attachment(side+"SplashSocket",side+"Foot")
