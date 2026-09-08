@@ -1,6 +1,7 @@
 extends Node3D
 ## Visual-only rig. The parent remains the original capsule-based controller.
 const CLIPS := {"idle":4.0,"walk":1.0,"wade":1.2,"pan_enter":2.0,"pan_swirl":2.0,"pan_wash":1.5,"pan_lift":1.5,"pan_exit":1.0}
+const SWIRL_VARIANTS := ["pan_swirl", "pan_swirl_2", "pan_swirl_3"]
 var miner: Node3D
 var skeleton: Skeleton3D
 var player: AnimationPlayer
@@ -36,16 +37,24 @@ func _ready() -> void:
 		var animation := player.get_animation(name)
 		animation.length = CLIPS[name]
 		animation.loop_mode = Animation.LOOP_LINEAR if name in ["idle","walk","wade","pan_swirl"] else Animation.LOOP_NONE
+	for name in SWIRL_VARIANTS.slice(1):
+		player.get_animation(name).length = 2.0
+		player.get_animation(name).loop_mode = Animation.LOOP_LINEAR
 	for node in miner.find_children("*","MeshInstance3D",true,false):
+		node.lod_bias = 8.0
 		for s in node.mesh.get_surface_count():
 			var label: String = ["Linen","Wool","Leather","Skin","Felt","Beard","Suspenders"][s]
 			var m := ShaderMaterial.new()
 			m.shader = preload("res://shaders/miner.gdshader")
 			m.set_shader_parameter("body_albedo",preload("res://assets/miner/body_albedo.png"))
 			m.set_shader_parameter("body_normal",preload("res://assets/miner/body_normal.png"))
+			if label=="Beard":
+				m.set_shader_parameter("body_albedo",preload("res://assets/miner/beard_albedo.png"))
+				m.set_shader_parameter("body_normal",preload("res://assets/miner/beard_normal.png"))
 			m.set_shader_parameter("wettable",label in ["Wool","Leather"])
+			m.set_shader_parameter("normal_strength",.12 if label=="Skin" else .65)
 			m.set_shader_parameter("worn_knees",label=="Wool")
-			m.set_shader_parameter("textured",not label in ["Felt","Beard","Suspenders"])
+			m.set_shader_parameter("textured",not label in ["Felt","Suspenders"])
 			m.set_shader_parameter("tint",Color(.12,.09,.056) if label=="Felt" else Color(.085,.045,.018) if label=="Beard" else Color(.15,.10,.054))
 			node.set_surface_override_material(s,m)
 			wet_materials.append(m)
@@ -55,7 +64,7 @@ func _ready() -> void:
 	sack_attachment = _attachment("SackSocket","Hips")
 	sack_visual = preload("res://assets/miner/sack.glb").instantiate()
 	sack_attachment.add_child(sack_visual)
-	sack_visual.position = Vector3(.195,.025,.015)
+	sack_visual.position = Vector3(.24,.025,-.14)
 	get_node("/root/Sack").changed.connect(_sack_changed)
 	_sack_changed(0)
 	_build_tree()
@@ -82,7 +91,7 @@ func _build_tree() -> void:
 		clip.animation = name
 		root_machine.add_node(name,clip)
 	var pan_machine := AnimationNodeStateMachine.new()
-	for name in ["pan_enter","pan_swirl","pan_wash","pan_lift","pan_exit"]:
+	for name in ["pan_enter","pan_swirl","pan_swirl_2","pan_swirl_3","pan_wash","pan_lift","pan_exit"]:
 		var clip := AnimationNodeAnimation.new()
 		clip.animation = name
 		pan_machine.add_node(name,clip)
@@ -106,11 +115,11 @@ func turn_to(yaw: float) -> void:
 	turn_target = yaw
 	turn_elapsed = 0
 
-func play_pan(clip: String) -> void:
+func play_pan(clip: String, cycle := 0) -> void:
 	active_pan = clip
 	exit_elapsed = 0
 	playback.start("pan",true)
-	pan_playback.start(clip,true)
+	pan_playback.start(SWIRL_VARIANTS[clampi(cycle,0,2)] if clip=="pan_swirl" else clip,true)
 	tree.advance(0)
 
 func _physics_process(delta: float) -> void:

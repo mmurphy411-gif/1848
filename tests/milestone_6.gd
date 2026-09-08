@@ -12,7 +12,7 @@ func place(w: CharacterBody3D,x: float,z: float) -> void:
 	w.position=Vector3(x,Layout.height_at(x,z)+.01,z)
 	w.velocity=Vector3.ZERO
 func _run() -> void:
-	for pair in [["miner",8000,15000],["pan",1,1499],["sack",1,799]]:
+	for pair in [["miner",8000,20000],["pan",1,1499],["sack",1,799]]:
 		var path: String="res://assets/miner/%s.glb" % pair[0]
 		check(FileAccess.file_exists(path),path+" exists")
 		var mesh:=Assets.mesh(path)

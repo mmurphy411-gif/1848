@@ -22,4 +22,8 @@ func _run() -> void:
 	camera.attributes=claim.get_node("Daylight").camera_attributes;camera.current=true
 	for i in 240:await process_frame
 	ok=await Lighting._sample(self,"M6 real-time overview") and ok
+	# Release scene resources before shutdown. The remaining reflection-atlas
+	# RID warning is isolated in reflection_cleanup_probe.gd (engine issue 122498).
+	claim.queue_free()
+	for i in 8: await process_frame
 	quit(0 if ok else 1)

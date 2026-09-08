@@ -62,18 +62,6 @@ func _ready() -> void:
 		var species := "ponderosa" if p.y>45 or (far_bank and rng.randf()<.55) else ("incense_cedar" if rng.randf()<.5 else "douglas_fir")
 		placements[species].append(_transform(p, rng.randf_range(.8,1.2), .06))
 		count += 1
-	# Preserve the full seeded stream and the foreground forest. Spend the
-	# allowed 300-conifer density near the claim; retain a sample farther out
-	# for the distant skyline rather than deleting half of every local stand.
-	for species in ["ponderosa","incense_cedar","douglas_fir"]:
-		var forest: Array = placements[species]
-		forest.sort_custom(func(a: Transform3D,b: Transform3D) -> bool: return Vector2(a.origin.x,a.origin.z).length_squared()<Vector2(b.origin.x,b.origin.z).length_squared())
-		var target: int = forest.size()/2
-		var close_count: int = target*2/3
-		var retained: Array = forest.slice(0,close_count)
-		for i in target-close_count:
-			retained.append(forest[close_count+i*(forest.size()-close_count)/(target-close_count)])
-		placements[species] = retained
 	# Broad spacing leaves the playable shore, spawn and panning lanes open.
 	for x in [-25.0,-13.0,0.0,13.0,25.0]:
 		for fraction in [.60,.91]:
@@ -98,7 +86,19 @@ func _ready() -> void:
 	var canopies := PackedVector4Array()
 	for oak in placements.black_oak: canopies.append(Vector4(oak.origin.x,oak.origin.z,0,0))
 	Assets.terrain().set_shader_parameter("oak_canopies",canopies)
-	for i in SPECIES.size(): _instances(SPECIES[i], Assets.plant(SPECIES[i],BARK[i]),placements[SPECIES[i]])
+	for i in SPECIES.size():
+		var species: String = SPECIES[i]
+		var near_trees: Array = []
+		var far_trees: Array = []
+		for transform in placements[species]:
+			if i<3 and Vector2(transform.origin.x,transform.origin.z).length()>60.0 and not "--full-forest" in OS.get_cmdline_user_args():
+				far_trees.append(transform)
+			else: near_trees.append(transform)
+		# Keep the canonical full instance capacity for earlier placement tests;
+		# visible_instance_count draws only the prefix assigned the full model.
+		var group := _instances(species,Assets.plant(species,BARK[i]),near_trees+far_trees)
+		group.multimesh.visible_instance_count=near_trees.size()
+		if not far_trees.is_empty():_instances(species+"_distant",Assets.plant(species,BARK[i],true,true),far_trees)
 	for i in 3:
 		var key := "cobble_%02d" % (i+1)
 		placements[key] = []
@@ -136,7 +136,7 @@ func _transform(p: Vector3, scale_value: float, tilt := 0.0) -> Transform3D:
 	if tilt>0: basis = Basis(Quaternion(Vector3.UP,Vector3.UP.lerp(normal_at(p.x,p.z),tilt).normalized()))*basis
 	return Transform3D(basis.scaled(Vector3.ONE*scale_value),p)
 
-func _instances(label: String, mesh: ArrayMesh, transforms: Array, distance_limit := 0.0) -> void:
+func _instances(label: String, mesh: ArrayMesh, transforms: Array, distance_limit := 0.0) -> MultiMeshInstance3D:
 	var group := MultiMeshInstance3D.new()
 	group.name = label
 	var multi := MultiMesh.new()
@@ -145,8 +145,13 @@ func _instances(label: String, mesh: ArrayMesh, transforms: Array, distance_limi
 	multi.instance_count = transforms.size()
 	for i in transforms.size(): multi.set_instance_transform(i,transforms[i])
 	group.multimesh = multi
+	group.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	if label in SPECIES or label.ends_with("_distant"):
+		group.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_DOUBLE_SIDED
+	if label=="black_oak": group.lod_bias=4.0
 	group.gi_mode = GeometryInstance3D.GI_MODE_STATIC
 	group.visibility_range_end = distance_limit
 	group.visibility_range_end_margin = 5 if distance_limit>0 else 0
 	group.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
 	add_child(group)
+	return group

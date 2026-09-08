@@ -489,3 +489,263 @@ not a hero view.
 | foliage atlas review | Rounded oak lobes improve the spray, but conifer needle spacing still feels combed. |
 | body atlas review | Wool and linen folds bake cleanly, but repeated swatches limit garment-specific wear. |
 | pan scuff atlas review | Scratches interrupt the steel, but their similar width needs more age variation. |
+
+## Milestone 6 notes round
+
+Implementation and review evidence are in the working tree. This round is **not
+accepted as complete**: the specified nearest-boulder oak-shadow gate still
+fails, the engine reports a reflection-atlas texture leak at shutdown, and human
+review is outstanding. The completion commit is withheld until those acceptance
+items are resolved. No day clock, sound, claim-layout values, gold map, pan-result
+rules, boundary physics or walker capsule changed.
+
+### Repository rewrite
+
+Before the rewrite, a full non-hardlinked backup was made at
+`C:\Users\mmurp\1848-m6-backup`, including the notes file. The prescribed
+`git lfs migrate import --everything --include="*.png,*.glb,*.blend,*.exr"`
+rewrote all 14 commits. `Complete milestone 6 miner` is now
+`cee03a0e8ff020750d434b2529e41c8cb2f84725` (formerly
+`d6ae1c1b07ceefbd4b3014023ff4c0c591278583`).
+
+All 88 reachable historical binary blobs were checked for LFS pointer contents,
+and `git lfs fsck` passed. A fresh clone at `C:\Users\mmurp\1848-m6-verify`
+imported successfully and passed all six original milestone suites. Only after
+that verification were the local reflogs expired and unreachable old blobs
+pruned. `.git` fell from **220,001,489 to 124,481,127 bytes**, including the
+local LFS object store; the ordinary Git pack is approximately 179 KB. Those are
+the immediate migration measurements, before this round's newly built assets.
+Evidence is in `artifacts/notes-6-lfs-history.json` and the
+`notes-6-clone-suite-*` logs. There is no remote to force-push.
+
+### Miner, motion and camera
+
+The procedural fallback is documented in `blender/README.md`; no external art
+was introduced. The miner is **13,812 triangles**, below the new 20,000 ceiling.
+Skin has smooth normals and reduced normal-map strength, the shirt has fuller
+sleeves and modeled gathers, the brim is wider, and the beard has shaped volume
+and separate strand maps. Each hand has five separated three-segment fingers,
+a palm aligned to the finger row and a thumb web. The poke has a neck tie and
+folds. Body textures remain 1024 pixels.
+
+| Rig measure | Before notes | After notes |
+| --- | --- | --- |
+| Swirl hip height above soles | 0.40 m | 0.52 m |
+| Torso pitch from vertical | 72 degrees | 43 degrees |
+| Head pitch from vertical | Followed torso | 63 degrees |
+| Knee separation | 0.31 m | 0.601 m |
+| Swirl circle radii | 0.06 m | 0.102 / 0.110 / 0.118 m |
+| Lowest rim over the swirl cycles | Insufficient controlled dip | -0.044 to -0.029 m |
+| Minimum highest rim point | Not recorded | +0.054 m |
+| Shoulder travel per cycle | Not recorded | 0.073–0.074 m |
+| Cycle 2 versus cycle 1 path RMS | Identical loops | 0.0244 m |
+| Maximum fingertip distance from rim | Not recorded | 0.0196 m |
+
+The three cycles have separate phase offsets and radii, with three brief shake
+impulses per cycle. The gameplay camera blends over 0.6 seconds to 2.2 m left
+of the hips and 0.4 m above them, aiming at the pan. A sphere sweep includes
+terrain and boulders and mirrors the shot when the other side is clearer.
+Mouse and stick orbit are held until the return blend finishes. SHOWING uses
+the ruled 0.55 m forward / 0.35 m above the pan opening and a 38-degree vertical
+field of view. The walker is excluded from the sweep, as in the original boom.
+PANNING retains the ordinary 65-degree field of view so the head and working
+pose fit above the low pan aim; the earlier 45-degree trial cropped the head.
+
+The fixed side review camera is 2 m left at crouched hip height, and the front
+three-quarter camera is 1.5 m away at 30 degrees above the pan. The side camera
+uses a 36 mm gate with a 50 mm focal length (39.6-degree vertical field of view)
+to keep the working crouch in frame in Godot's vertical-FOV convention. This
+is a review framing convention, not a standard 24 mm-high full-frame gate.
+
+The original 2 m composition ray conflicts with the newly required cameras
+only 0.65–1.5 m from their subject: it hits the invisible walker or ground behind
+the pan. Following the brief's contradiction rule, close views exclude the
+walker's capsule and test the ray up to the intended subject; ordinary views
+retain the original 2 m test. The physical camera sphere sweep still checks
+obstructions throughout gameplay transitions. Review cameras exist only in the
+capture harness.
+
+### Forest, materials and validation
+
+All **600 conifers** are restored at the original placements. Instances beyond
+60 m use species-specific **416-triangle** crown clusters with the same atlas.
+The full models and their original placement arrays remain available for the
+unchanged earlier tests. `--full-forest` selects full models for the benchmark
+control. The initial 600-tree overview measured 5.76 ms p95; the first distant
+variant pass measured 3.53 ms p95. Final measurements follow below.
+
+| Final 1080p RTX 5080 run, 600 warmed frames | Full models median / p95 | Distant variants median / p95 |
+| --- | --- | --- |
+| Downstream | 3.56 / 3.84 ms | 2.53 / 2.79 ms |
+| Moving wade with splashes | 3.79 / 4.08 ms | 2.74 / 3.06 ms |
+| Overview | 4.94 / 5.28 ms | 3.02 / 3.39 ms |
+
+Both final configurations fit 5.5 ms, and distant models provide additional
+headroom. The 6.0 ms overview exception is not used. The final comparison uses
+the same final geometry and materials in both runs; the older 5.76/3.53 ms
+numbers above describe the initial budget investigation. Logs are
+`notes-6-perf-{full,distant}-final.log` in `artifacts/`.
+
+Oak trunk and first-order/second-order limbs are tapered tubes. An opaque bark
+shader fixes the blue transparent limb artifacts; leaf surfaces alone use the
+cutout shader. Tree MultiMeshes explicitly cast double-sided shadows. Interior
+leaf coverage is 45.9% in the under-canopy view. Gravel uses warm, low-saturation
+stones, and all sand transitions span at least 1.7 m with coarse and fine edge
+noise. The bake emits an exact stone mask for the screenshot probe.
+
+The first full graphical regression exposed two material interactions: the
+lighter stone palette flattened the old gravel-detail sample, and the brighter
+riverbed reduced the contrast of the shin foam. The fine gravel matrix was
+darkened while retaining pale stone faces, and submerged gravel now retains
+wet reflectance instead of reverting to dry reflectance below 40 cm. The
+water shader and probe thresholds are unchanged.
+
+The foliage antialiasing edge is 0.25, below the 0.38 scissor threshold as
+required by [Godot's spatial shader reference](https://docs.godotengine.org/en/4.7/tutorials/shaders/shader_reference/spatial_shader.html).
+
+The still-image material-ID probes measure SHOWING pan interior and contents at
+23.5%, skin at 12.1%, and the largest material (terrain) at 39.7%. Gravel has
+95.2% of identified stone pixels in the required luminance interval, and the
+longest near-0.5 sand-transition run is 169 pixels. All subject-minimum gates
+and still-image composition guards pass. These measurements do not constitute
+human approval of the model or pose.
+
+The oak-shadow gate remains failed: the geometrically nearest visible boulder
+is `Boulder02`, and the leaf-shadow control changes only 47 pixels there, with
+0.7% footprint density. The prominent oak silhouette in this standing view
+falls on the canyon wall; the nearest world-space boulder is outside the frame.
+The probe was not moved to the wall to manufacture a pass. A user ruling on
+the intended receiver is pending. The fixed camera and scene placements remain
+unchanged.
+
+`tests/reflection_cleanup_probe.gd` isolates the shutdown warning to one
+ReflectionProbe: the minimal scene leaks seven texture RIDs with the probe and
+none without it, even after freeing the scene and processing extra frames.
+This matches [Godot issue 122498](https://github.com/godotengine/godot/issues/122498),
+which identifies unfreed reflection-atlas color views and their parent texture.
+The application cleanup is explicit, but that does **not** fix the engine leak.
+The reflection feature and warning have not been disabled to hide it.
+
+### Notes render review
+
+The final stills were opened together and the SHOWING shot was also inspected
+full size. The side animation must be reviewed first, followed by SHOWING,
+standing/side, gravel and oak-under. Captures, frame manifests, contact sheets,
+animated previews, masks and logs remain in ignored `artifacts/`.
+
+| Render | Demanding art-director note |
+| --- | --- |
+| pan-side-swirl | The crouch and low pan are readable, but the sleeves still have a broad angular shoulder silhouette. |
+| pan-front-swirl | The larger circular sweep is measurable, but the two hands retain a rigidly matched pose. |
+| pan-front-wash | The tilt exposes the crease clearly, though the arm lines are still stiff and symmetrical. |
+| pan-showing | The gold and bowl are now the subject, but the near wrists remain bulky and the beard is only a narrow strip under the hat. |
+| hands | Separate curled fingers read at the rim, but the finger-to-palm transitions and thumb anatomy need human scrutiny. |
+| miner-standing | The wider hat helps the silhouette, while the requested boulder canopy shadow is still absent from this fixed view. |
+| standing-no-leaf-shadows | The control preserves the branches, but its tiny change on the target boulder cannot support a canopy-shadow acceptance claim. |
+| miner-side | The beard breaks the jaw and the pan hangs vertically, but the torso remains rather straight-sided. |
+| sack-stage-3 | The tie and gathered neck are visible from the left rear, though the bag's large folds remain simple. |
+| gravel-close | The colors read as warmer river stones and the sand edge wanders, but the repeated rounded stone faces remain conspicuous. |
+| oak-under | Solid brown limbs replace the ribbons and foliage fills the crown, but the limb forks still look angular. |
+| overview | The restored forest fills both slopes, while repeated vertical trunks and canyon benches still reveal the procedural construction. |
+| material-ID and gravel-mix controls | Subject masks align with the beauty views, but opaque water is used only for diagnostics and must not be mistaken for final shading. |
+
+Reproduce with Godot `--headless --path . --fixed-fps 60 --script
+tests/milestone_6_notes.gd`; run the same suite graphically to check actual
+MultiMesh transform readback. The dummy headless renderer returns identity
+transforms, so headless mode checks distant allocation against canonical
+placements instead. Run `tests/miner_notes_capture.gd` graphically at 1920x1080
+with `--fixed-fps 60`, then `python tests/probe_miner_notes.py` and
+`python tests/build_pan_review.py`. Run `tests/miner_performance.gd` without a
+fixed FPS for real-time performance. The original M2 labels alone are corrected;
+M5's count is exactly 600 and M6's ceiling is 20,000, as explicitly permitted.
+
+The complete M1–5 graphical regression passes after the submerged-gravel fix
+(`artifacts/notes-6-regression-final.log`): contact foam 0.621 versus nearby
+0.456, gravel sample deviation 0.054, all water/material/guard/frame gates pass.
+All seven final headless suites pass, and the graphical notes rig suite also
+passes. The 24 regression renders were reopened in four contact sheets:
+
+| Regression render | Current art-director note |
+| --- | --- |
+| M1 player | The hanging pan reads, but the distant river exit remains abrupt. |
+| M1 overview | The restored trees fill the old diagnostic view so densely that the claim itself is hard to read. |
+| M2 pan | The bowl is prominent, but the hands still look too mechanical. |
+| M2 density | The grid is legible, though its lowest rows are obscured by oak crowns. |
+| M3 downstream | The sunlight gives the miner scale, but the empty channel exit remains conspicuous. |
+| M3 upstream | The oak trunks frame the path, while long canyon bands remain repetitive. |
+| M3 boulders | The boulders have scale, but the nearest rock competes with the miner. |
+| M3 noon | The materials separate clearly, but noon exposes the blocky shoulder joins. |
+| M3 overview | The tree count is restored, though the canyon benches remain overly regular. |
+| M4 shore | The material transition is softer, but the left foreground boulder still dominates. |
+| M4 glint | The bright glint reads, while the surrounding horizon remains empty. |
+| M4 top | The wet bed is clearer and darker, but the broad channel bands remain regular. |
+| M4 wade | Contact foam separates from the wet bed, though the huge neighboring boulder overwhelms the test view. |
+| M4 overview | The channel is clear, but the opposite shore still looks unnaturally straight. |
+| M4 shadow-color | Cool shadows remain readable, while the rock speckle is too uniformly distributed. |
+| M4 noon-water | Water depth reads, but the bright dry bar still competes with the foam. |
+| M5 gravel-close | Warm stone faces keep their local contrast, but their rounded relief remains repetitive. |
+| M5 treeline | Bark is solid and the canopy casts detail, though the conifer cards still reveal repeated fans. |
+| M5 downstream | The rear miner silhouette is clearer, but the shirt remains straight-sided. |
+| M5 upstream | The oak branches have volume, though the visible wall shadow is still mostly branches. |
+| M5 boulder-close | The boulder's outline works, but its mineral noise needs a stronger hierarchy. |
+| M5 oak | The old angle looks past the crown, so it remains a poor view for judging canopy density. |
+| M5 overview | The full forest fills the slopes, but trunk spacing still reads as a generated distribution. |
+| M5 noon | The bar palette is coherent, while the broad sand ripples still repeat too evenly. |
+
+The final gravel calibration passes both the notes brightness gate (95.2%) and
+the original M6 local-detail gate (0.057 deviation). The final water-only run
+and original M6 still harness pass; the latter also checks the submerged pan
+and all five torso-shadow samples. Its legacy sack filename now uses the same
+left-rear framing as the notes harness. Logs are `notes-6-water-last.log` and
+`notes-6-original-capture.log`. The old M6 views were reopened as well:
+
+| Original M6 render | Current art-director note |
+| --- | --- |
+| downstream | The fuller sleeves improve the rear outline, but the distant river exit is still abrupt. |
+| upstream | The sack is readable at the belt, while the broad canyon bands remain repetitive. |
+| miner-standing | The carried pan hangs convincingly, but the shoulders remain angular. |
+| standing-shadow-baseline | Torso-shadow removal is measurable, though the gravel texture distracts from the comparison. |
+| miner-walk | The stride separates the feet, but the torso still looks rigid. |
+| miner-wade | Wet boots and foam read, while the small splash details are hard to judge at this distance. |
+| pan-swirl | The pan reaches the water, though this old opposite-side angle is weaker than the new side review. |
+| pan-lift | The bowl dominates appropriately, but wrist bulk and thumb anatomy still need work. |
+| sack-stage-3 | The left-rear close view exposes the tie, but the poke's folds are still broad and simple. |
+| gravel-close | The brightness and relief gates both pass, but smooth pebble domes remain too repetitive. |
+| oak-under | The old view looks past the crown, so use the new notes oak-under shot for canopy review. |
+
+### Ordered animation review
+
+The player and fixed-side recordings each contain **144 1080p frames at 12 fps**;
+the front review contains **108 frames** covering swirl, wash and lift. Frame
+manifests validate timestamps and dimensions. All 17 contact sheets were
+opened in order, with full-size checks of the working pose and lift. Animated
+previews are `artifacts/notes-6-{player,side,front}-preview.webp`; original PNGs
+are in `pan-sequence/`, `pan-sequence-side/`, and `pan-sequence-front/`.
+The final player recording includes the last gravel calibration; side/front
+recordings precede that small stone-face brightness adjustment but use the
+same final character, animation and review cameras. The stills use final
+materials throughout.
+
+| Review sheet | Demanding art-director note |
+| --- | --- |
+| side 01, entry | The pan rotates from carry to working grip, but the fixed low framing crops the head during early entry. |
+| side 02, first swirl | The circle is now visible against the planted boots, but shoulder movement could feel less mechanically coupled. |
+| side 03, second swirl | The radius and phase change are apparent, though the central torso remains stiff. |
+| side 04, third swirl | The larger sweep breaks the repeated path, but the grip is still too symmetrical. |
+| side 05, wash | The drain angle reads clearly, while the elbows feel locked into a repeated stance. |
+| side 06, lift and hold | The pan rises to the face without moving the feet, but the hands become visibly mechanical as they rise. |
+| player 01, entry | The side dolly reveals the action, but the hat grazes the top edge during the descent. |
+| player 02, first swirl | The whole working pose is visible, though the water glint competes with the pan. |
+| player 03, second swirl | The sweep stays readable, but the broad sleeve shape hides some elbow articulation. |
+| player 04, third swirl | The larger final cycle is visible, though the dark pan still competes with the boot beside it. |
+| player 05, wash | The pan tilt is readable, but this angle gives less crease detail than the front review. |
+| player 06, lift and SHOWING | The close-up transition ends on the gold, while the near wrists remain too prominent. |
+| front 01, first swirl | Water crosses only the low rim and the bowl stays legible, though the hands are posed too evenly. |
+| front 02, second swirl | The different path is visible against the gravel, but the shoulders are outside this pan-focused frame. |
+| front 03, third swirl | The pan's wider circle reads, though the repeated finger curl remains conspicuous. |
+| front 04, wash | The crease is exposed as the pan drains, but the matched arm lines look stiff. |
+| front 05, lift | The rising pan and wide brim are clear, while the hands still look like separate mechanical pieces. |
+
+The hand/forearm anatomy and early-entry framing remain explicit visual review
+concerns, even with all geometric grip and camera tests passing. This is the
+human review required by the notes, not a claim of final visual acceptance.

@@ -66,9 +66,9 @@ func _run() -> void:
 		_check(panner.state == panner.State.PANNING, "Peak is accessible for pan %d" % cycle)
 		var amount: float = panner.result.get("ounces", 0.0)
 		await _frames(int(panner.PAN_DURATION * 60) - 2)
-		_check(panner.state == panner.State.PANNING, "Pan lasts the full six seconds (%d)" % cycle)
+		_check(panner.state == panner.State.PANNING, "Pan lasts the full configured duration (%d)" % cycle)
 		await _frames(40)
-		_check(panner.state == panner.State.SHOWING and rig.focused, "Six-second pan enters focused SHOWING (%d)" % cycle)
+		_check(panner.state == panner.State.SHOWING and rig.focused, "Completed pan enters focused SHOWING (%d)" % cycle)
 		var camera: Camera3D = rig.get_node("SpringArm3D/Camera3D")
 		_check(camera.global_position.distance_to(panner.pan.global_position) < 1.0, "Camera dollies within 1 m of the pan (%d)" % cycle)
 		var yaw: float = rig.yaw

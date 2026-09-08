@@ -63,3 +63,30 @@ Linen, Wool, Leather, Skin, Felt, Beard, Suspenders. The miner exporter includes
 skin weights and NLA animation; the static-asset export policy above applies only
 to the other builders. Pan and sack retain their exported materials. All binary
 sources and outputs are tracked through Git LFS.
+
+## Milestone 6 notes regeneration
+
+No suitable CC0 humanoid base mesh was available offline, so this round uses the
+permitted procedural sculpt pass. No external base mesh or third-party art was
+introduced. `build_miner.py` adds fuller sleeves, cuff and belt gathers, a broader
+brim, a shaped beard with separate 512-pixel strand albedo/normal maps, smooth
+skin, three-segment separated fingers, a connected thumb web and a tied poke.
+The body atlas remains 1024 pixels. Palm width follows the finger row in the
+rest mesh; the thumb web blends between the hand and thumb bones.
+
+`build_miner_animation.py` now exports ten tracks: the original eight plus two
+distinct swirl variants. The hips remain 0.52 m above the soles during swirl,
+torso/head pitches are 43/63 degrees, and the three pan radii are
+0.102/0.110/0.118 m. The pan hangs by its rim beside the leg when carried.
+
+`build_trees.py` retains the full species and builds three distant conifers at
+416 triangles each, sharing the original atlases. The oak's first two limb
+orders are tubes; its bark uses an opaque runtime shader and its interior leaf
+cards use the alpha-to-coverage foliage shader. `build_gravel.py` emits an
+additional exact stone-population mask for render validation.
+
+Regenerate with the same Blender commands above, then import in Godot. The
+notes review harness is `tests/miner_notes_capture.gd`; `--stills-only` and
+`--sequences-only` select its two capture jobs. Run
+`python tests/probe_miner_notes.py` for still-image gates and
+`python tests/build_pan_review.py` for contact sheets and animated previews.

@@ -92,7 +92,7 @@ func _run() -> void:
 			legal = legal and river.depth_at(p)<=0 and absf(p.z-Layout.shore_z(p.x))>=(1.499 if key.begins_with("cobble") else 11.999) and Vegetation.normal_at(p.x,p.z).y>=cos(deg_to_rad(45))
 			if key.begins_with("cobble"): legal=legal and Vegetation.clear_of_boulders(p)
 	_check(legal,"Every instance respects depth, shore, slope and boulder exclusions")
-	_check(conifers>=300 and conifers<=1200,"Conifer count %d" % conifers)
+	_check(conifers==600,"Conifer count %d" % conifers)
 	_check(cobbles>=400 and cobbles<=900,"Cobble count %d" % cobbles)
 	var cards: int = vegetation.placements.grass.size()*7+(vegetation.placements.lupine.size()+vegetation.placements.poppy.size()+vegetation.placements.yarrow.size())*21
 	_check(cards<3000,"Ground cover %d cards below 3000" % cards)

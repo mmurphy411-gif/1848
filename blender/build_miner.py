@@ -71,17 +71,44 @@ def bake_body():
 
 materials=bake_body()
 materials += [material('Felt',(.12,.09,.056)),material('Beard',(.085,.045,.018)),material('Suspenders',(.15,.10,.054)),material('Buckle',(.25,.22,.16))]
+# Bake a strand-height field to the beard's own UVs. Its shaped mesh supplies
+# the jaw silhouette; these fine strands only describe the hair surface.
+import numpy as np
+from png_helpers import png
+yy,xx=np.mgrid[:512,:512]/512
+strand=np.sin((xx+.013*np.sin(yy*15+xx*7))*math.tau*110)
+strand+=.45*np.sin(xx*math.tau*193+yy*8)+.25*np.sin(xx*math.tau*47-yy*11)
+hair_height=strand*.0012
+dx=(np.roll(hair_height,-1,1)-np.roll(hair_height,1,1))*256
+dy=(np.roll(hair_height,-1,0)-np.roll(hair_height,1,0))*256
+hair_normal=np.stack([-dx,-dy,np.ones_like(dx)],axis=2);hair_normal/=np.linalg.norm(hair_normal,axis=2)[:,:,None]
+hair_value=.29+.035*strand+.045*yy
+png(OUT/'beard_albedo.png',np.stack([hair_value,hair_value*.73,hair_value*.53],axis=2)*255)
+png(OUT/'beard_normal.png',(hair_normal*.5+.5)*255)
+beard_material=materials[5];p=beard_material.node_tree.nodes.get('Principled BSDF')
+for suffix in ['albedo','normal']:
+    tex=beard_material.node_tree.nodes.new('ShaderNodeTexImage');tex.image=bpy.data.images.load(str(OUT/('beard_'+suffix+'.png')))
+    if suffix=='albedo':beard_material.node_tree.links.new(tex.outputs['Color'],p.inputs['Base Color'])
+    else:
+        tex.image.colorspace_settings.name='Non-Color';normal=beard_material.node_tree.nodes.new('ShaderNodeNormalMap')
+        beard_material.node_tree.links.new(tex.outputs['Color'],normal.inputs['Color']);beard_material.node_tree.links.new(normal.outputs[0],p.inputs['Normal'])
 # Rig rest joints; arms relaxed slightly away from the body.
 joints={'Hips':((0,0,.94),(0,0,1.06),None),'Spine':((0,0,1.06),(0,0,1.24),'Hips'),'Chest':((0,0,1.24),(0,0,1.43),'Spine'),'Neck':((0,0,1.43),(0,0,1.51),'Chest'),'Head':((0,0,1.51),(0,0,1.69),'Neck')}
 for side,sign in [('Left',1),('Right',-1)]:
     hip=(sign*.105,0,.94);knee=(sign*.11,-.022,.53);ankle=(sign*.11,0,.11)
-    shoulder=(sign*.21,0,1.40);elbow=(sign*.34,0,1.12);wrist=(sign*.42,-.015,.875)
+    shoulder=(sign*.21,0,1.40);elbow=(sign*.35,0,1.08);wrist=(sign*.45,-.015,.765)
     joints[side+'Shoulder']=((0,0,1.4),shoulder,'Chest')
-    joints[side+'UpperArm']=(shoulder,elbow,side+'Shoulder');joints[side+'LowerArm']=(elbow,wrist,side+'UpperArm');joints[side+'Hand']=(wrist,(sign*.445,-.01,.79),side+'LowerArm')
+    joints[side+'UpperArm']=(shoulder,elbow,side+'Shoulder');joints[side+'LowerArm']=(elbow,wrist,side+'UpperArm');joints[side+'Hand']=(wrist,tuple(Vector(wrist)+Vector((sign*.025,0,-.085))),side+'LowerArm')
     joints[side+'UpperLeg']=(hip,knee,'Hips');joints[side+'LowerLeg']=(knee,ankle,side+'UpperLeg');joints[side+'Foot']=(ankle,(sign*.11,-.17,.07),side+'LowerLeg')
     for f in range(5):
         start=Vector(wrist)+Vector((sign*(.018+f*.01),-.035+f*.017,-.07 if f else -.02))
-        joints[side+['Thumb','Index','Middle','Ring','Little'][f]+'Proximal']=(tuple(start),tuple(start+Vector((sign*.006,0,-(.05 if f else .038)))),side+'Hand')
+        prefix=side+['Thumb','Index','Middle','Ring','Little'][f]
+        lengths=[.0246,.0314,.0381]
+        parent=side+'Hand'
+        for segment,length in zip(['Proximal','Intermediate','Distal'],lengths):
+            end=start+Vector((sign*.003,0,-length))
+            joints[prefix+segment]=(tuple(start),tuple(end),parent)
+            start=end;parent=prefix+segment
 joints['pan_socket']=(joints['RightHand'][0],tuple(Vector(joints['RightHand'][0])+Vector((0,0,.1))),'RightHand')
 bpy.ops.object.armature_add();rig=bpy.context.object;rig.name='MinerRig';bpy.ops.object.mode_set(mode='EDIT');rig.data.edit_bones.remove(rig.data.edit_bones[0])
 for name,(a,b,parent) in joints.items():
@@ -89,17 +116,23 @@ for name,(a,b,parent) in joints.items():
     if parent:bone.parent=rig.data.edit_bones[parent]
 bpy.ops.object.mode_set(mode='OBJECT')
 verts=[];faces=[];uvs=[];slots=[];weights=[]
-def loft(name,points,radii,depths,slot,bone,sides=24):
+def loft(name,points,radii,depths,slot,bone,sides=24,across_axis=(1,0,0)):
     base=len(verts); points=[Vector(p) for p in points]
     for j,p in enumerate(points):
         direction=(points[min(j+1,len(points)-1)]-points[max(0,j-1)]).normalized()
-        across=Vector((1,0,0))
+        across=Vector(across_axis)
         if abs(direction.dot(across))>.9:across=Vector((0,1,0))
         across=(across-direction*across.dot(direction)).normalized();other=direction.cross(across).normalized()
         for k in range(sides):
-            a=k*math.tau/sides;verts.append(p+across*math.cos(a)*radii[j]+other*math.sin(a)*depths[j])
+            a=k*math.tau/sides
+            gather=1.0
+            if slot==0:
+                gather+=.055*math.sin(a*7+j*.65)+.027*math.sin(a*11-j*.9)
+            if slot==5:gather+=.055*math.sin(a*9+j*.7)+.035*math.cos(a*13-j)
+            verts.append(p+(across*math.cos(a)*radii[j]+other*math.sin(a)*depths[j])*gather)
             x=slot%2 if slot<4 else 0;y=slot//2 if slot<4 else 0
-            uvs.append(((x+.04+.92*k/sides)*.5,(y+.04+.92*j/max(1,len(points)-1))*.5));weights.append(bone(p) if callable(bone) else {bone:1})
+            uv=(k/sides,j/max(1,len(points)-1)) if slot==5 else ((x+.04+.92*k/sides)*.5,(y+.04+.92*j/max(1,len(points)-1))*.5)
+            uvs.append(uv);weights.append(bone(p) if callable(bone) else {bone:1})
     for j in range(len(points)-1):
         for k in range(sides):
             a=base+j*sides+k;b=base+j*sides+(k+1)%sides;faces.append((a,b,b+sides,a+sides));slots.append(slot)
@@ -109,7 +142,7 @@ def blend(p,a,b,joint,width=.10):
     t=max(0,min(1,(p.z-joint)/width+.5));return {a:t,b:1-t}
 # Closed shirt torso, with overlapping sleeve seams and shaped shoulders.
 heights=[.93,.97,1.02,1.08,1.14,1.20,1.26,1.32,1.38,1.42,1.445]
-loft('Shirt',[(0,0,z) for z in heights],[.16,.18,.175,.17,.178,.19,.205,.213,.216,.17,.073],[.112,.12,.122,.126,.137,.145,.146,.138,.113,.082,.062],0,lambda p:blend(p,'Spine','Hips',1.065,.12) if p.z<1.13 else blend(p,'Chest','Spine',1.24,.20),32)
+loft('Shirt',[(0,0,z) for z in heights],[.16,.183,.19,.185,.181,.193,.21,.223,.224,.18,.073],[.112,.132,.141,.137,.144,.15,.15,.145,.121,.091,.062],0,lambda p:blend(p,'Spine','Hips',1.065,.12) if p.z<1.13 else blend(p,'Chest','Spine',1.24,.20),40)
 loft('Trouser seat',[(0,.01,z) for z in [.82,.87,.92,.97,1.0]],[.16,.18,.177,.167,.158],[.10,.125,.124,.118,.112],1,'Hips',28)
 for side,sign in [('Left',1),('Right',-1)]:
     hip,knee,ankle=[Vector(joints[side+n][0]) for n in ['UpperLeg','LowerLeg','Foot']]
@@ -119,28 +152,46 @@ for side,sign in [('Left',1),('Right',-1)]:
     loft('Boot upper',[(sign*.11,0,z) for z in [.045,.08,.14,.23,.29]],[.072,.071,.065,.063,.069],[.09,.085,.072,.069,.074],2,side+'Foot',24)
     loft('Boot toe',[(sign*.11,y,.063) for y in [.05,0,-.07,-.16,-.22]],[.063,.077,.081,.075,.054],[.05,.063,.061,.048,.025],2,side+'Foot',24)
     a,b,c=[Vector(joints[side+n][0]) for n in ['UpperArm','LowerArm','Hand']]
-    pts=line(a,b,7)+line(b,b.lerp(c,.35),4)[1:];rs=[.106,.104,.10,.095,.089,.083,.077,.077,.078,.080]
+    pts=line(a,b,7)+line(b,b.lerp(c,.35),4)[1:];rs=[.113,.123,.12,.111,.106,.100,.089,.094,.090,.084]
     loft('Rolled sleeve',pts,rs,rs,0,lambda p,s=side:blend(p,s+'UpperArm',s+'LowerArm',1.12,.13),24)
-    cuff=b.lerp(c,.3);loft('Sleeve roll',[cuff+Vector((0,0,z)) for z in [.025,.008,-.012]],[.084,.091,.082],[.084,.091,.082],0,side+'LowerArm',24)
-    pts=line(b.lerp(c,.25),c,9);rs=[.068,.066,.064,.060,.055,.050,.044,.038,.034]
-    loft('Forearm',pts,rs,rs,3,side+'LowerArm',20)
-    loft('Palm',line(c,c+Vector((sign*.025,0,-.085)),6),[.038,.043,.045,.043,.040,.033],[.029,.030,.027,.025,.022,.02],3,side+'Hand',16)
+    cuff=b.lerp(c,.3);loft('Sleeve roll',[cuff+Vector((0,0,z)) for z in [.028,.016,.006,-.009,-.018]],[.086,.099,.103,.097,.085],[.086,.099,.103,.097,.085],0,side+'LowerArm',28)
+    pts=line(b.lerp(c,.25),c,9);rs=[.050,.050,.049,.047,.044,.040,.035,.031,.028]
+    loft('Forearm',pts,rs,rs,3,side+'LowerArm',32)
+    # The broad palm axis follows the finger row, including in the rest mesh.
+    # A radial broad axis made the outer fingers appear disconnected in close-up.
+    loft('Palm',line(c,c+Vector((sign*.025,0,-.085)),6),[.028,.039,.049,.054,.053,.051],[.024,.025,.024,.022,.020,.018],3,side+'Hand',32,across_axis=(0,1,0))
+    thumb_start=Vector(joints[side+'ThumbProximal'][0])
+    web_start=c+Vector((sign*.022,-.018,-.040))
+    web_points=line(web_start,thumb_start,5)
+    def thumb_web_weight(p,s=side,a=web_start,b=thumb_start):
+        t=max(0,min(1,(p-a).dot(b-a)/(b-a).length_squared))
+        return {s+'Hand':1-t,s+'ThumbProximal':t}
+    loft('Thumb web',web_points,[.018,.019,.017,.013,.010],[.018,.018,.016,.012,.010],3,thumb_web_weight,20)
     for f in range(5):
-        bn=side+['Thumb','Index','Middle','Ring','Little'][f]+'Proximal';a,b,_=joints[bn]
-        pts=line(a,b,5);loft('Finger',pts,[.011,.012,.011,.009,.006],[.011,.012,.011,.009,.006],3,bn,8)
-loft('Neck',[(0,0,z) for z in [1.415,1.46,1.51,1.54]],[.065]*4,[.061]*4,3,'Neck',20)
-zs=[1.49+i*.20/14 for i in range(15)];r=[.091*math.sin(math.pi*(i+.5)/15)**.6 for i in range(15)]
-loft('Head',[(0,-.007,z) for z in zs],r,[a*.9 for a in r],3,'Head',28)
-loft('Beard',[(0,-.067,z) for z in [1.48,1.51,1.54,1.57,1.60]],[.027,.052,.069,.076,.062],[.015,.030,.041,.034,.02],5,'Head',24)
+        prefix=side+['Thumb','Index','Middle','Ring','Little'][f]
+        pts=[]
+        for j,segment in enumerate(['Proximal','Intermediate','Distal']):
+            a,b,_=joints[prefix+segment]
+            pts+=line(a,b,4)[0 if j==0 else 1:]
+        def finger_weight(p,prefix=prefix):
+            mid=joints[prefix+'Intermediate'][0][2];tip=joints[prefix+'Distal'][0][2]
+            if p.z>mid-.004:return blend(p,prefix+'Proximal',prefix+'Intermediate',mid,.008)
+            return blend(p,prefix+'Intermediate',prefix+'Distal',tip,.008)
+        rr=[.009,.010,.0095,.010,.0095,.009,.0095,.0085,.007,.003]
+        loft('Continuous finger',pts,rr,rr,3,finger_weight,12)
+loft('Neck',[(0,0,z) for z in [1.415,1.46,1.51,1.54]],[.065]*4,[.061]*4,3,'Neck',32)
+zs=[1.49+i*.20/23 for i in range(24)];r=[.091*math.sin(math.pi*(i+.5)/24)**.6 for i in range(24)]
+loft('Head',[(0,-.007,z) for z in zs],r,[a*.9 for a in r],3,'Head',40)
+loft('Beard',[(0,-.069,z) for z in [1.38,1.415,1.45,1.485,1.515,1.545,1.575,1.60]],[.020,.037,.056,.071,.080,.082,.077,.061],[.018,.033,.045,.052,.054,.051,.041,.025],5,'Head',32)
 loft('Nose',[(0,y,1.604) for y in [-.072,-.095,-.119]],[.019,.023,.011],[.032,.028,.012],3,'Head',12)
 # Felt brim shaped down at its edge; low crown defines the silhouette.
-loft('Hat',[(0,0,z) for z in [1.656,1.65,1.645,1.658,1.68,1.73,1.768,1.78]],[.195,.21,.155,.115,.112,.108,.091,.063],[.16,.178,.125,.102,.099,.094,.081,.057],4,'Head',40)
+loft('Hat',[(0,0,z) for z in [1.637,1.645,1.657,1.665,1.68,1.73,1.768,1.78]],[.25,.27,.17,.115,.112,.108,.091,.063],[.218,.238,.15,.102,.099,.094,.081,.057],4,'Head',48)
 loft('Hat band',[(0,0,z) for z in [1.667,1.69]],[.115,.114],[.103,.101],2,'Head',40)
 loft('Belt',[(0,0,z) for z in [.956,.977,.995]],[.182,.181,.174],[.13,.129,.125],2,'Hips',32)
 # Narrow straps follow the torso front/back, never floating above shoulders.
 for sign in [-1,1]:
     for back in [-1,1]:
-        points=[(sign*(.075+(z-.98)*.09),back*(.123 if z<1.1 else .145 if z<1.34 else .09),z) for z in [.98,1.08,1.2,1.32,1.40,1.438]]
+        points=[(sign*(.075+(z-.98)*.09),back*(.136 if z<1.1 else .155 if z<1.34 else .10),z) for z in [.98,1.08,1.2,1.32,1.40,1.438]]
         loft('Suspender',points,[.020]*6,[.004]*6,6,lambda p:blend(p,'Chest','Spine',1.24,.2),8)
 body=mesh_object('Miner',verts,faces,uvs=uvs,materials=materials,slots=slots)
 for name in joints:body.vertex_groups.new(name=name)
@@ -183,11 +234,21 @@ pan=mesh_object('Pan',pv,pf,pu,materials=steel,slots=ps);export(pan,'miner/pan.g
 sv=[];sf=[];su=[]
 for j,(z,r) in enumerate([(-.23,.025),(-.21,.072),(-.17,.087),(-.08,.080),(-.025,.032),(0,.025),(.018,.04)]):
     for i in range(20):
-        a=i*math.tau/20;sv.append((math.cos(a)*r,math.sin(a)*r*.65,z));su.append((i/20,j/6))
+        a=i*math.tau/20
+        fold=1+.10*math.sin(a*5+j*.5)+.045*math.cos(a*9-j)
+        sv.append((math.cos(a)*r*fold,math.sin(a)*r*.65*fold,z));su.append((i/20,j/6))
 for j in range(6):
     for i in range(20):
         a=j*20+i;b=j*20+(i+1)%20;sf.append((a,b,b+20,a+20))
 sf.append(tuple(reversed(range(20))));sf.append(tuple(120+i for i in range(20)))
+# A thin leather tie loops around the gathered neck and has two loose tails.
+def sack_cord(points,radius=.004):
+    vv=[];ff=[];uu=[];cc=[];ss=[]
+    tube(vv,ff,uu,cc,ss,points,[radius]*len(points),6)
+    base=len(sv);sv.extend(vv);su.extend(uu);sf.extend([tuple(base+i for i in face) for face in ff])
+sack_cord([(math.cos(i*math.tau/24)*.029,math.sin(i*math.tau/24)*.021,-.009) for i in range(25)])
+sack_cord([(.005,-.024,-.006),(.018,-.029,-.027),(.031,-.033,-.067)])
+sack_cord([(.005,-.024,-.006),(-.012,-.029,-.029),(-.017,-.032,-.053)])
 sack=mesh_object('Tied poke',sv,sf,su,materials=[material('Worn canvas poke',(.30,.225,.125))]);sack.shape_key_add(name='Basis')
 for stage in range(1,5):
     key=sack.shape_key_add(name='stage_'+str(stage))

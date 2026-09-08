@@ -22,6 +22,8 @@ varying vec3 world;
 varying vec3 geom_normal;
 varying float kind;
 uniform vec4 oak_canopies[10];
+uniform int review_mode=0;
+uniform sampler2D gravel_stone_mask : filter_linear_mipmap, repeat_enable;
 float hash(vec2 p) { return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
 float noise(vec2 p) {
  vec2 i=floor(p),f=fract(p); f=f*f*(3.0-2.0*f);
@@ -45,6 +47,7 @@ void tri(sampler2D a,sampler2D n,sampler2D o,float tile,out vec3 albedo,out vec3
 }
 void fragment() {
  vec3 a,n,o;
+ float review_sand=0.0;
  float shore=-6.0+.0075*pow(clamp(world.x,-42.0,42.0),2.0);
  float inland=world.z-shore;
  float macro=noise(world.xz*.08);
@@ -63,16 +66,25 @@ void fragment() {
 
  } else {
    planar(gravel_albedo,gravel_normal,gravel_orm,world.xz/1.5,a,n,o);
-   float sand_band=smoothstep(1.0,1.9,inland+noise(world.xz*2.0)*.5)*(1.0-smoothstep(2.6,3.3,inland+noise(world.xz*2.0)*.5));
-   sand_band=max(sand_band,smoothstep(.40,.70,noise(world.xz*.20+vec2(noise(world.xz*.13)*2.0)))*.92);
+   float wandering=inland+(noise(world.xz*.35)-.5)*3.6+(noise(world.xz*1.7+vec2(7.1,3.2))-.5)*.85;
+   float sand_band=smoothstep(.15,1.85,wandering)*(1.0-smoothstep(2.25,4.0,wandering));
+   float patch_metres=(noise(world.xz*.20+vec2(noise(world.xz*.13)*2.0))-.5)*8.0;
+   patch_metres+=(noise(world.xz*1.4)-.5)*.7;
+   sand_band=max(sand_band,smoothstep(-.2,1.5,patch_metres)*.92);
+   review_sand=sand_band;
    if(sand_band>.01) { vec3 sa,sn,so; planar(sand_albedo,sand_normal,sand_orm,world.xz/2.0,sa,sn,so); a=mix(a,sa,sand_band); n=normalize(mix(n,sn,sand_band)); o=mix(o,so,sand_band); }
    float duff=smoothstep(11.5,13.0,inland)*smoothstep(.08,.75,under_oak-noise(world.xz*1.5)*.25);
    if(duff>.01) { vec3 da,dn,d_o;planar(duff_albedo,duff_normal,duff_orm,world.xz/2.0,da,dn,d_o);a=mix(a,da,duff);n=normalize(mix(n,dn,duff));o=mix(o,d_o,duff); }
-   float wet=(1.0-smoothstep(1.0,1.5,inland))*smoothstep(-.4,-.3,world.y);
+   // Submerged gravel is wet too; the former height gate restored dry stone
+   // reflectance below 40 cm and washed out contact foam with the new palette.
+   float wet=1.0-smoothstep(1.0,1.5,inland);
    a*=mix(1.0,.56,wet); o.g=mix(o.g,.46,wet);
  }
  ALBEDO=a*(kind>2.5 && kind<3.5 ? .60+.65*noise(world.xy*.09)+.17*noise(world.zy*.38) : .94+.10*macro);
  ROUGHNESS=clamp(o.g+(macro-.5)*.06,0.0,1.0); AO=o.r;
  float strength=1.0-smoothstep(40.0,70.0,distance(CAMERA_POSITION_WORLD,world));
  NORMAL=normalize((VIEW_MATRIX*vec4(normalize(mix(geom_normal,n,strength*.8)),0)).xyz);
+ if(review_mode==1) {
+   ALBEDO=vec3(0.0); EMISSION=vec3(review_sand,texture(gravel_stone_mask,world.xz/1.5).r,1.0);
+ }
 }

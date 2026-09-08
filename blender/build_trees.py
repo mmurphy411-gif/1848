@@ -125,16 +125,24 @@ def build_tree(species,index,atlas):
         def branch(root, direction, length, radius, depth):
             end=root+direction*length
             mid=root.lerp(end,.5)+Vector((rng.uniform(-.4,.4),rng.uniform(-.4,.4),.3))
-            tube(verts,faces,uvs,colors,slots,[root,mid,end],[radius,radius*.7,radius*.35],7 if depth==2 else 5,.9)
+            if depth:
+                tube(verts,faces,uvs,colors,slots,[root,mid,end],[radius,radius*.7,radius*.35],12 if depth==2 else 9,.9)
+            else:
+                across=direction.cross(Vector((0,0,1))).normalized()*radius
+                base=len(verts);verts.extend([root-across,root+across,end+across*.2,end-across*.2])
+                faces.append(tuple(base+i for i in range(4)));slots.append(0)
+                uvs.extend([(0,0),(1,0),(1,1),(0,1)]);colors.extend([(.5,0,0,1)]*4)
             if depth:
                 for sign in [-1,1]:
                     d=(direction+Vector((rng.uniform(-.7,.7),rng.uniform(-.7,.7),.2))).normalized()
                     branch(end,d,length*.65,radius*.48,depth-1)
             else:
-                for t in [.25,.6,1.0]: spray(mid.lerp(end,t),direction,rng.uniform(.4,.6),19)
+                for t in [.25,.6,1.0]: spray(mid.lerp(end,t),direction,rng.uniform(.4,.6),20)
         for k in range(9):
             a=k*2.399; root=Vector((0,0,4+k*.35)); direction=Vector((math.cos(a),math.sin(a),.6)).normalized()
             branch(root,direction,4.2,.25,2)
+            # Interior sprays interrupt the empty bowl visible from underneath.
+            spray(root+direction*2.8+Vector((0,0,1.4)),direction,.55,10)
     obj=mesh_object(species,verts,faces,uvs,colors,[bark,foliage],slots)
     # Cards use gently outward-biased normals, rather than flat billboard lighting.
     normals=[]
@@ -145,9 +153,35 @@ def build_tree(species,index,atlas):
     export(obj,'trees/'+species+'.glb')
     obj.location.x=index*18
 
+def build_distant(species,index,atlas):
+    # One crown cluster, sharing the full tree's atlas. Root coordinates and
+    # species crown envelope match the full model; only geometry is reduced.
+    rng=random.Random(1848+index);v=[];f=[];uv=[];c=[];slots=[]
+    height=[30,25,33][index]
+    bark=bpy.data.materials['Bark '+species];foliage=bpy.data.materials['Foliage '+species]
+    tube(v,f,uv,c,slots,[Vector((0,0,height*j/8)) for j in range(9)],
+         [.55*(1-j/9)**1.1+.025 for j in range(9)],6,.15)
+    source=bpy.data.objects[species].data
+    leaves=[p for p in source.polygons if p.material_index==1]
+    for j in range(160):
+        poly=leaves[int((j+.5)*len(leaves)/160)]
+        points=[source.vertices[i].co.copy() for i in poly.vertices]
+        center=sum(points,Vector())/4
+        # Retain the parent tree's branch-fan directions and canopy envelope.
+        points=[center+(point-center)*1.55 for point in points]
+        base=len(v);v.extend(points);f.append(tuple(base+k for k in range(4)))
+        uv.extend([(0,0),(1,0),(1,1),(0,1)]);slots.append(1)
+        c.extend([(min(.95,center.z/height+.2),1,0,1)]*4)
+    obj=mesh_object(species+'_distant',v,f,uv,c,[bark,foliage],slots)
+    normals=[tuple(Vector((p[0],p[1],max(.5,p[2]*.12))).normalized()) if color[1]>.5 else tuple(vertex.normal)
+             for p,color,vertex in zip(v,c,obj.data.vertices)]
+    obj.data.normals_split_custom_set_from_vertices(normals)
+    export(obj,'trees/'+species+'_distant.glb');obj.location.x=index*18;obj.location.y=20
+
 atlases=[]
 for i,species in enumerate(SPECIES):
     # Do not delete previous atlas collections: keep inspectable node sources.
     atlases.append(foliage_atlas(species,i))
 for i,species in enumerate(SPECIES): build_tree(species,i,atlases[i])
+for i,species in enumerate(SPECIES[:3]):build_distant(species,i,atlases[i])
 save('build_trees'); print('TREES_SECONDS',time.perf_counter()-start)

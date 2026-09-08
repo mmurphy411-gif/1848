@@ -5,7 +5,9 @@ def build_gravel(outdir):
     n=2048; tile=1.5; rng=np.random.default_rng(184806)
     y,x=np.mgrid[:n,:n]; grain=rng.random((n,n))
     height=(grain-.5)*.0007
-    color=np.stack([.56+grain*.09,.50+grain*.08,.39+grain*.09],axis=2)
+    # The fine damp matrix stays darker than the pale stone faces, retaining
+    # local relief contrast without reintroducing near-black stones.
+    color=np.stack([.51+grain*.09,.455+grain*.08,.35+grain*.09],axis=2)
     # Place coarse first and reject overlap for the medium population. Pea
     # grains occupy the remaining matrix, rather than tessellating the plane.
     occupied=np.zeros((n,n),dtype=bool)
@@ -28,8 +30,15 @@ def build_gravel(outdir):
             dome=np.maximum(0,1-d*d)**.65
             raised=np.maximum(0,dome-buried)*radius*tile/n*.32
             edge=np.clip((1-d)*12,0,1)*mask
-            shade=rng.uniform(.20,.85); warm=rng.uniform(-.035,.055)
-            stone=np.stack([shade+warm+grain[iy,ix]*.035,shade+grain[iy,ix]*.025,shade-warm+grain[iy,ix]*.025],axis=2)
+            # Low-saturation Sierra stones in linear reflectance: warm grey,
+            # buff/tan, quartz, and occasional dark green-grey. Encode sRGB
+            # only after clamping neutral-light luminance to the ruled range.
+            palette=np.array([[.76,.74,.71],[.78,.74,.66],[.81,.78,.71],[.83,.825,.805],[.67,.69,.665]])
+            base=palette[rng.choice(5,p=[.40,.25,.18,.12,.05])]
+            linear=base[None,None,:]*(rng.uniform(.98,1.07)+(grain[iy,ix]-.5)[:,:,None]*.045)*1.12
+            luminance=linear@np.array([.2126,.7152,.0722])
+            linear*=np.clip(luminance,.26,.83)[:,:,None]/luminance[:,:,None]
+            stone=np.where(linear<=.0031308,linear*12.92,1.055*linear**(1/2.4)-.055)
             color[iy,ix]=color[iy,ix]*(1-edge[:,:,None])+stone*edge[:,:,None]
             height[iy,ix]=np.maximum(height[iy,ix],raised*mask)
             occupied[iy,ix]|=mask; added+=mask.sum()
@@ -39,3 +48,4 @@ def build_gravel(outdir):
     png(outdir/'gravel_albedo.png',np.clip(color*255,0,255))
     png(outdir/'gravel_normal.png',(normal*.5+.5)*255)
     png(outdir/'gravel_orm.png',np.full((n,n),232,dtype=np.uint8))
+    png(outdir/'gravel_stones.png',occupied.astype(np.uint8)*255)

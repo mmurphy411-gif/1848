@@ -18,6 +18,7 @@ static func terrain() -> ShaderMaterial:
 	if materials.has("terrain"): return materials.terrain
 	var result := ShaderMaterial.new()
 	result.shader = preload("res://shaders/terrain.gdshader")
+	result.set_shader_parameter("gravel_stone_mask",load("res://assets/textures/gravel_stones.png"))
 	for set_name in SETS:
 		for suffix in ["albedo", "normal", "orm"]:
 			result.set_shader_parameter(set_name + "_" + suffix, load("res://assets/textures/%s_%s.png" % [set_name, suffix]))
@@ -35,14 +36,16 @@ static func rock(set_name := "granite", tile := 4.0) -> ShaderMaterial:
 	materials[key] = result
 	return result
 
-static func plant(species: String, bark_color: Color, atlas := true) -> ArrayMesh:
-	var tree := mesh("res://assets/%s/%s.glb" % ["trees" if atlas else "plants", species])
+static func plant(species: String, bark_color: Color, atlas := true, distant := false) -> ArrayMesh:
+	var tree := mesh("res://assets/%s/%s%s.glb" % ["trees" if atlas else "plants", species,"_distant" if distant else ""])
 	for surface in tree.get_surface_count():
 		var result := ShaderMaterial.new()
-		result.shader = preload("res://shaders/foliage.gdshader")
-		result.set_shader_parameter("leaves", surface == 1 or not atlas)
-		result.set_shader_parameter("use_atlas", atlas)
+		var bark := atlas and surface==0
+		result.shader = preload("res://shaders/bark.gdshader") if bark else preload("res://shaders/foliage.gdshader")
+		if not bark:
+			result.set_shader_parameter("leaves",true)
+			result.set_shader_parameter("use_atlas",atlas)
 		result.set_shader_parameter("tint", bark_color)
-		if atlas: result.set_shader_parameter("leaf_atlas", load("res://assets/textures/foliage_%s_albedo.png" % species))
+		if atlas and not bark: result.set_shader_parameter("leaf_atlas", load("res://assets/textures/foliage_%s_albedo.png" % species))
 		tree.surface_set_material(surface, result)
 	return tree

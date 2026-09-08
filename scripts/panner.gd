@@ -59,6 +59,7 @@ func start_pan() -> bool:
 	segment_index = 0
 	segment = SEGMENTS[0]
 	walker.get_node("Visual").play_pan(segment)
+	walker.camera_rig.begin_panning()
 	pan.clear()
 	pan.show()
 	return true
@@ -75,7 +76,7 @@ func _physics_process(delta: float) -> void:
 				if segment_index != i:
 					segment_index = i
 					segment = SEGMENTS[i]
-					walker.get_node("Visual").play_pan(segment)
+					walker.get_node("Visual").play_pan(segment, i-1 if segment=="pan_swirl" else 0)
 				break
 		if walker.river.depth_at(walker.global_position) > 0.45:
 			_reset() # Cancel without awarding the held result.

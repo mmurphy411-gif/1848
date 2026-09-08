@@ -200,3 +200,17 @@ These come from review of what was shipped. They apply to every milestone from n
 - **Foliage cards are judged from underneath.** A card that reads at 20 m is not done until it reads at 2 m. Use leaf clusters, not single giant leaves, and alpha-to-coverage rather than hard scissor edges.
 - **Repository hygiene.** Binary files over 1 MB go through git LFS. Textures are baked at the smallest resolution that holds up at the distance they are seen. Do not commit 87 MB of PNGs again.
 - **Do not move a probe to make it pass** unless the spec change made the old location meaningless, and then say so in the README, as was done for the water transmission probe in milestone 5.
+
+## Standing rules learned from milestone 6
+
+
+- **Every close-up render gets a coverage gate for its subject.** If a shot
+  exists to show a thing, a probe asserts that thing covers a minimum of the
+  frame and that no other single surface dominates it. Milestone 4 shipped a
+  hero shot that was 60 percent boulder; milestone 6 shipped a pan close-up that
+  was 60 percent forearm. Both passed the composition guard.
+- **When a milestone's fallback list is exhausted, stop and report.** Do not
+  reach into an earlier milestone's fallbacks or its floors. Milestone 6 halved
+  the forest to save 0.14 ms because milestone 5 had listed conifer count as a
+  fallback. That was a design decision, and design decisions are made in the
+  spec, not in the budget pass.

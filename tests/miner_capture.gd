@@ -11,6 +11,7 @@ var rig: Node3D
 var camera: Camera3D
 var player_camera: Camera3D
 var ok:=true
+var capture_prefix := "milestone-6-"
 func _initialize() -> void:_run.call_deferred()
 func frames(n: int) -> void:
 	for i in n:await physics_frame
@@ -24,10 +25,14 @@ func save(label: String) -> Image:
 	await RenderingServer.frame_post_draw
 	var im:=root.get_texture().get_image()
 	assert(im.get_size()==Vector2i(1920,1080))
-	if Guard.check(self,"milestone-6-"+label):
-		im.save_png("res://artifacts/milestone-6-"+label+".png")
-		print("Saved milestone-6-",label)
+	if capture_guard(capture_prefix+label):
+		im.save_png("res://artifacts/"+capture_prefix+label+".png")
+		print("Saved ",capture_prefix,label)
 	return im
+func capture_guard(label: String) -> bool:
+	if label.ends_with("sack-stage-3") and camera.current:
+		return Guard.check_subject(self,label,walker,visual.sack_visual.global_position+Vector3.DOWN*.1)
+	return Guard.check(self,label)
 func _run() -> void:
 	root.content_scale_size=Vector2i(1920,1080)
 	root.content_scale_mode=Window.CONTENT_SCALE_MODE_VIEWPORT
@@ -54,7 +59,11 @@ func _run() -> void:
 	var standing:=await save("miner-standing")
 	ok=await shadow_probe(standing) and ok
 	root.get_node("Sack").ounces=3.5;root.get_node("Sack").changed.emit(3.5)
-	rig.yaw=-.45;await frames(45);await save("sack-stage-3")
+	var hips: Vector3 = (visual.skeleton.global_transform*visual.skeleton.get_bone_global_pose(visual.skeleton.find_bone("Hips"))).origin
+	camera.fov=35
+	view(hips-visual.global_basis.x*.9+visual.global_basis.z*1.5+Vector3.UP*.2,visual.sack_visual.global_position+Vector3.DOWN*.1)
+	await save("sack-stage-3")
+	camera.fov=55
 	rig.yaw=0;rig.rotation.y=0;Input.action_press("move_forward");await frames(24)
 	view(walker.position+Vector3(3.3,1.35,.1),walker.position+Vector3(0,.9,0));await save("miner-walk")
 	Input.action_release("move_forward");await frames(30)
@@ -73,6 +82,10 @@ func _run() -> void:
 	var gravel:=await save("gravel-close")
 	var patch:=Water._patch(gravel,camera,Vector3(-3,Layout.height_at(-3,-2.2),-2.2),64)
 	ok=Water._check(patch.w>.05,"M6 gravel variation %.3f" % patch.w) and ok
+	if "--stills-only" in OS.get_cmdline_user_args():
+		print("MINER CAPTURE: ","PASS" if ok and not Guard.failed else "FAIL")
+		quit(0 if ok and not Guard.failed else 1)
+		return
 	walker.show();player_camera.current=true
 	await place(0,-6.7);visual.rotation.y=0;rig.yaw=.5;rig.pitch=-.2;await frames(40)
 	panner.start_pan();panner.result={"tier":3,"ounces":.4}
