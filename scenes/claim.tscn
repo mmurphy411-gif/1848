@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://scripts/greybox.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/walker.tscn" id="2"]
@@ -8,11 +8,18 @@
 [ext_resource type="Script" path="res://scripts/density_debug.gd" id="6"]
 [ext_resource type="Script" path="res://scripts/daylight.gd" id="7"]
 [ext_resource type="Script" path="res://scripts/vegetation.gd" id="8"]
+[ext_resource type="Script" path="res://scripts/day_clock.gd" id="9"]
+[ext_resource type="Script" path="res://scripts/claim.gd" id="10"]
+[ext_resource type="Script" path="res://scripts/soundscape.gd" id="11"]
 [sub_resource type="SphereShape3D" id="CameraShape"]
 radius = 0.22
 [sub_resource type="CameraAttributesPractical" id="CameraAttributes"]
 
 [node name="Claim" type="Node3D"]
+script = ExtResource("10")
+
+[node name="Soundscape" type="Node3D" parent="."]
+script = ExtResource("11")
 
 [node name="Vegetation" type="Node3D" parent="."]
 script = ExtResource("8")
@@ -30,6 +37,12 @@ script = ExtResource("7")
 camera_attributes = SubResource("CameraAttributes")
 
 [node name="Sun" type="DirectionalLight3D" parent="Daylight"]
+
+[node name="Moon" type="DirectionalLight3D" parent="Daylight"]
+sky_mode = 1
+
+[node name="Clock" type="Node" parent="Daylight"]
+script = ExtResource("9")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="Daylight"]
 camera_attributes = SubResource("CameraAttributes")

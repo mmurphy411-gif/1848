@@ -1,7 +1,7 @@
 # 1848
 
-Milestone 6: a playable panning claim with a rigged miner, animated panning,
-procedural canyon assets, flowing water, and golden-hour light.
+Milestone 7: a playable panning claim with a rigged miner, animated panning,
+procedural canyon assets, flowing water, a day/night cycle, and spatial ambience.
 Built with **Godot 4.7.2 standard**, GDScript, and the Forward+ renderer.
 
 ## Play
@@ -67,16 +67,17 @@ Tests opt into spawn-seeded results with `Panner.reproducible`; normal play re-s
 from time. `density_debug.gd` is a permanent debug-only tool.
 Collision layers are terrain/rocks = 1, walker = 2, river = 3 (bit values 1, 2, 4).
 
-Milestones 5 onward in `ASTRA_BRIEF.md` are untouched. Assets, the miner, and the
-day-cycle clock belong to later milestones. Blender sources and glTF assets will go in `blender/`
-and `assets/` when those milestones begin.
+The sections below retain the development record for each milestone. Current
+Blender sources live in `blender/`, exported assets in `assets/`, and authored
+procedural audio sources in `audio/`.
 
 ## Light and atmosphere
 
 `Daylight` in `scenes/claim.tscn` owns the Sun, WorldEnvironment, and two fog volumes.
-Its `@tool` script, `scripts/daylight.gd`, exposes `hour`, fixed at **19.25**. Changing
+Its `@tool` script, `scripts/daylight.gd`, exposes an editor pose at **19.25**. Changing
 it in the editor reapplies the look; `apply(hour)` deterministically sets the sun,
-physical sky, ambient, fog, and shared camera exposure. There is no running clock.
+physical sky, ambient, fog, and shared camera exposure. Explicit `apply(hour)` calls
+pause the clock for deterministic review; normal play starts the clock at dawn.
 The continuous sun path runs from 04:45 to 20:30, peaks at 74 degrees shortly after
 noon, and sets along +X. At 19:15 its elevation is 10.15 degrees and azimuth is
 -24.25 degrees from +X. Four of five tested waterline positions have an unobstructed
@@ -749,3 +750,64 @@ materials throughout.
 The hand/forearm anatomy and early-entry framing remain explicit visual review
 concerns, even with all geometric grip and camera tests passing. This is the
 human review required by the notes, not a claim of final visual acceptance.
+
+## Milestone 7 — day cycle
+
+The main scene now starts at 04:45. Dawn to 20:30 lasts 1,200 real seconds;
+night lasts 180 seconds before dawn returns. The clock handles midnight, long
+frames and multiple complete wraps, and never feeds the density or yield RNG.
+Scene instances created by tests remain at the established 19:15 pose. Launching
+that scene as `current_scene` starts the clock and audio, so F5 and Play.cmd both
+enter the same playable state. The editor pose remains separately adjustable.
+
+The existing PhysicalSkyMaterial, fog volumes, SDFGI and reflection probe remain.
+Moonlight is a second shadowed directional light, excluded from the physical sky's
+single-sun calculation. River mist thickens at night. A seeded 4,096 × 2,048
+half-float panorama supplies fine stars, fading in between -3 and -10 degrees of
+sun elevation. Its black background preserves the daytime calibration. Brightness
+uploads occur only when the rounded twilight fade changes, not continuously.
+The existing reflection capture is invalidated every eight real seconds during
+play and immediately for explicit light poses; it is not rendered every frame.
+
+`audio/build_audio.py` authors 24 kHz mono WAVs from seeded noise and oscillators.
+River and rapids have separate spatial sources; pine wind comes from the banks.
+Birds fade out at dusk, crickets fade in, and sparse owl calls replace birds.
+Playback offsets, call spacing, pitch and positions vary using a separate cosmetic
+RNG. Eleven bounded spatial voices serve ambience; no music or wildlife AI is
+introduced. Waveforms have headroom and continuous periodic ambient seams. WAVs
+use LFS; Godot imports them with its default QOA compression. Action samples are
+included for the final polish pass. This is authored synthesis, not field recording;
+human listening review is still useful for the bird and owl timbres.
+
+Validation: `tests/milestone_7.gd` checks 20/3-minute timing, wraps, frame-rate
+independence, frozen poses, noon/golden/night lighting, star fade, bounded audio
+sources and day/night crossfades. `tests/day_cycle_capture.gd` renders six fixed
+hours at 1080p through the unchanged composition guard and measures both night
+and the running clock. Logs and renders are in `artifacts/`.
+
+Art-director review of the six final player views (each opened at full size):
+
+| Render | Send-back note |
+| --- | --- |
+| milestone-7-dawn.png | The rock shadow silhouettes remain too smooth for this sharply lit canyon. |
+| milestone-7-noon.png | The pale bar and flat upper wall planes still make noon feel bleached. |
+| milestone-7-golden.png | The warm opening reads, but the foreground sand ripples remain too repetitive. |
+| milestone-7-dusk.png | The right bank loses more bark detail than the near gravel as dusk deepens. |
+| milestone-7-night.png | The moon reveals the bar and stars, but the water highlight is too restrained in this downstream composition. |
+| milestone-7-next-dawn.png | The first warm light arrives on boulders before the broad bar, leaving the miner nearly silhouetted. |
+
+All development iterations were also opened: the initial six had an overbright
+additive star field that washed out daylight and made stars into square lights;
+the second six removed that wash but made night stars too faint and moonlight too
+blue. The final set uses a black panorama background, smaller star texels and a
+less blue, lower moon. The original Milestone 6 oak-shadow probe, human animation
+review and Godot reflection-atlas shutdown warning remain open; this milestone
+is not a claim that those older acceptance gates have passed. The cleanup is
+saved as `e03b4e7` with an explicit checkpoint message, not a completion message.
+
+Final Milestone 7 verification: Milestones 1–7 plus `milestone_6_notes` all pass
+unchanged, editor import has no script errors, and all six capture guards pass.
+On the local RTX 5080, 600 warmed 1080p frames measured night median/p95
+2.63/2.87 ms and the live day cycle 2.87/3.14 ms. This is local hardware evidence,
+not a measurement on the brief's unspecified mid-range GPU. The known seven
+reflection texture RID shutdown warnings remain visible and documented.

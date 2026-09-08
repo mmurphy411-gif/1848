@@ -1,6 +1,7 @@
 @tool
 extends Node3D
-## A deterministic lighting rig. Milestone 7 will animate hour; there is no clock here.
+## Physical sky with deterministic posing and a separate real-time day clock.
+signal time_changed(hour: float, daylight: float)
 
 @export_range(0.0, 24.0) var hour := 19.25:
 	set(value):
@@ -9,6 +10,8 @@ extends Node3D
 			apply(hour)
 @export var camera_attributes: CameraAttributesPractical
 @onready var sun: DirectionalLight3D = $Sun
+@onready var moon: DirectionalLight3D = $Moon
+@onready var clock: Node = $Clock
 @onready var world: WorldEnvironment = $WorldEnvironment
 @onready var mist: FogVolume = $RiverMist
 @onready var rim_air: FogVolume = $ClearRimAir
@@ -16,18 +19,42 @@ var environment: Environment
 var sky_material: PhysicalSkyMaterial
 var sun_elevation := 0.0
 var sun_azimuth := 0.0
+var _reflection_elapsed := 0.0
+var stars = preload("res://scripts/night_sky.gd").new()
 
 func _ready() -> void:
 	environment = Environment.new()
 	sky_material = PhysicalSkyMaterial.new()
+	sky_material.night_sky = stars.texture
 	environment.sky = Sky.new()
 	environment.sky.sky_material = sky_material
 	world.environment = environment
 	mist.material = FogMaterial.new()
 	rim_air.material = FogMaterial.new()
+	clock.advanced.connect(_animate)
 	apply(hour)
 
 func apply(time: float) -> void:
+	# Explicit poses stay frozen for the editor and all existing capture tools.
+	clock.running = false
+	_update_light(time)
+	_refresh_reflection()
+
+func _animate(time: float) -> void:
+	_update_light(time)
+	_reflection_elapsed += get_process_delta_time()
+	if _reflection_elapsed >= 8.0:
+		_reflection_elapsed = 0.0
+		_refresh_reflection()
+
+func _refresh_reflection() -> void:
+	var probe := get_node_or_null("../Greybox/RiverReflection") as ReflectionProbe
+	if probe:
+		# A transform notification queues one new cubemap; continuous mode would
+		# render six extra views every frame. Keep the existing reflection feature.
+		probe.position.y = 4.0 if probe.position.y > 4.0 else 4.001
+
+func _update_light(time: float) -> void:
 	var h := fposmod(time, 24.0)
 	# Late-June daylight, oriented so northwest/sunset is downstream (+X).
 	# Direction is continuous through midnight and both horizon crossings.
@@ -44,7 +71,15 @@ func apply(time: float) -> void:
 	var direction := Vector3(cos(azimuth) * cos(elevation), sin(elevation), sin(azimuth) * cos(elevation))
 	sun.basis = Basis.looking_at(-direction, Vector3.UP)
 	var daylight := smoothstep(-3.0, 5.0, sun_elevation)
+	stars.fade(1.0-smoothstep(-10.0,-3.0,sun_elevation))
 	var warmth := 1.0 - smoothstep(10.0, 40.0, sun_elevation)
+	moon.basis = Basis.looking_at(-Vector3(1,.28,-.15).normalized(),Vector3.UP)
+	moon.light_color = Color(.72,.82,1.0)
+	moon.light_energy = .26*(1.0-daylight)
+	moon.light_angular_distance = .5
+	moon.shadow_enabled = true
+	moon.directional_shadow_max_distance = 100.0
+	moon.sky_mode = DirectionalLight3D.SKY_MODE_LIGHT_ONLY
 	sun.light_color = Color(1.0, 0.96, 0.88).lerp(Color(1.0, 0.82, 0.62), warmth)
 	sun.light_energy = lerpf(1.45, 1.9, warmth) * daylight
 	sun.light_angular_distance = 0.6
@@ -61,7 +96,7 @@ func apply(time: float) -> void:
 	sky_material.mie_color = Color(0.96, 0.98, 1.0)
 	sky_material.mie_eccentricity = 0.8
 	sky_material.turbidity = lerpf(2.0, 3.0, warmth)
-	sky_material.energy_multiplier = lerpf(0.03, 2.5, daylight)
+	sky_material.energy_multiplier = lerpf(0.18, 2.5, daylight)
 	sky_material.ground_color = Color(0.55, 0.58, 0.60)
 	sky_material.sun_disk_scale = 1.0
 	environment.background_mode = Environment.BG_SKY
@@ -77,6 +112,14 @@ func apply(time: float) -> void:
 	camera_attributes.dof_blur_near_enabled = false
 	_configure_indirect_light()
 	_configure_fog(warmth)
+	if daylight < 1.0:
+		var night := 1.0-daylight
+		environment.fog_light_color = environment.fog_light_color.lerp(Color(.055,.085,.16),night)
+		environment.fog_light_energy = lerpf(.85,.2,night)
+		environment.volumetric_fog_density = lerpf(.004,.006,night)
+		mist.material.density = lerpf(mist.material.density,.008,night)
+		mist.material.albedo = mist.material.albedo.lerp(Color(.25,.35,.55),night)
+	time_changed.emit(h,daylight)
 
 func _configure_indirect_light() -> void:
 	environment.sdfgi_enabled = true
