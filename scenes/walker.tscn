@@ -1,9 +1,10 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/walker.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/panner.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/pan_display.gd" id="3"]
 [ext_resource type="Script" path="res://scripts/miner_visual.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/action_audio.gd" id="5"]
 [sub_resource type="CapsuleShape3D" id="BodyShape"]
 radius = 0.32
 height = 1.8
@@ -29,3 +30,6 @@ script = ExtResource("3")
 
 [node name="Panner" type="Node" parent="."]
 script = ExtResource("2")
+
+[node name="ActionAudio" type="Node3D" parent="."]
+script = ExtResource("5")

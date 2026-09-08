@@ -1,7 +1,8 @@
 # 1848
 
-Milestone 7: a playable panning claim with a rigged miner, animated panning,
-procedural canyon assets, flowing water, a day/night cycle, and spatial ambience.
+Milestones 7 and 8: a playable panning claim with a rigged miner, animated panning,
+procedural canyon assets, flowing water, a day/night cycle, spatial sound, and
+polished pan results, sack growth, camera transitions and wind.
 Built with **Godot 4.7.2 standard**, GDScript, and the Forward+ renderer.
 
 ## Play
@@ -493,12 +494,14 @@ not a hero view.
 
 ## Milestone 6 notes round
 
-Implementation and review evidence are in the working tree. This round is **not
+Implementation is checkpointed in `e03b4e7`; review evidence remains in `artifacts/`.
+This round is **not
 accepted as complete**: the specified nearest-boulder oak-shadow gate still
 fails, the engine reports a reflection-atlas texture leak at shutdown, and human
 review is outstanding. The completion commit is withheld until those acceptance
-items are resolved. No day clock, sound, claim-layout values, gold map, pan-result
-rules, boundary physics or walker capsule changed.
+items are resolved. This notes checkpoint changed no day clock, sound,
+claim-layout values, gold map, pan-result rules, boundary physics or walker capsule.
+The subsequently requested Milestones 7 and 8 are recorded below.
 
 ### Repository rewrite
 
@@ -762,7 +765,8 @@ enter the same playable state. The editor pose remains separately adjustable.
 
 The existing PhysicalSkyMaterial, fog volumes, SDFGI and reflection probe remain.
 Moonlight is a second shadowed directional light, excluded from the physical sky's
-single-sun calculation. River mist thickens at night. A seeded 4,096 × 2,048
+single-sun calculation ([PhysicalSkyMaterial documentation](https://docs.godotengine.org/en/4.3/classes/class_physicalskymaterial.html)).
+River mist thickens at night. A seeded 4,096 × 2,048
 half-float panorama supplies fine stars, fading in between -3 and -10 degrees of
 sun elevation. Its black background preserves the daytime calibration. Brightness
 uploads occur only when the rounded twilight fade changes, not continuously.
@@ -811,3 +815,116 @@ On the local RTX 5080, 600 warmed 1080p frames measured night median/p95
 2.63/2.87 ms and the live day cycle 2.87/3.14 ms. This is local hardware evidence,
 not a measurement on the brief's unspecified mid-range GPU. The known seven
 reflection texture RID shutdown warnings remain visible and documented.
+
+## Milestone 8 — polish
+
+The pan now shows dark, wet concentrate even on a zero-gold result. Gold flakes
+have varied flattened shapes, orientations and tones, with a few thicker grains
+in the crescent and a deformed pea-sized nugget in tier 4. A modest emissive floor
+keeps the result readable at night without the former bright orange glow. Counts,
+yield probabilities, the hidden map, award timing and eleven-second action remain
+unchanged; every visual variation uses its own seeded cosmetic generator.
+
+The five existing sack thresholds remain 0, 0.25, 1, 3 and 8 ounces. Its gathered
+neck and tie now retain their initial size while the bag body grows. Fine canvas
+weave and a small movement-driven swing give it weight. The capture's material-ID
+pass includes the same neck deformation so it measures the real silhouette.
+Camera FOV now shares the dolly's exact 0.6-second easing rather than finishing on
+a different exponential curve. The right stick gives finer control near centre,
+and a small clearance advantage is required before switching panning sides, to
+avoid oscillating between two almost equally blocked camera positions.
+
+Bark and leaves now share one wind function, with a slow, nonuniform gust envelope
+inside the existing 14 cm amplitude ceiling. Pine wind audio uses that envelope's
+rhythm. Dry footsteps follow each 1.2 m traveled; wading steps follow 0.63 m,
+matching the existing animation strides. Gravel, scoop, swirl and wash sounds
+follow the panning timeline. Swirl fades and stops on cancellation; idle feet are
+silent. Ambience and Foley have separate buses and a master limiter. Normal Escape
+and window-close exits stop sound and let the audio thread drain before quitting;
+this removes the nine loop/playback pairs found by the shutdown check.
+
+`tests/milestone_8.gd` exercises actual dry walking, wading, panning, cancellation,
+contents reset, stage uniforms, camera completion and bus configuration.
+`tests/polish_capture.gd` captures all five pan tiers, a night pan, all five sack
+stages, and two underneath-oak wind views. Every shot uses the composition guard;
+`tests/probe_polish.py` checks subject coverage, monotonic sack silhouette growth
+and recorded audio levels. The SHOWING gates remain 15% minimum pan interior and
+contents, 20% maximum skin and 40% maximum single material. Sack coverage minima
+increase from 0.8% to 1.8% across stages, preserving the old stage-3 minimum of 1.5%;
+no other material may cover more than half the frame. These checks verify framing,
+not the artistic quality of the miner's hands.
+
+`tests/audio_capture.gd` records the actual mixed game output: 19 seconds of day,
+walking, wading and a complete pan, then eight seconds of night ambience and an owl.
+Day peak/RMS were 0.331/0.0449; night 0.228/0.0383, with negligible DC offset and no
+clipping. Files are `artifacts/milestone-8-day-audio.wav` and
+`artifacts/milestone-8-night-audio.wav`. This is output-level and playback validation,
+not a claim that a person has approved the synthesized wildlife timbres.
+
+Final performance, local RTX 5080, 1080p, VSync off, 600 warmed frames per view,
+with day clock and all spatial ambience active:
+
+| View | Median | p95 |
+| --- | --- | --- |
+| Downstream | 2.88 ms | 3.13 ms |
+| Moving wade with splashes and footsteps | 3.12 ms | 3.52 ms |
+| Overview, all 600 conifers | 3.37 ms | 3.62 ms |
+
+Art-director review (all saved beauty views opened):
+
+| Render | Send-back note |
+| --- | --- |
+| milestone-8-pan-tier-0.png | The dark concentrate reads, but the coarse cuff silhouettes still intrude into the bowl. |
+| milestone-8-pan-tier-1.png | Two flecks are clear against the sand, though their isolated placement feels deliberately staged. |
+| milestone-8-pan-tier-2.png | The thinner flakes form a legible arc, but their spacing remains too orderly. |
+| milestone-8-pan-tier-3.png | The crescent is distinguishable at a glance, but the larger grains could have less uniform highlights. |
+| milestone-8-pan-tier-4.png | The nugget is unmistakable, though its angular edge still reads somewhat sculpted. |
+| milestone-8-pan-night.png | The gold stays readable, but the concentrate loses its fine texture in the deep shadow. |
+| milestone-8-sack-stage-0.png | The empty poke is visibly flat, but its long side planes need softer folds. |
+| milestone-8-sack-stage-1.png | The first increase reads beside the forearm, though the canvas still looks too clean. |
+| milestone-8-sack-stage-2.png | The neck stays anchored, but the lower bag still has a straight polygonal edge. |
+| milestone-8-sack-stage-3.png | The larger belly is clear, but the tie could cast a stronger little contact shadow. |
+| milestone-8-sack-stage-4.png | The largest bag feels full, though its lateral silhouette is still too symmetrical. |
+
+The first polish result set was also opened: flakes looked like orange beads, so
+the final pass made them thinner, longer, tangent to the crease and more yellow.
+All five sack shots were opened in both sets; their criticisms above remain.
+Diagnostic ID images are coverage evidence, not beauty renders.
+
+Scope and remaining acceptance: Milestones 7 and 8 implement the two remaining
+brief sections; there are no separate MILESTONE_7.md or MILESTONE_8.md specifications
+in this repository. The user's request to finish them authorizes the day clock
+and sound that were outside the earlier notes round. Milestone 6's human review,
+nearest-boulder oak-shadow gate and upstream reflection-atlas texture warning
+are still explicitly unresolved. No probe was moved and no old performance floor
+or forest reduction was used to make these new milestones pass. The known engine
+warning remains visible; the project is not represented as having passed all
+Milestone 6 notes acceptance criteria.
+
+Additional final wind review:
+
+| Render | Send-back note |
+| --- | --- |
+| milestone-8-oak-wind-0.png | The leaf motion is restrained, but the angular limb junctions and large central stub still look constructed. |
+| milestone-8-oak-wind-4.png | The gust changes the crown, but separated-looking twig junctions remain conspicuous from directly underneath. |
+
+The initial two wind shots accidentally reused the old cross-canyon aim and only
+put 11.7% foliage in frame; both were opened and rejected for missing their subject.
+The harness now uses the already established notes-round underneath-crown camera
+and its original oak instance, reaching 45.9% foliage. The boulder-shadow receiver
+and its probe were not changed. Both final wind views and all eleven final pan/sack
+views were rechecked together in the two `milestone-8-review-*.jpg` contact sheets;
+the first sheet makes the orderly tier-2 spacing conspicuous, and the second makes
+the sack's broad flat side planes and the oak junctions conspicuous.
+
+Final Milestone 8 verification: all nine headless suites (1–8 plus 6 notes) pass;
+all thirteen final capture guards and subject probes pass; editor import and the
+main-scene launch/quit smoke test have no script errors. Pan subject coverage is
+23.7%, skin 12.1%, and the largest background material 39.7%. Actual sack silhouette
+coverage grows monotonically from 0.98% to 2.20%, including the neck correction.
+Recorded day/night audio passes the level probes, and the new audio ObjectDB
+shutdown leaks are eliminated. Only the previously isolated seven reflection
+texture RID warnings remain in graphical shutdown logs. Validation files are
+`artifacts/m8-milestone_*.log`, `milestone-8-probes.json`,
+`milestone-8-capture-final.log`, `milestone-8-performance.log` and
+`milestone-8-launch.log`. No earlier milestone assertion was weakened in this pass.

@@ -11,6 +11,9 @@ var pan_playback: AnimationNodeStateMachinePlayback
 var pan_attachment: BoneAttachment3D
 var sack_attachment: BoneAttachment3D
 var sack_visual: Node3D
+var sack_material: ShaderMaterial
+var sack_sway := 0.0
+var sack_time := 0.0
 var splashes: Array[GPUParticles3D] = []
 var wet_materials: Array[ShaderMaterial] = []
 var wet_line := 0.0
@@ -65,8 +68,12 @@ func _ready() -> void:
 	sack_visual = preload("res://assets/miner/sack.glb").instantiate()
 	sack_attachment.add_child(sack_visual)
 	sack_visual.position = Vector3(.24,.025,-.14)
+	sack_material = ShaderMaterial.new()
+	sack_material.shader = preload("res://shaders/sack.gdshader")
+	for mesh in sack_visual.find_children("*","MeshInstance3D",true,false):
+		mesh.material_override = sack_material
 	get_node("/root/Sack").changed.connect(_sack_changed)
-	_sack_changed(0)
+	_sack_changed(get_node("/root/Sack").ounces)
 	_build_tree()
 	water_material = walker.get_parent().get_node("Greybox/River/WaterSurface").material_override
 	for side in ["Left","Right"]: _splash(side)
@@ -156,7 +163,9 @@ func _physics_process(delta: float) -> void:
 	_update_shin_foam(depth)
 	$Pan.global_transform = pan_attachment.global_transform
 	# The fabric poke hangs under gravity rather than rotating with pelvic bend.
-	sack_visual.global_rotation = Vector3(0,rotation.y,0)
+	sack_time += delta*locomotion_rate
+	sack_sway = move_toward(sack_sway,minf(speed/2.4,1.0),delta*3.0)
+	sack_visual.global_rotation = Vector3(0,rotation.y,sin(sack_time*TAU*2)*.055*sack_sway)
 
 func _update_shin_foam(depth: float) -> void:
 	# A depth-buffer intersection was enough for the capsule but loses most
@@ -172,6 +181,7 @@ func _update_shin_foam(depth: float) -> void:
 func _sack_changed(_ounces: float) -> void:
 	var stage: int = get_node("/root/Sack").stage()
 	sack_visual.scale = Vector3(.65+.12*stage,.85+.075*stage,.28+.20*stage)
+	sack_material.set_shader_parameter("growth",sack_visual.scale)
 
 func _splash(side: String) -> void:
 	var foot := _attachment(side+"SplashSocket",side+"Foot")

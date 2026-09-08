@@ -24,6 +24,7 @@ var _transition_time := 1.0
 var _transition_arm := Vector3.ZERO
 var _transition_length := 0.0
 var _transition_margin := 0.0
+var _transition_fov := 65.0
 
 func _ready() -> void:
 	rotation = Vector3(pitch, yaw, 0)
@@ -42,7 +43,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		else:
-			get_tree().quit()
+			get_parent().request_quit()
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and not focused and not panning and _transition_time >= FOCUS_DURATION:
@@ -52,6 +53,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _process(delta: float) -> void:
 	if not focused and not panning and _transition_time >= FOCUS_DURATION:
 		var stick := Input.get_vector("look_left", "look_right", "look_up", "look_down")
+		stick *= stick.length() # Fine aiming near the stick centre.
 		yaw -= stick.x * stick_speed * delta
 		pitch = clampf(pitch - stick.y * stick_speed * delta, -0.85, 0.32)
 	var blend := 1.0 - exp(-12.0 * delta)
@@ -77,16 +79,17 @@ func _process(delta: float) -> void:
 		var safe := _safe_position(pan, desired)
 		if safe.distance_to(desired) > .001:
 			global_position += safe-desired
-		camera.fov = lerpf(camera.fov, 38.0 if focused else 65.0, blend)
+		camera.fov = lerpf(_transition_fov, 38.0 if focused else 65.0, weight)
 	else:
 		var camera: Camera3D = arm.get_node("Camera3D")
-		camera.fov = lerpf(camera.fov,65.0,blend)
+		camera.fov = lerpf(_transition_fov,65.0,weight)
 
 func _begin_transition() -> void:
 	_transition_from = global_transform
 	_transition_arm = arm.position
 	_transition_length = arm.spring_length
 	_transition_margin = arm.margin
+	_transition_fov = arm.get_node("Camera3D").fov
 	_transition_time = 0.0
 
 func _safe_position(origin: Vector3, destination: Vector3) -> Vector3:
@@ -116,7 +119,7 @@ func _update_side() -> void:
 	if safe.distance_to(desired) > .12:
 		var alternate := hips-left*2.2*side_sign+Vector3.UP*.4
 		var alternative_safe := _safe_position(pan,alternate)
-		if alternative_safe.distance_to(alternate) < safe.distance_to(desired):
+		if alternative_safe.distance_to(alternate)+.08 < safe.distance_to(desired):
 			side_sign *= -1
 			safe = alternative_safe
 	_focus_transform = Transform3D(Basis.IDENTITY,safe).looking_at(pan,Vector3.UP)

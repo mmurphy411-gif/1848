@@ -1,5 +1,6 @@
 shader_type spatial;
 render_mode cull_disabled, alpha_to_coverage, diffuse_lambert, specular_disabled;
+#include "res://shaders/wind.gdshaderinc"
 uniform sampler2D leaf_atlas : source_color, filter_linear_mipmap;
 uniform bool leaves=false;
 uniform bool use_atlas=true;
@@ -13,7 +14,7 @@ void vertex(){
  atlas_bias=smoothstep(25.0,90.0,distance(w,CAMERA_POSITION_WORLD));
  float phase=MODEL_MATRIX[3].x*.71+MODEL_MATRIX[3].z*.39;
  float wind_time=review_time>=0.0?review_time:TIME;
- float sway=(sin(wind_time*.83+phase+w.y*.14)*.095+sin(wind_time*1.91+phase*.73)*.045)*COLOR.r;
+ float sway=wind_sway(wind_time,phase,w.y,COLOR.r);
  // World amplitude remains <= 14 cm, including instances scaled to 1.2.
  vec3 offset=vec3(sway,0.0,sway*.24);
  vec3 x=MODEL_MATRIX[0].xyz,y=MODEL_MATRIX[1].xyz,z=MODEL_MATRIX[2].xyz;

@@ -10,6 +10,8 @@ var birds: AudioStreamPlayer3D
 var owl: AudioStreamPlayer3D
 var crickets: Array[AudioStreamPlayer3D] = []
 var loops: Array[AudioStreamPlayer3D] = []
+var winds: Array[AudioStreamPlayer3D] = []
+var wind_time := 0.0
 
 func _ready() -> void:
 	rng.seed = 184807
@@ -18,7 +20,9 @@ func _ready() -> void:
 		loops.append(_voice("river",Vector3(x,0,Layout.shore_z(x)-10),-19,30,true))
 	for x in [-28.0,25.0]:
 		loops.append(_voice("rapids",Vector3(x,0,Layout.shore_z(x)-4),-19,9,true))
-		loops.append(_voice("wind",Vector3(x,13,Layout.back_z(x)+3),-25,35,true))
+		var wind := _voice("wind",Vector3(x,13,Layout.back_z(x)+3),-25,35,true)
+		winds.append(wind)
+		loops.append(wind)
 		var cricket := _voice("crickets",Vector3(x,1,Layout.back_z(x)-2),-80,20,true)
 		crickets.append(cricket)
 		loops.append(cricket)
@@ -34,6 +38,7 @@ func _voice(clip: String, point: Vector3, db: float, range_m: float, loop := fal
 		voice.stream.loop_begin = 0
 		voice.stream.loop_end = roundi(voice.stream.get_length()*voice.stream.mix_rate)
 	voice.volume_db = db
+	voice.bus = "Ambience"
 	voice.unit_size = range_m
 	voice.max_distance = 180
 	voice.attenuation_filter_cutoff_hz = 9000
@@ -46,11 +51,19 @@ func start() -> void:
 	active = true
 	for voice in loops: voice.play(rng.randf()*voice.stream.get_length())
 
+func stop() -> void:
+	active = false
+	for voice in get_children():
+		if voice is AudioStreamPlayer3D: voice.stop()
+
 func _time_changed(_hour: float, light: float) -> void:
 	target_day_mix = smoothstep(.05,.8,light)
 
 func _process(delta: float) -> void:
 	if not active: return
+	wind_time += delta
+	var gust := .72+.28*sin(wind_time*.19)*sin(wind_time*.071+1.0)
+	for wind in winds: wind.volume_db=-25.0+linear_to_db(gust)
 	day_mix = move_toward(day_mix,target_day_mix,delta*.2)
 	for cricket in crickets:
 		cricket.volume_db = linear_to_db(maxf(.0001,(1-day_mix)*db_to_linear(-32.0)))

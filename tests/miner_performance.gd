@@ -6,6 +6,9 @@ func _run() -> void:
 	root.content_scale_size=Vector2i(1920,1080)
 	root.content_scale_mode=Window.CONTENT_SCALE_MODE_VIEWPORT
 	var claim: Node3D=load("res://scenes/claim.tscn").instantiate();root.add_child(claim)
+	if "--live-cycle" in OS.get_cmdline_user_args():
+		claim.get_node("Daylight/Clock").start(19.25)
+		claim.get_node("Soundscape").start()
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	var w: CharacterBody3D=claim.get_node("Walker")
 	var rig: Node3D=claim.get_node("CameraRig")
@@ -24,6 +27,9 @@ func _run() -> void:
 	ok=await Lighting._sample(self,"M6 real-time overview") and ok
 	# Release scene resources before shutdown. The remaining reflection-atlas
 	# RID warning is isolated in reflection_cleanup_probe.gd (engine issue 122498).
+	claim.get_node("Soundscape").stop()
+	claim.get_node("Walker/ActionAudio").stop()
+	for i in 8: await physics_frame
 	claim.queue_free()
 	for i in 8: await process_frame
 	quit(0 if ok else 1)

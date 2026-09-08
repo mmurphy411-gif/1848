@@ -40,7 +40,7 @@ static func capture(tree: SceneTree, claim: Node3D, label: String) -> Dictionary
 	exposure.exposure_multiplier=1.0
 	camera.attributes=exposure
 	var shader := Shader.new()
-	shader.code="shader_type spatial; render_mode unshaded, fog_disabled, cull_disabled; uniform vec3 code; uniform bool cutout=false; uniform sampler2D atlas; void fragment(){ ALBEDO=code; ALPHA=(cutout && COLOR.g>.5)?texture(atlas,UV).a:1.0; ALPHA_SCISSOR_THRESHOLD=.38; }"
+	shader.code="shader_type spatial; render_mode unshaded, fog_disabled, cull_disabled; uniform vec3 code; uniform bool cutout=false; uniform sampler2D atlas; uniform bool sack=false; uniform vec3 growth=vec3(1.0); void vertex(){ if(sack) VERTEX*=mix(vec3(.65,.85,.28)/growth,vec3(1.0),smoothstep(.025,.10,-VERTEX.y)); } void fragment(){ ALBEDO=code; ALPHA=(cutout && COLOR.g>.5)?texture(atlas,UV).a:1.0; ALPHA_SCISSOR_THRESHOLD=.38; }"
 	var materials: Dictionary={}
 	var legend: Dictionary={}
 	for i in LABELS.size():
@@ -61,7 +61,13 @@ static func capture(tree: SceneTree, claim: Node3D, label: String) -> Dictionary
 			for s in node.mesh.get_surface_count():old.append(node.get_surface_override_material(s))
 			saved.append({"node":node,"override":node.material_override,"surfaces":old})
 			node.material_override=null
-			for s in node.mesh.get_surface_count():node.set_surface_override_material(s,materials[classify(node,s)])
+			for s in node.mesh.get_surface_count():
+				var id_material: ShaderMaterial=materials[classify(node,s)]
+				if classify(node,s)=="sack" and saved[-1].override is ShaderMaterial:
+					id_material=id_material.duplicate()
+					id_material.set_shader_parameter("sack",true)
+					id_material.set_shader_parameter("growth",saved[-1].override.get_shader_parameter("growth"))
+				node.set_surface_override_material(s,id_material)
 		elif node is MultiMeshInstance3D:
 			saved.append({"node":node,"override":node.material_override})
 			var id_material: ShaderMaterial=materials[classify(node,0)].duplicate()
