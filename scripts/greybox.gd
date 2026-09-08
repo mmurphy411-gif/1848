@@ -1,10 +1,10 @@
 @tool
 extends Node3D
-## Deterministic blockout, also visible when the main scene is opened in the editor.
+## Unchanged procedural terrain and physics layout, with milestone 5 surfaces.
 
 const Layout = preload("res://scripts/claim_layout.gd")
-const ALBEDOS := [Color(0.40, 0.37, 0.32), Color(0.48, 0.44, 0.37), Color(0.28, 0.26, 0.23), Color(0.50, 0.50, 0.48), Color(0.30, 0.32, 0.28)]
-const ROUGHNESS := [0.95, 0.9, 0.5, 0.85, 0.7]
+const Assets = preload("res://scripts/asset_library.gd")
+const MATERIAL_COUNT := 5
 
 func _ready() -> void:
 	_build_ground()
@@ -14,14 +14,10 @@ func _ready() -> void:
 
 func _build_ground() -> void:
 	var surfaces: Array[SurfaceTool] = []
-	for index in ALBEDOS.size():
+	for index in MATERIAL_COUNT:
 		var surface := SurfaceTool.new()
 		surface.begin(Mesh.PRIMITIVE_TRIANGLES)
-		var material := _material(Color.WHITE)
-		material.vertex_color_use_as_albedo = true
-		material.vertex_color_is_srgb = true
-		material.roughness = ROUGHNESS[index]
-		surface.set_material(material)
+		surface.set_material(Assets.terrain())
 		surfaces.append(surface)
 	# Strips follow the bend and waterline, avoiding sawtooth intersections.
 	var columns := _columns()
@@ -89,7 +85,7 @@ func _triangle(surfaces: Array[SurfaceTool], a: Vector3, b: Vector3, c: Vector3)
 	elif inland < 3.0:
 		kind = 1
 	var surface := surfaces[kind]
-	var color: Color = ALBEDOS[kind]
+	var color := Color(float(kind) / 4.0, 0, 0, 1)
 	surface.set_color(color)
 	for point in [a, b, c]:
 		surface.add_vertex(point)
@@ -147,30 +143,34 @@ func _build_river() -> void:
 	add_child(probe)
 
 func _build_boulders() -> void:
-	var material := _material(Color(0.50, 0.50, 0.48))
-	material.roughness = 0.85
+	var material := Assets.rock()
 	for index in Layout.BOULDERS.size():
 		var data: Vector4 = Layout.BOULDERS[index]
 		var rock := MeshInstance3D.new()
 		rock.name = "Boulder%02d" % (index + 1)
-		var mesh := SphereMesh.new()
-		mesh.radius = 1.0
-		mesh.height = 2.0
-		mesh.radial_segments = 8
-		mesh.rings = 3
+		var mesh := Assets.mesh("res://assets/boulders/boulder_%02d.glb" % (index + 1))
 		# Bake dimensions into the mesh so physics shapes have unit scale.
-		var source := mesh.get_mesh_arrays()
+		var source := mesh.surface_get_arrays(0)
 		var vertices: PackedVector3Array = source[Mesh.ARRAY_VERTEX]
+		var normals: PackedVector3Array = source[Mesh.ARRAY_NORMAL]
+		var basis := Basis(Vector3.UP, index * 1.71).scaled(Vector3(data.z, data.w, data.z))
+		var radius := 0.0
 		for i in vertices.size():
-			vertices[i] *= Vector3(data.z, data.w, data.z * 0.78)
+			vertices[i] = basis * vertices[i]
+			normals[i] = (basis.inverse().transposed() * normals[i]).normalized()
+			radius = maxf(radius, maxf(absf(vertices[i].x), absf(vertices[i].z)))
+		for i in vertices.size():
+			vertices[i].x *= data.z / radius
+			vertices[i].z *= data.z / radius
+			normals[i] = (normals[i] / Vector3(data.z / radius, 1, data.z / radius)).normalized()
 		source[Mesh.ARRAY_VERTEX] = vertices
+		source[Mesh.ARRAY_NORMAL] = normals
 		var baked := ArrayMesh.new()
 		baked.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, source)
 		rock.mesh = baked
 		rock.material_override = material
 		rock.gi_mode = GeometryInstance3D.GI_MODE_STATIC
 		rock.position = Vector3(data.x, Layout.height_at(data.x, data.y) + data.w * 0.35, data.y)
-		rock.rotation.y = index * 1.71
 		add_child(rock)
 		rock.create_convex_collision(true, true)
 
@@ -179,11 +179,14 @@ func _build_bedrock() -> void:
 		var data: Vector4 = Layout.BEDROCK[index]
 		var slab := MeshInstance3D.new()
 		slab.name = "Bedrock%02d" % (index + 1)
-		var mesh := BoxMesh.new()
-		mesh.size = Vector3(data.z, 0.12, data.w)
+		var source := Assets.mesh("res://assets/bedrock/ledge_%02d.glb" % (index + 1)).surface_get_arrays(0)
+		var vertices: PackedVector3Array = source[Mesh.ARRAY_VERTEX]
+		for i in vertices.size(): vertices[i] *= Vector3(data.z, 1, data.w)
+		source[Mesh.ARRAY_VERTEX] = vertices
+		var mesh := ArrayMesh.new()
+		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, source)
 		slab.mesh = mesh
-		slab.material_override = _material(Color(0.16, 0.18, 0.18))
-		slab.material_override.roughness = 0.6
+		slab.material_override = Assets.rock("bedrock", 2.0)
 		slab.gi_mode = GeometryInstance3D.GI_MODE_STATIC
 		slab.position = Vector3(data.x, Layout.height_at(data.x, data.y) - 0.025, data.y)
 		# Match the shallow gravel slope so only 3.5 cm of the slab shows.
@@ -191,9 +194,3 @@ func _build_bedrock() -> void:
 		slab.quaternion = Quaternion(Vector3.UP, normal)
 		add_child(slab)
 		slab.create_trimesh_collision()
-
-func _material(color: Color) -> StandardMaterial3D:
-	var material := StandardMaterial3D.new()
-	material.albedo_color = color
-	material.roughness = 0.95
-	return material

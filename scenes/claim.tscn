@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/greybox.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/walker.tscn" id="2"]
@@ -7,11 +7,15 @@
 [ext_resource type="Script" path="res://scripts/hud.gd" id="5"]
 [ext_resource type="Script" path="res://scripts/density_debug.gd" id="6"]
 [ext_resource type="Script" path="res://scripts/daylight.gd" id="7"]
+[ext_resource type="Script" path="res://scripts/vegetation.gd" id="8"]
 [sub_resource type="SphereShape3D" id="CameraShape"]
 radius = 0.22
 [sub_resource type="CameraAttributesPractical" id="CameraAttributes"]
 
 [node name="Claim" type="Node3D"]
+
+[node name="Vegetation" type="Node3D" parent="."]
+script = ExtResource("8")
 
 [node name="Greybox" type="Node3D" parent="."]
 script = ExtResource("1")

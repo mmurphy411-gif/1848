@@ -19,7 +19,7 @@ static func run(tree: SceneTree, claim: Node3D) -> bool:
 	camera.far = 600
 	camera.fov = 65
 	walker.hide()
-	_view(camera, Vector3(-19, 1.1, -1.8), Vector3(-12, 0, -9))
+	_view(camera, Vector3(-10, 1.1, -1), Vector3(-8, 0, -10))
 	await _save(tree, "water-shore")
 	walker.show()
 	player_camera.current = true
@@ -31,17 +31,22 @@ static func run(tree: SceneTree, claim: Node3D) -> bool:
 	var glint_stats := _patch(glint, player_camera, glint_point, 64)
 	var ok := _check(glint_stats.w > 0.06, "Glint luminance deviation %.3f > 0.06" % glint_stats.w)
 	walker.hide()
-	_view(camera, Vector3(0, 6, 0), Vector3(0, 0, -6))
+	camera.fov = 75
+	_view(camera, Vector3(0, 8, 2), Vector3(0, 0, -6))
 	var top := await _save(tree, "water-top")
-	var shallow := _patch(top, camera, Vector3(0, 0, -6.966667))
+	# M5 deliberately puts full foam over the old 5 cm sample. Measure bed
+	# transmission just outside the new 35 cm foam band (38 cm analytical depth).
+	var shallow := _patch(top, camera, Vector3(0, 0, -8.777778), 64)
 	# The gravel directly below this camera is shaded by Boulder03; compare
 	# the exposed shallows to exposed dry gravel in the same view.
-	var dry := _patch(top, camera, Vector3(-6, Layout.height_at(-6, -2), -2))
+	# Include sunlit dry gravel outside the real boulder's larger shadow.
+	var dry := _patch(top, camera, Vector3(-9, Layout.height_at(-9, -1), -1), 64)
 	var deep := _patch(top, camera, Vector3(0, 0, -10.666667))
 	ok = _check(shallow.y <= dry.y * 1.25, "Shallows green %.3f <= dry %.3f × 1.25" % [shallow.y, dry.y]) and ok
 	ok = _check(deep.y >= deep.x * 1.3 and _luma(deep) < _luma(shallow), "Channel RGB %s darker than shallows %s, G/R %.3f >= 1.3" % [deep, shallow, deep.y / maxf(deep.x, 0.001)]) and ok
 	# Hold an actual knee-deep pose without the idle current moving the probe target.
 	walker.set_physics_process(false)
+	camera.fov = 65
 	walker.position = Vector3(10, -0.45, Layout.shore_z(10) - 3.166667)
 	walker.show()
 	_view(camera, Vector3(13, 2.4, -6.6), Vector3(10, 0, -8.4))
@@ -90,6 +95,7 @@ static func _settle(tree: SceneTree) -> void:
 static func _save(tree: SceneTree, label: String) -> Image:
 	await _settle(tree)
 	var picture := tree.root.get_texture().get_image()
+	if not preload("res://tests/composition_guard.gd").check(tree,label): return picture
 	assert(picture.get_width() == 1920 and picture.get_height() == 1080)
 	DirAccess.make_dir_recursive_absolute("res://artifacts")
 	assert(picture.save_png("res://artifacts/milestone-4-%s.png" % label) == OK)

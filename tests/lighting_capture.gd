@@ -53,6 +53,7 @@ static func _save(tree: SceneTree, name: String) -> void:
 	for i in 180:
 		await tree.process_frame
 	await RenderingServer.frame_post_draw
+	if not preload("res://tests/composition_guard.gd").check(tree,name): return
 	DirAccess.make_dir_recursive_absolute("res://artifacts")
 	var error := tree.root.get_texture().get_image().save_png("res://artifacts/" + name)
 	assert(error == OK, "Could not save " + name)

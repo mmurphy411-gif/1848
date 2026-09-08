@@ -12,6 +12,9 @@ mono_crash.*.json
 *.blend1
 *.blend2
 *.blend@
+__pycache__/
+# Godot extracts these copies from tree GLBs; authored atlases live in textures/.
+/assets/trees/*_foliage_*_albedo.png*
 
 # OS / editors
 Thumbs.db

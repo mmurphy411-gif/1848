@@ -1,4 +1,5 @@
 extends SceneTree
+const Guard = preload("res://tests/composition_guard.gd")
 ## Render-only review harness; never loaded by the playable scene.
 
 func _initialize() -> void:
@@ -8,14 +9,19 @@ func _run() -> void:
 	var claim: Node3D = load("res://scenes/claim.tscn").instantiate()
 	claim.get_node("Walker/Panner").reproducible = true
 	root.add_child(claim)
+	if "--assets-only" in OS.get_cmdline_user_args():
+		var success: bool = await load("res://tests/asset_capture.gd").run(self, claim)
+		await _release_scene(claim)
+		quit(0 if success and not Guard.failed else 1)
+		return
 	if "--water-only" in OS.get_cmdline_user_args():
 		var success: bool = await load("res://tests/water_capture.gd").run(self, claim)
 		await _release_scene(claim)
-		quit(0 if success else 1)
+		quit(0 if success and not Guard.failed else 1)
 		return
 	if "--lighting-only" in OS.get_cmdline_user_args():
 		var success: bool = await load("res://tests/lighting_capture.gd").run(self, claim)
-		quit(0 if success else 1)
+		quit(0 if success and not Guard.failed else 1)
 		return
 	# Mouse capture is unavailable in headless mode, so verify it in this harness.
 	var rig: Node3D = claim.get_node("CameraRig")
@@ -41,7 +47,7 @@ func _run() -> void:
 	DirAccess.make_dir_recursive_absolute("res://artifacts")
 	var ignore := FileAccess.open("res://artifacts/.gdignore", FileAccess.WRITE)
 	ignore.close()
-	root.get_texture().get_image().save_png("res://artifacts/milestone-1-player.png")
+	if Guard.check(self,"milestone-1-player"): root.get_texture().get_image().save_png("res://artifacts/milestone-1-player.png")
 	var frame_times: Array[float] = []
 	var previous := Time.get_ticks_usec()
 	for i in 240:
@@ -62,7 +68,7 @@ func _run() -> void:
 	for i in 10:
 		await process_frame
 	await RenderingServer.frame_post_draw
-	root.get_texture().get_image().save_png("res://artifacts/milestone-1-overview.png")
+	if Guard.check(self,"milestone-1-overview"): root.get_texture().get_image().save_png("res://artifacts/milestone-1-overview.png")
 	# Capture the same playable camera in SHOWING with a deterministic good pan.
 	var walker: CharacterBody3D = claim.get_node("Walker")
 	var panner: Node = walker.get_node("Panner")
@@ -83,7 +89,7 @@ func _run() -> void:
 		push_error("Pan capture did not reach SHOWING")
 		quit(1)
 		return
-	root.get_texture().get_image().save_png("res://artifacts/milestone-2-pan.png")
+	if Guard.check(self,"milestone-2-pan"): root.get_texture().get_image().save_png("res://artifacts/milestone-2-pan.png")
 	# Check Escape is consumed by SHOWING, rather than quitting/releasing the mouse.
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	var escape := InputEventKey.new()
@@ -126,11 +132,12 @@ func _run() -> void:
 	for i in 10:
 		await process_frame
 	await RenderingServer.frame_post_draw
-	root.get_texture().get_image().save_png("res://artifacts/milestone-2-density.png")
+	if Guard.check(self,"milestone-2-density"): root.get_texture().get_image().save_png("res://artifacts/milestone-2-density.png")
 	print("Saved player, overview, tier 3 pan, and F3 density renders to artifacts/.")
 	var success: bool = await load("res://tests/lighting_capture.gd").run(self, claim)
 	success = await load("res://tests/water_capture.gd").run(self, claim) and success
-	print("CAPTURE SUITE: %s" % ("PASS" if success else "FAIL: frame budget"))
+	success = await load("res://tests/asset_capture.gd").run(self, claim) and success and not Guard.failed
+	print("CAPTURE SUITE: %s" % ("PASS" if success else "FAIL: see probes, guard or frame budget above"))
 	await _release_scene(claim)
 	quit(0 if success else 1)
 

@@ -8,7 +8,7 @@ uniform sampler2D normal_small : hint_normal, repeat_enable, filter_linear_mipma
 uniform sampler2D foam_noise : repeat_enable, filter_linear_mipmap;
 uniform vec3 absorption = vec3(0.35, 0.08, 0.20);
 uniform vec3 scatter : source_color = vec3(0.02, 0.10, 0.09);
-uniform float foam_distance : hint_range(0.1, 1.0) = 0.6;
+uniform float foam_distance : hint_range(0.1, 1.0) = 0.35;
 uniform float foam_texture_scale = 0.8;
 uniform float normal_strength : hint_range(0.0, 1.0) = 0.35;
 uniform float wave_amplitude : hint_range(0.0, 0.1) = 0.03;
@@ -58,13 +58,15 @@ void fragment() {
 	vec3 transmission = exp(-absorption * min(ray_distance, 40.0));
 	vec3 bed = texture(screen_texture, refracted_uv).rgb;
 	vec3 through_water = bed * transmission + scatter * (vec3(1.0) - transmission);
-	float breakup = texture(foam_noise, (world_position.xz - flow * t * 0.35) * foam_texture_scale).r;
-	float contact = 1.0 - smoothstep(0.15, foam_distance, vertical_depth);
-	vec3 bed_normal = normalize(cross(dFdx(bed_world), dFdy(bed_world)));
-	float obstacle = 1.0 - smoothstep(0.3, 0.8, abs(bed_normal.y));
-	float broken_foam = smoothstep(0.55, 0.8, breakup);
+	vec2 moving = world_position.xz - flow * t * 0.35;
+	vec2 streak_uv = vec2(dot(moving, flow) / 3.5, dot(moving, vec2(-flow.y, flow.x)));
+	float breakup = texture(foam_noise, streak_uv * foam_texture_scale).r;
+	float contact = 1.0 - smoothstep(0.08, foam_distance, vertical_depth);
+	float obstacle = smoothstep(0.2, 0.6, flow_data.a * 5.0 - vertical_depth);
+	contact = mix(contact, pow(contact, 0.25), obstacle);
+	float broken_foam = smoothstep(0.51, 0.61, breakup);
 	// Rock faces and legs hold a denser collar; gently sloped shallows stay clear.
-	float foam = contact * mix(broken_foam, 0.9 + 0.1 * broken_foam, obstacle);
+	float foam = contact * mix(broken_foam, 0.9 + 0.1 * broken_foam, sqrt(obstacle));
 	float fresnel = 0.064 + 0.936 * pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 5.0);
 	ALBEDO = vec3(0.85, 0.90, 0.88) * foam;
 	// The screen sample is already lit. Emission here transports bed light;
