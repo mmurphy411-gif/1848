@@ -17,6 +17,9 @@ func _physics_process(delta: float) -> void:
 	var axes := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	var fisher := get_node_or_null("Fisher")
 	var activities := get_parent().get_node_or_null("Activities")
+	if activities and activities.holds_at_fire():
+		velocity=Vector3.ZERO
+		return
 	if panner.state != panner.State.IDLE or (fisher and fisher.state>1) or (activities and (activities.busy or activities.ui_open())):
 		axes = Vector2.ZERO # Current and gravity remain active during the pan.
 	var direction := Basis(Vector3.UP, camera_rig.rotation.y) * Vector3(axes.x, 0, axes.y)

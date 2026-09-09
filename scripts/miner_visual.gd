@@ -1,8 +1,8 @@
 extends Node3D
 ## Visual-only rig. The parent remains the original capsule-based controller.
-const CLIPS := {"idle":4.0,"walk":1.0,"wade":1.2,"pan_enter":2.0,"pan_swirl":2.0,"pan_wash":1.5,"pan_lift":1.5,"pan_exit":1.0,"fish_idle":3.0,"cast":1.2,"fish_wait":4.0,"strike":.4,"fight":1.0,"land":2.0,"gather":2.0,"tend_fire":2.0,"eat":3.0,"lie_down":2.0}
+const CLIPS := {"idle":4.0,"walk":1.0,"wade":1.2,"pan_enter":2.0,"pan_swirl":2.0,"pan_wash":1.5,"pan_lift":1.5,"pan_exit":1.0,"fish_idle":3.0,"cast":1.2,"fish_wait":4.0,"strike":.4,"fight":1.0,"land":2.0,"gather":2.0,"tend_fire":2.0,"cook":3.0,"eat":3.0,"lie_down":2.0}
 const FISH_CLIPS := ["fish_idle","cast","fish_wait","strike","fight","land"]
-const CAMP_CLIPS := ["gather","tend_fire","eat","lie_down"]
+const CAMP_CLIPS := ["gather","tend_fire","cook","eat","lie_down"]
 var activity_clip := ""
 var activity_rate := 1.0
 var handline_attachment: BoneAttachment3D
@@ -38,6 +38,7 @@ var water_material: ShaderMaterial
 @onready var walker: CharacterBody3D = get_parent()
 
 func _ready() -> void:
+	# A dedicated loop keeps the skillet at the coals throughout the recipe.
 	miner = preload("res://assets/miner/miner.glb").instantiate()
 	miner.name = "Miner"
 	miner.rotation.y = PI
@@ -48,7 +49,7 @@ func _ready() -> void:
 	for name in CLIPS:
 		var animation := player.get_animation(name)
 		animation.length = CLIPS[name]
-		animation.loop_mode = Animation.LOOP_LINEAR if name in ["idle","walk","wade","pan_swirl","fish_idle","fish_wait","fight"] else Animation.LOOP_NONE
+		animation.loop_mode = Animation.LOOP_LINEAR if name in ["idle","walk","wade","pan_swirl","fish_idle","fish_wait","fight","cook"] else Animation.LOOP_NONE
 	for name in SWIRL_VARIANTS.slice(1):
 		player.get_animation(name).length = 2.0
 		player.get_animation(name).loop_mode = Animation.LOOP_LINEAR

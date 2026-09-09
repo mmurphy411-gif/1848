@@ -111,8 +111,10 @@ cannot be caught on the handline.
 1. Leave fishing and walk inland to the camp under the central oak.
 2. Approach the fire ring and press **G**. Lighting takes three driftwood from your
    inventory. The test kit supplies ten.
-3. Approach the skillet and press **G**, then **F** to confirm frying. Allow roughly
-   half a minute for the meal to cook. The eating animation follows automatically.
+3. Approach the skillet on the riverward side of the fire and press **G**, then **F**
+   to confirm frying. The miner moves into position and holds the skillet over the
+   coals. **Frying fish** appears while it cooks. Allow roughly half a minute; eating
+   follows automatically, then the skillet returns to its resting spot.
 4. At the crate, press **G** to open the ledger. Check the catch entry and meal count.
    A fried meal restores 20 condition, capped at 100.
 5. Close the ledger with G or Escape. At the bedroll, press **G** to sleep.

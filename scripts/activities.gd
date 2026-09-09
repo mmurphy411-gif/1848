@@ -5,6 +5,8 @@ var action := ""
 var item := ""
 var cooking_menu := false
 var sleep_phase := 0
+var work_from := Vector3.ZERO
+var work_elapsed := 0.0
 var fade := ColorRect.new()
 @onready var walker: CharacterBody3D=get_parent().get_node("Walker")
 @onready var camp: Node3D=get_parent().get_node("Camp")
@@ -22,10 +24,10 @@ func ui_open() -> bool:
 func idle() -> bool: return not busy and walker.panner.state==0 and walker.get_node("Fisher").state==0 and not ui_open()
 func _unhandled_input(event: InputEvent) -> void:
 	if cooking_menu and event.is_action_pressed("ui_cancel"):
-		cooking_menu=false;get_viewport().set_input_as_handled();return
+		cooking_menu=false;hud.notify("",0);get_viewport().set_input_as_handled();return
 	if cooking_menu and event.is_action_pressed("fish"):
 		cooking_menu=false
-		if camp.fry(): start("cook","tend_fire",999)
+		if camp.fry(): start("cook","cook",999)
 		get_viewport().set_input_as_handled();return
 	if not event.is_action_pressed("interact") or event.is_echo() or not idle(): return
 	var target: String=camp.target(walker)
@@ -48,8 +50,22 @@ func _unhandled_input(event: InputEvent) -> void:
 				if item!="": start("gather","gather",2)
 	get_viewport().set_input_as_handled()
 func start(kind: String,clip: String,seconds: float) -> void:
+	if action=="eat": camp.restore_skillet()
 	busy=true;action=kind;timer=seconds
+	hud.notify("",0)
+	if kind=="eat":
+		camp.props.Skillet.hide();camp.props.Skillet.collision_layer=0
+	if kind in ["cook","fire"]:
+		work_from=walker.global_position;work_elapsed=0
+		walker.velocity=Vector3.ZERO
+		walker.get_node("Visual").turn_to(PI)
 	walker.get_node("Visual").play_activity(clip)
+func holds_at_fire() -> bool: return busy and action in ["cook","fire"]
+func _physics_process(delta: float) -> void:
+	if not holds_at_fire(): return
+	work_elapsed+=delta
+	walker.global_position=work_from.lerp(camp.work_position(),smoothstep(0, .45,work_elapsed))
+	walker.velocity=Vector3.ZERO
 func sleep() -> void:
 	if not idle(): return
 	sleep_phase=0
@@ -63,12 +79,13 @@ func _process(delta: float) -> void:
 	if timer>0: return
 	if action=="sleep" and sleep_phase==0:
 		clock.end_day()
-		walker.global_position=camp.props.Bedroll.global_position+Vector3(.65,.4,0)
+		walker.global_position=camp.wake_position()
 		walker.velocity=Vector3.ZERO
 		sleep_phase=1;timer=1.5
 		walker.get_node("Visual").stop_activity()
 		return
 	if action=="fire": camp.light_fire()
 	elif action=="gather": hud.notify("Gathered "+item if bait.gather(item) else "Nothing this time")
+	elif action=="eat": camp.restore_skillet()
 	fade.color.a=0;busy=false;action=""
 	walker.get_node("Visual").stop_activity()

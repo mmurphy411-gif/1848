@@ -15,6 +15,8 @@ var smoke := GPUParticles3D.new()
 var fire_sound := AudioStreamPlayer3D.new()
 var last_hour := 4.75
 var phase := 0.0
+var skillet_rest := Transform3D.IDENTITY
+var cooking_food: MeshInstance3D
 @onready var game: Node=get_node("/root/GameState")
 @onready var clock: Node=get_parent().get_node("Daylight/Clock")
 func _ready() -> void:
@@ -25,7 +27,8 @@ func _ready() -> void:
 			best=absf(p.x);oak=p
 	position=Vector3(oak.x,Layout.height_at(oak.x,oak.z-3),oak.z-3)
 	var asset := preload("res://assets/camp/camp.glb").instantiate()
-	var offsets := {"FireRing":Vector3.ZERO,"LeanTo":Vector3(0,0,1.3),"Bedroll":Vector3(0,0,1.9),"Pot":Vector3(-.6,0,0),"Skillet":Vector3(1,0,-.1),"Rack":Vector3(1.7,0,.8),"Crate":Vector3(-1.1,0,1.5),"Cache":Vector3(0,2.5,3),"Driftwood":Vector3(-1.5,0,-.4)}
+	# A clear work area around the fire; the shelter opens riverward from inland.
+	var offsets := {"FireRing":Vector3.ZERO,"LeanTo":Vector3(-1.8,0,3.4),"Bedroll":Vector3(-1.8,0,4.2),"Pot":Vector3(1.5,0,-.1),"Skillet":Vector3(.95,0,-1.05),"Rack":Vector3(2.6,0,1.2),"Crate":Vector3(-3.4,0,3.5),"Cache":Vector3(0,2.5,3),"Driftwood":Vector3(-2.2,0,.5)}
 	for source in asset.find_children("*","MeshInstance3D",true,false):
 		var key := str(source.name)
 		if not offsets.has(key): continue
@@ -33,12 +36,23 @@ func _ready() -> void:
 		add_child(body);body.position=offsets[key]
 		var world := body.global_position
 		body.position.y+=Layout.height_at(world.x,world.z)-global_position.y
+		if key=="LeanTo": body.rotation.y=PI
+		if key=="Skillet": body.rotation.y=PI/2
 		var model := MeshInstance3D.new();model.mesh=source.mesh;model.transform=source.transform
 		body.add_child(model)
 		if key=="FireRing": model.material_override=preload("res://scripts/asset_library.gd").rock("granite",.6)
-		var collider := CollisionShape3D.new();collider.shape=model.mesh.create_convex_shape();collider.transform=model.transform
+		var collider := CollisionShape3D.new()
+		# Preserve the shelter's open doorway instead of filling it with a hull.
+		collider.shape=model.mesh.create_trimesh_shape() if key=="LeanTo" else model.mesh.create_convex_shape()
+		collider.transform=model.transform
 		body.add_child(collider);props[key]=body
 	asset.free()
+	skillet_rest=props.Skillet.transform
+	cooking_food=MeshInstance3D.new();cooking_food.visible=false
+	# FishSchool is later in the scene; resolve its mesh when cooking begins.
+	cooking_food.scale=Vector3(.65,.35,.65);cooking_food.position=Vector3(0,.085,0)
+	props.Skillet.add_child(cooking_food)
+	process_physics_priority=20 # After the miner's hand pose.
 	var duff := MeshInstance3D.new()
 	var surface := SurfaceTool.new();surface.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for i in 64:
@@ -96,10 +110,33 @@ func fresh_index() -> int:
 	for i in game.inventory.fish.size():
 		if game.inventory.fish[i].state=="fresh" and not game.inventory.fish[i].get("cooked",false): return i
 	return -1
+func work_position() -> Vector3:
+	var point := global_position+Vector3(.14,0,-1.0)
+	point.y=Layout.height_at(point.x,point.z)+.02
+	return point
+func wake_position() -> Vector3:
+	var point: Vector3=props.LeanTo.global_position+Vector3(0,0,-.65)
+	point.y=Layout.height_at(point.x,point.z)+.02
+	return point
+func restore_skillet() -> void:
+	props.Skillet.transform=skillet_rest
+	props.Skillet.show()
+	props.Skillet.collision_layer=1
+	cooking_food.hide()
+func _physics_process(_delta: float) -> void:
+	var activities: Node=get_parent().get_node("Activities")
+	if not activities.busy or activities.action!="cook": return
+	var hand: Node3D=get_parent().get_node("Walker/Visual").right_hand
+	# The authored handle extends along +X; turn it riverward toward the grip.
+	props.Skillet.global_basis=Basis(Vector3.UP,PI/2)
+	props.Skillet.global_position=hand.global_position-props.Skillet.global_basis*Vector3(.42,.045,0)
 func fry() -> bool:
 	var i := fresh_index()
 	if i<0 or fire_hours<Cooking.RECIPES.fried.hours or not cooking_fish.is_empty(): return false
 	cooking_fish=game.inventory.fish.pop_at(i);cook_hours=Cooking.RECIPES.fried.hours
+	props.Skillet.collision_layer=0
+	cooking_food.mesh=get_parent().get_node("FishSchool").sources[cooking_fish.species]
+	cooking_food.show()
 	game.changed.emit();return true
 func hang() -> bool:
 	var i := fresh_index()
@@ -121,6 +158,7 @@ func day_end() -> void:
 	if not cooking_fish.is_empty():
 		game.event("The unfinished meal spoiled.")
 		cooking_fish={}
+		restore_skillet()
 		get_parent().get_node("Activities").finish_cooking()
 	if not smoking.is_empty(): game.event("The unfinished fish on the rack spoiled.")
 	smoking={};smoke_hours=0
@@ -138,6 +176,7 @@ func advance(hours: float) -> void:
 			if Cooking.portions(cooking_fish.weight_lb)==2:
 				cooking_fish.cooked=true;cooking_fish.day=game.day;game.inventory.fish.append(cooking_fish)
 			game.eat();cooking_fish={}
+			restore_skillet()
 			get_parent().get_node("Activities").finish_cooking()
 	fire_hours=maxf(0,fire_hours-hours)
 	if hours>lit: ember_hours=maxf(0,ember_hours-(hours-lit))

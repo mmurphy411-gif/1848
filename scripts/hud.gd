@@ -94,7 +94,9 @@ func _process(delta: float) -> void:
 	if fisher.state!=0:
 		action_label.text="%s · %d bait · %d hooks" % [str(fisher.bait_type).capitalize(),game.inventory.bait.get(fisher.bait_type,0)+(1 if fisher.bait_loaded else 0),game.inventory.hooks]
 		return
-	if not activities.idle(): return
+	if not activities.idle():
+		action_label.text={"cook":"Frying fish","fire":"Tending fire","eat":"Eating"}.get(activities.action,"")
+		return
 	var camp: Node=get_parent().get_node("Camp")
 	var target: String=camp.target(activities.walker)
 	var names := {"FireRing":"Add wood" if camp.burning() else "Light fire · 3 driftwood","Skillet":"Skillet","Rack":"Smoke fish","Cache":"Food cache","Bedroll":"Sleep","Crate":"Open ledger"}

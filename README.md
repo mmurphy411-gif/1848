@@ -1045,6 +1045,12 @@ are mutually exclusive, and camp actions require both idle.
 Camp uses the existing black oak nearest X = 0 at least ten metres inland. Its center
 is three metres riverward of that trunk. The lean-to, bedroll, ring, skillet, pot,
 rack, crate, cache and driftwood are imported props with terrain-layer collision.
+After camp playtest feedback, the shelter faces riverward from 3.4 m inland of the
+ring, offset to one side of the oak; its bedroll is underneath and the ledger crate
+stands beside it. The rack, pot and wood stack are spaced around the clearing.
+The shelter uses a triangle collision shape so its doorway remains open.
+The bedroll can be reached from the doorway; waking places the miner outside the
+low roof so the standing collision capsule stays clear.
 A duff patch follows the existing ground. Driftwood has three visible stock sizes.
 The fire burns two game hours, then one hour of embers; added wood extends burning
 up to four hours. Firelight is warm, shadowed and spatially audible.
@@ -1055,6 +1061,10 @@ wood. Grasshoppers follow actual grass placements, worms follow oak duff, and we
 rock bait follows the shared boulders/slabs. Budgets reset on the day tick.
 
 A fried fish takes twenty game minutes and gives +20 condition, capped at 100. A fish
+is visibly held over the coals in a dedicated three-second `cook` animation loop.
+Confirming a fry positions and turns the miner at the fire; the skillet follows the
+right-hand grip, with movement held until the cooking action ends. The resting
+skillet is hidden during the subsequent carried meal and restored afterward. A fish
 of at least two pounds leaves a cooked second portion, usable that day. Smoking needs
 four hours of burning fire and pauses without fire; unfinished rack fish spoil at
 day end. Smoked fish keeps and gives +15 without a fire. Fresh fish survives the next
@@ -1168,3 +1178,21 @@ Milestone 9 integration and model checks pass. The 1280×720 captures
 above the bait count, though the underwater fish movement remains subtle.
 These captures use posed fight values to inspect each HUD state; the model and
 integration tests exercise the actual tension changes.
+
+### Camp playtest follow-up — clearance and cooking
+
+`tests/camp_layout.gd` exercises the fire and skillet interactions, cooking through
+a whole animation loop, the meal award, single-skillet visibility and movement
+release. The skillet's center stays within 4.3 cm of the fire center, at least
+42.8 cm above the ring origin. The shelter is entirely more than three metres
+inland of the fire. Milestone 6, its panning notes suite, and milestone 9 pass after
+the miner rebuild. The prior panning clips and geometry remain unchanged.
+
+Final 1080p renders were opened and all pass the composition guard:
+
+| Render | Art-director note |
+| --- | --- |
+| camp-rework-layout.png | The clearing now has distinct sleeping and cooking areas, though the oak hides part of the shelter from this side. |
+| camp-rework-frying.png | The hand, handle and skillet line up over the coals; the flame shapes still look chunky at this distance. |
+| camp-rework-meal.png | The miner eats beside the ring with one skillet visible, but the seated hand gesture still needs softer finger poses. |
+| camp-rework-dusk.png | The fire has space around it and lights a separate shelter; the distant roof cloth could show more wear. |
