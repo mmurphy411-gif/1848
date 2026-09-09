@@ -939,6 +939,8 @@ Phase 1 review notes above are retained as development records.
 
 ### Play the new loop
 
+For a step-by-step dusk catch and camp playtest, see [How to fish](FISHING_GUIDE.md).
+
 - **F / gamepad Y:** enter a fishing stance at the water's edge, then cast. During
   drift it brings the line back for a recast. Strike after the line jerks, then hold
   to pull and release when the fish surges. Escape leaves the stance or ends a reveal.
@@ -1029,8 +1031,12 @@ SHOWING → STANCE, with a SNAGGED branch. One bait is reserved on casting. Reca
 early strikes and cancellation retain it; a stolen bait or landed fish consumes it.
 The strike window is 0.15–0.75 seconds. Fish approach for two seconds before a bite.
 Drift reads the existing water mesh's flow colors once per second. A 12-segment ribbon
-joins the winder and bait. Runs have a visible 0.4-second approach cue; holding through
-a run breaks the line. Snags near boulders/slabs have a 25% chance, with a 50% failed
+joins the winder and bait. Runs have a 0.4-second warning on a line tension meter,
+followed by an explicit release prompt. Ordinary pulling settles at 35%; pulling
+during a run adds 110 percentage points per second, releasing removes 160 per
+second, and the line breaks at 100%. This replaces the immediate run break after
+playtest feedback that the fish's movement was too subtle. From working tension,
+there is about 0.59 seconds to release after the run starts. Snags near boulders/slabs have a 25% chance, with a 50% failed
 freeing attempt. Each lost hook also costs two metres of line. Fishing and panning
 are mutually exclusive, and camp actions require both idle.
 
@@ -1147,3 +1153,18 @@ sheets and animated previews are in `artifacts/review/` and remain uncommitted.
 sequence, camp at dusk, ledger, then a live dusk catch → fry → sleep → morning ledger.
 The code is checkpointed as a review candidate. The final completion message
 `Complete milestone 9 fishing and camp` is reserved for acceptance after that review.
+
+### Fishing playtest follow-up — tension feedback
+
+The fight now displays actual tension, a numeric percentage, and text prompts to
+pull or release. Green/yellow/red provide a second cue. The meter hides outside
+the fight and while the ledger or sandbox is open. A break explains that tension
+reached 100%, while the existing hook and line loss rules remain in effect.
+
+`tests/fishing_tension.gd` verifies reaction time at 30, 60 and 144 Hz, recovery from
+80% tension, a catch controlled by the meter, state visibility, and release prompts.
+Milestone 9 integration and model checks pass. The 1280×720 captures
+`artifacts/tension-{pull,warning,run,slack}.png` were opened: the meter reads clearly
+above the bait count, though the underwater fish movement remains subtle.
+These captures use posed fight values to inspect each HUD state; the model and
+integration tests exercise the actual tension changes.

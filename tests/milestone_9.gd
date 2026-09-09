@@ -60,7 +60,10 @@ func run() -> void:
 	check(f.state==f.State.FIGHT,"Valid strike hooks fish")
 	f.set_physics_process(false)
 	f.fight=Fight.begin(1,5,0);f.fight.elapsed=2
-	Input.action_press("fish");f._physics_process(.02);Input.action_release("fish")
+	f.fight.tension=.35
+	Input.action_press("fish");f._physics_process(.02)
+	check(f.state==f.State.FIGHT and game.inventory.hooks==12,"Run gives time to release before tension breaks line")
+	f._physics_process(.6);Input.action_release("fish")
 	check(game.inventory.hooks==11 and game.inventory.line_m==18 and f.state==f.State.STANCE,"Holding through run loses hook and two metres")
 	f.bait_type="grasshopper";f.bait_loaded=true
 	f.change(f.State.BITE,"fish_wait");f.elapsed=.4;f.press()

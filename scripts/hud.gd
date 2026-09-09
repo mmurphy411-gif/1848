@@ -1,10 +1,15 @@
 extends CanvasLayer
-## The sack total is the only player HUD element.
+## Contextual fishing feedback alongside the sack total.
 
 var label := Label.new()
 var action_label := Label.new()
 var notice := ""
 var notice_time := 0.0
+var tension_panel := PanelContainer.new()
+var tension_label := Label.new()
+var tension_bar := ProgressBar.new()
+var tension_hint := Label.new()
+var tension_fill := StyleBoxFlat.new()
 
 func _ready() -> void:
 	add_child(label)
@@ -28,6 +33,50 @@ func _ready() -> void:
 	action_label.add_theme_color_override("font_color",Color(.94,.90,.79))
 	action_label.add_theme_constant_override("outline_size",5)
 	action_label.mouse_filter=Control.MOUSE_FILTER_IGNORE
+	_build_tension_meter()
+
+func _build_tension_meter() -> void:
+	add_child(tension_panel)
+	tension_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	tension_panel.offset_left=-220;tension_panel.offset_right=220
+	tension_panel.offset_top=-190;tension_panel.offset_bottom=-98
+	tension_panel.mouse_filter=Control.MOUSE_FILTER_IGNORE
+	var paper := StyleBoxFlat.new()
+	paper.bg_color=Color(.045,.065,.07,.94)
+	paper.set_corner_radius_all(8)
+	paper.content_margin_left=16;paper.content_margin_right=16
+	paper.content_margin_top=10;paper.content_margin_bottom=10
+	tension_panel.add_theme_stylebox_override("panel",paper)
+	var stack := VBoxContainer.new();stack.mouse_filter=Control.MOUSE_FILTER_IGNORE
+	stack.add_theme_constant_override("separation",5);tension_panel.add_child(stack)
+	for text_label in [tension_label,tension_hint]:
+		text_label.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+		text_label.mouse_filter=Control.MOUSE_FILTER_IGNORE
+		text_label.add_theme_font_size_override("font_size",18)
+		text_label.add_theme_color_override("font_color",Color(.94,.90,.79))
+	stack.add_child(tension_label)
+	tension_bar.custom_minimum_size=Vector2(0,12)
+	tension_bar.show_percentage=false;tension_bar.mouse_filter=Control.MOUSE_FILTER_IGNORE
+	var track := StyleBoxFlat.new();track.bg_color=Color(.17,.21,.22)
+	track.set_corner_radius_all(4);tension_fill.set_corner_radius_all(4)
+	tension_bar.add_theme_stylebox_override("background",track)
+	tension_bar.add_theme_stylebox_override("fill",tension_fill)
+	stack.add_child(tension_bar);stack.add_child(tension_hint)
+	tension_panel.hide()
+
+func _update_tension(fisher: Node,ui_open: bool) -> void:
+	tension_panel.visible=fisher.state==fisher.State.FIGHT and not ui_open
+	if not tension_panel.visible: return
+	var fight: Dictionary=fisher.fight
+	var tension: float=fight.tension
+	var warning: bool=fight.running or fight.run_at-fight.elapsed<=.4
+	tension_bar.value=tension*100
+	tension_label.text="LINE TENSION  ·  %d%%" % roundi(tension*100)
+	tension_fill.bg_color=Color(.92,.29,.22) if tension>=.75 else Color(.96,.69,.27) if tension>=.5 or warning else Color(.42,.76,.63)
+	if fight.running: tension_hint.text="FISH RUNNING · Release F / Y"
+	elif warning: tension_hint.text="FISH ABOUT TO RUN · Release F / Y"
+	elif tension>=.5: tension_hint.text="HIGH TENSION · Release F / Y to ease"
+	else: tension_hint.text="Hold F / Y to pull · Breaks at 100%"
 
 func notify(text: String,seconds := 1.5) -> void:
 	notice=text;notice_time=seconds
@@ -38,6 +87,7 @@ func _process(delta: float) -> void:
 	var activities: Node=get_parent().get_node("Activities")
 	var fisher: Node=get_parent().get_node("Walker/Fisher")
 	var game := get_node("/root/GameState")
+	_update_tension(fisher,activities.ui_open())
 	action_label.text=""
 	if activities.ui_open(): return
 	if notice_time>0: action_label.text=notice;return

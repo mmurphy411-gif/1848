@@ -54,7 +54,7 @@ func has_bait() -> bool:
 	for kind in Fishery.BAITS:
 		if game.inventory.bait[kind]>0: return true
 	return bait_loaded
-func message(text: String) -> void: walker.get_parent().get_node("HUD").notify(text)
+func message(text: String,seconds := 1.5) -> void: walker.get_parent().get_node("HUD").notify(text,seconds)
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel") and state!=State.IDLE:
 		if state==State.SHOWING: stance()
@@ -212,7 +212,7 @@ func _physics_process(delta: float) -> void:
 		if fight.broken:
 			game.lose_hook();bait_loaded=false
 			if is_instance_valid(fish): fish.flee()
-			message("Line broke");stance()
+			message("Line broke — 100% tension. Release F / Y during runs.",4);stance()
 		elif fight.landed: land()
 	elif state==State.LAND:
 		if is_instance_valid(trophy): trophy.global_position=visual.right_hand.global_position
