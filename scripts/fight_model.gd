@@ -3,13 +3,15 @@ const RUN_TENSION_RATE := 1.1
 const SLACK_TENSION_RATE := 1.6
 const WORKING_TENSION := .35
 static func begin(weight: float, distance: float, seed: int) -> Dictionary:
-	return {"stamina":4+3*weight,"distance":distance,"elapsed":0.0,"run_at":2.0+float(posmod(seed,200))/100.0,"running":false,"tension":.15,"broken":false,"landed":false}
+	return {"stamina":4+3*weight,"distance":distance,"elapsed":0.0,"run_at":2.0+float(posmod(seed,200))/100.0,"running":false,"tension":.15,"broken":false,"landed":false,"seed":seed,"run_index":0}
 static func step(old: Dictionary, delta: float, pull: bool) -> Dictionary:
 	var f := old.duplicate()
 	if f.broken or f.landed: return f
 	f.elapsed+=delta
 	f.running=f.elapsed>=f.run_at and f.elapsed<f.run_at+.8
-	if f.elapsed>=f.run_at+.8: f.run_at+=3.6
+	if f.elapsed>=f.run_at+.8:
+		f.run_index+=1
+		f.run_at+=2.0+2.0*preload("res://scripts/weather.gd").noise(f.seed,f.run_index,913)
 	if f.running and pull:
 		f.tension=minf(1.0,f.tension+RUN_TENSION_RATE*delta)
 	elif pull:

@@ -214,3 +214,15 @@ These come from review of what was shipped. They apply to every milestone from n
   the forest to save 0.14 ms because milestone 5 had listed conifer count as a
   fallback. That was a design decision, and design decisions are made in the
   spec, not in the budget pass.
+
+## Standing rules learned from milestone 9
+
+- **A band met by a policy constant has not been met.** When a simulation
+  target is missed, tune the model the spec names, or stop and report. Do not
+  add a parameter to the scripted policy that produces the number. Milestone 9
+  met its hook-loss band with a 16 percent snag exposure that exists nowhere
+  in the game.
+- **List the tests you did not write.** When a milestone ships fewer assertions
+  than its spec lists, the README names each omission and why. Silence reads
+  as coverage. Milestone 9 shipped about two thirds of its listed assertions
+  without a note.

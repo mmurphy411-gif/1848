@@ -1196,3 +1196,87 @@ Final 1080p renders were opened and all pass the composition guard:
 | camp-rework-frying.png | The hand, handle and skillet line up over the coals; the flame shapes still look chunky at this distance. |
 | camp-rework-meal.png | The miner eats beside the ring with one skillet visible, but the seated hand gesture still needs softer finger poses. |
 | camp-rework-dusk.png | The fire has space around it and lights a separate shelter; the distant roof cloth could show more wear. |
+
+## Milestone 9 notes — time economy
+
+One game hour is 76.2 real seconds during daylight. A 20-minute real day spans
+04:45–20:30. A pan takes 11 real seconds, about 8.7 game minutes: at most about
+100 pans fit if he never walks. The mean dusk trout bite is 16 real seconds,
+about 12.6 game minutes, or three to four bites per real minute at the best pool.
+Frying takes 20 game minutes, about 25 real seconds. Smoking needs four game hours,
+about five real minutes of fire.
+
+The scarce resource in this game is the player's real minutes, not the fish.
+
+## Milestone 9 notes — partial model work and design stop
+
+This is an **uncommitted, incomplete notes round**, not milestone 9 acceptance.
+Part 1's pure fishery model now has stable spot indices, the prescribed six-day
+catch pressure (0.30 per catch, floor 0.15), autumn decline, and boulder-sized
+pools sampled in the specified depth band. Fight intervals vary deterministically
+between two and four seconds. `tests/fishery_pressure.gd` checks these models.
+The new snag rule is factored into `fishing_rules.gd` for the simulation, but is
+not yet wired into the live Fisher. Catch pressure is also not wired to live
+catches yet; GameState's catch-log migration is pending. No new visual assets
+or render acceptance are claimed for this partial round.
+
+The original trout-focused careful policy now rotates to the highest eligible
+pressure-adjusted rate and moves away below 0.5. Casts scatter by a seeded 1.5 m
+and use the geometry-based snag rule. The old policy snag-exposure constant is
+gone. The daily maximum is observed, not forced by a catch-count cap. Rotation
+accounts for bank walking at the existing 2.4 m/s, and landing/reveal costs 4.5 s.
+The simulation no longer catches a species if its rounded visible population is
+zero. It retains the original two one-game-hour fishing sessions, daily bait
+attempts, one rack slot per session, and diagnostic hook/line supply.
+
+At the default 6% sunk-bait snag rate, seed 1848 produces 322 trout, 56 smoked
+fish on November 1, seven hook losses, and 130 healthy days. Increasing that
+action-rule rate to 8% (inside the explicitly allowed 4–10% interval) yields:
+
+| Measure | Result | Required band |
+| --- | --- | --- |
+| Trout taken | 310 | 150–280 — fails |
+| Smoked stock on November 1 | 48 | 5–40 — fails |
+| Hooks lost | 11 | 8–20 — passes |
+| Days at condition 60+ | 130 / 130 | At least 85% — passes |
+| October days with two fresh river meals | 19 / 31 (61.3%) | Below 70% — passes |
+| Maximum take from one spot in a day | 2 | At most 3 — passes |
+
+The prescribed pressure constants remain unchanged. The season script exits with
+a design-stop failure and writes its CSV evidence, rather than weakening its
+assertions. These are the revised policy's results; the old 573-trout result above
+is historical. The notes' standing rule requires stopping when the named model
+tuning cannot meet a band; no stock cap, artificial catch limit, or extra policy
+knob has been introduced to force the remaining targets. The remaining balance
+decision must be resolved before this can be called a completed notes round.
+
+### Test omissions, explicitly recorded
+
+The original milestone 9 round omitted the shore-approach flee/return timing,
+real grass-band interaction by hour/weather, daily bait/wood limits and reset,
+seed variation over half the spots, rain transition and frost-mist timing, complete
+HUD eligibility, sandbox WASD isolation, camp/boulder overlap, and the stance-turn
+duration band. They were not covered by the smaller integration suite; the README
+should have disclosed that. Those tests are still pending in this notes round.
+
+Parts 2–7 also remain pending: in-world run line/arm/spray/audio cues and diagnostic
+meter toggle; rebuilt fish heads/fins and tail grip with hull checks; bank fish
+depth/shadow treatment and framing; cloth/duff/fire revisions; GameState journal
+and catch-log migration; camp-only eating and updated fishing guide; the full
+`milestone_9_notes.gd` suite, re-shot probes and both catch-camera sequences.
+The current fishing guide still describes the live build. No milestone 10 work
+has started. Nothing in this notes round has been committed.
+
+### User ruling — September 8, 2026
+
+The user accepted plentiful fish: time spent fishing is time forgone panning
+for gold. The 310-trout season and 48 smoked fish on November 1 are accepted.
+The simulation therefore retains the minimum food checks but removes the trout
+and smoked-stock upper limits; no model or policy constant changes to force a
+scarcity target. The remaining checks still apply.
+
+The user authorized committing this partial milestone 9 work and beginning
+milestone 10. This supersedes the notes' prerequisite to finish the entire notes
+round before starting the store. The pending live wiring, visual revisions and
+omitted tests listed above remain deferred, not passed or completed. The prior
+design-stop status above describes the review before this ruling.
