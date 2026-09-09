@@ -17,8 +17,11 @@ func configure(data: Dictionary,source: Mesh,w: CharacterBody3D) -> void:
 	species=data.species;spot=data.spot;weight_lb=data.weight_lb;mesh=source;walker=w
 	var offset := Vector2(sin(data.index*2.4)*1.1,cos(data.index*2.4)*.65)
 	home=Vector3(spot.position.x+offset.x,-.4,spot.position.y+offset.y)
+	var water: float=walker.get_node("/root/GameState").water_level()
+	home.z=minf(home.z,preload("res://scripts/river_model.gd").shore_z(home.x,water)-3.5)
+	home.y=water-.4
 	if species in ["sucker","salmon"]: home.y=Layout.height_at(home.x,home.z)+.22
-	elif species=="pikeminnow" or species=="hardhead": home.y=Layout.height_at(home.x,home.z)*.5
+	elif species=="pikeminnow" or species=="hardhead": home.y=lerpf(water,Layout.height_at(home.x,home.z),.5)
 	position=home
 	scale=Vector3.ONE*pow(weight_lb/(15.0 if species=="salmon" else 1.0),1.0/3.0)
 	material=ShaderMaterial.new();material.shader=preload("res://shaders/fish.gdshader")
@@ -51,7 +54,8 @@ func _process(delta: float) -> void:
 	var heading := atan2(motion.z,-motion.x) if approach or flee_time>=0 or dart>.4 else 0.0
 	rotation.y=lerp_angle(rotation.y,heading,delta*4)
 	position=position.move_toward(desired,delta*(3.0 if flee_time>=0 else 1.0 if approach else .6))
-	position.z=minf(position.z,Layout.shore_z(position.x)-4.5)
+	var water: float=get_node("/root/GameState").water_level()
+	position.z=minf(position.z,preload("res://scripts/river_model.gd").shore_z(position.x,water)-3.5)
 	var half_height := mesh.get_aabb().size.y*.5*scale.y+.03
-	position.y=clampf(position.y,Layout.height_at(position.x,position.z)+half_height,-half_height)
+	position.y=clampf(position.y,Layout.height_at(position.x,position.z)+half_height,water-half_height)
 	material.set_shader_parameter("pace",3.0 if flee_time>=0 else 1.8 if approach else .7)

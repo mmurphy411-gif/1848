@@ -26,6 +26,8 @@ func ui_open() -> bool:
 	return false
 func idle() -> bool: return not busy and walker.panner.state==0 and walker.get_node("Fisher").state==0 and not ui_open()
 func _unhandled_input(event: InputEvent) -> void:
+	if busy and action in ["crevice","rocker","build_rocker"] and event.is_action_pressed("ui_cancel"):
+		get_parent().get_node("Mining").cancel();get_viewport().set_input_as_handled();return
 	if cooking_menu and event.is_action_pressed("interact"):
 		recipe_index=posmod(recipe_index+1,recipes.size());recipe_prompt();get_viewport().set_input_as_handled();return
 	if cooking_menu and event.is_action_pressed("ui_cancel"):
@@ -37,6 +39,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		else: hud.notify("Need ingredients and enough fire")
 		get_viewport().set_input_as_handled();return
 	if not event.is_action_pressed("interact") or event.is_echo() or not idle(): return
+	if get_parent().has_node("Mining") and get_parent().get_node("Mining").interact():
+		get_viewport().set_input_as_handled();return
 	var target: String=camp.target(walker)
 	match target:
 		"FireRing":
@@ -97,5 +101,6 @@ func _process(delta: float) -> void:
 	if action=="fire": camp.light_fire()
 	elif action=="gather": hud.notify("Gathered "+item if bait.gather(item) else "Nothing this time")
 	elif action=="eat": camp.restore_skillet()
+	elif action in ["crevice","rocker","build_rocker"]: get_parent().get_node("Mining").complete(action)
 	fade.color.a=0;busy=false;action=""
 	walker.get_node("Visual").stop_activity()

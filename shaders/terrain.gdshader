@@ -23,6 +23,7 @@ varying vec3 geom_normal;
 varying float kind;
 uniform vec4 oak_canopies[10];
 uniform int review_mode=0;
+uniform float water_level=0.0;
 uniform sampler2D gravel_stone_mask : filter_linear_mipmap, repeat_enable;
 float hash(vec2 p) { return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
 float noise(vec2 p) {
@@ -77,7 +78,7 @@ void fragment() {
    if(duff>.01) { vec3 da,dn,d_o;planar(duff_albedo,duff_normal,duff_orm,world.xz/2.0,da,dn,d_o);a=mix(a,da,duff);n=normalize(mix(n,dn,duff));o=mix(o,d_o,duff); }
    // Submerged gravel is wet too; the former height gate restored dry stone
    // reflectance below 40 cm and washed out contact foam with the new palette.
-   float wet=1.0-smoothstep(1.0,1.5,inland);
+   float wet=1.0-smoothstep(.155,.1725,world.y-water_level);
    a*=mix(1.0,.56,wet); o.g=mix(o.g,.46,wet);
  }
  ALBEDO=a*(kind>2.5 && kind<3.5 ? .60+.65*noise(world.xy*.09)+.17*noise(world.zy*.38) : .94+.10*macro);

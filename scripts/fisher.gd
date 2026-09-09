@@ -24,6 +24,7 @@ var flow_vertices := PackedVector3Array()
 var flow_colors := PackedColorArray()
 var flow := Vector2(.25,0)
 var flow_time := 0.0
+var flow_mesh: Mesh
 @onready var walker: CharacterBody3D=get_parent()
 @onready var visual: Node3D=walker.get_node("Visual")
 @onready var game: Node=get_node("/root/GameState")
@@ -33,7 +34,14 @@ func _ready() -> void:
 	line=preload("res://scripts/fishing_line.gd").new()
 	add_child(line)
 	process_physics_priority=25
+	game.changed.connect(refresh_flow)
+	refresh_flow()
+
+func refresh_flow() -> void:
+	if not is_inside_tree(): return
 	var water: MeshInstance3D=walker.get_parent().get_node("Greybox/River/WaterSurface")
+	if flow_mesh==water.mesh: return
+	flow_mesh=water.mesh
 	var arrays: Array=water.mesh.surface_get_arrays(0)
 	flow_vertices=arrays[Mesh.ARRAY_VERTEX];flow_colors=arrays[Mesh.ARRAY_COLOR]
 
@@ -47,9 +55,7 @@ func sample_flow(point: Vector3) -> Vector2:
 	return Vector2(color.r*2-1,color.g*2-1).normalized()*color.b
 func can_fish() -> bool:
 	var p := walker.global_position
-	var depth: float=walker.river.depth_at(p)
-	var inland: float=p.z-Layout.shore_z(p.x)
-	return state==State.IDLE and walker.panner.state==0 and absf(p.x)<40 and p.z<=Layout.back_z(p.x) and ((depth>0 and depth<=.45) or (depth==0 and inland>=-.7 and inland<=1.5)) and game.inventory.hooks>0 and game.inventory.line_m>=6 and has_bait() and not walker.get_parent().get_node("Activities").busy
+	return state==State.IDLE and walker.panner.state==0 and walker.river.work_edge(p,walker.wade_limit()) and game.inventory.hooks>0 and game.inventory.line_m>=6 and has_bait() and not walker.get_parent().get_node("Activities").busy
 func has_bait() -> bool:
 	for kind in Fishery.BAITS:
 		if game.inventory.bait[kind]>0: return true
@@ -119,14 +125,14 @@ func aim() -> Vector3:
 	var direction := -camera.global_basis.z
 	var point := walker.global_position-Layout.inland_normal(walker.position.x)*6
 	if direction.y<-.015:
-		point=camera.global_position+direction*(-camera.global_position.y/direction.y)
+		point=camera.global_position+direction*((game.water_level()-camera.global_position.y)/direction.y)
 	var origin := Vector2(walker.position.x,walker.position.z)
 	var horizontal := Vector2(point.x,point.z)-origin
 	horizontal=horizontal.limit_length(12 if game.inventory.get("rod",false) else 8)
-	point=Vector3(origin.x+horizontal.x,.025,origin.y+horizontal.y)
-	if point.z>Layout.shore_z(point.x)-1:
+	point=Vector3(origin.x+horizontal.x,game.water_level()+.025,origin.y+horizontal.y)
+	if point.z>walker.river.shore_z(point.x)-.35:
 		point=walker.global_position-Layout.inland_normal(walker.position.x)*5
-	point.y=.025
+	point.y=game.water_level()+.025
 	return point
 func cast() -> void:
 	if bait_type=="": return
@@ -158,11 +164,9 @@ static func step_with_rod(old: Dictionary,delta: float,pull: bool,rod: bool) -> 
 func _physics_process(delta: float) -> void:
 	if state==State.IDLE: return
 	elapsed+=delta
-	if walker.river.depth_at(walker.global_position)>.45:
-		stance();return
+	if not walker.river.work_edge(walker.global_position,walker.wade_limit()):
+		cancel();return
 	if state==State.STANCE:
-		if walker.position.z-Layout.shore_z(walker.position.x)>1.5 or absf(walker.position.x)>=40:
-			cancel();return
 		target=aim();line.ring.global_position=target;return
 	var end := target
 	if state==State.CAST:
@@ -177,7 +181,7 @@ func _physics_process(delta: float) -> void:
 		var speed := .6 if bait_type=="grasshopper" else .25
 		var point := target+Vector3(flow.x,0,flow.y)*speed*delta
 		if Vector2(point.x-walker.position.x,point.z-walker.position.z).length()<=(12 if game.inventory.get("rod",false) else 8): target=point
-		target.y=.025+sin(elapsed*3)*.008 if bait_type=="grasshopper" else Layout.height_at(target.x,target.z)*.6
+		target.y=game.water_level()+.025+sin(elapsed*3)*.008 if bait_type=="grasshopper" else lerpf(game.water_level(),Layout.height_at(target.x,target.z),.6)
 		if bite_in>=0:
 			bite_in-=delta
 			if is_instance_valid(fish): fish.approach_target=target

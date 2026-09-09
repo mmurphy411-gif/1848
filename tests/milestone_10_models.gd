@@ -39,7 +39,7 @@ func _initialize() -> void:
 			check(mean>previous_mean,"index mean rises"); previous_mean=mean
 		for day in 133:
 			check(Stock.stock(good.item,day,1848)==Stock.stock(good.item,day,1848),"stock deterministic")
-	check(sale_items==["hook","line","rod","flour","beans","pork","coffee","salt"],"eight sale items")
+	check(sale_items==["hook","line","rod","flour","beans","pork","coffee","salt","crowbar","pick","shovel","boots","rocker"],"M11 adds five tool purchases")
 	check(Stock.stock("hook",0)==24 and Stock.stock("hook",3)==48,"hook shipments")
 	check(Stock.stock("hook",5,1848,[{"day":5,"item":"hook","count":30}])==18,"purchases deducted")
 	check(Stock.stock("hook",130)==408,"last hook shipment cutoff")

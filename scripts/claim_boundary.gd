@@ -4,9 +4,9 @@ extends RefCounted
 
 const Layout = preload("res://scripts/claim_layout.gd")
 
-static func guide_motion(position: Vector3, desired: Vector3, depth: float) -> Vector3:
+static func guide_motion(position: Vector3, desired: Vector3, depth: float, wade_limit := .45) -> Vector3:
 	var motion := desired
-	var water_weight := smoothstep(0.32, 0.62, depth)
+	var water_weight := smoothstep(wade_limit-.13, wade_limit+.17, depth)
 	var inland := Layout.inland_normal(position.x)
 	motion = _redirect(motion, inland, water_weight)
 	# Return current at knee depth, including when the player lets go of movement.

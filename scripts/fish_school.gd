@@ -3,6 +3,7 @@ const Fishery=preload("res://scripts/fishery.gd")
 const Fish=preload("res://scripts/fish.gd")
 var sources: Dictionary={}
 var hour_key := -1
+var river_level := INF
 @onready var state: Node=get_node("/root/GameState")
 @onready var clock: Node=get_parent().get_node("Daylight/Clock")
 func _ready() -> void:
@@ -21,7 +22,9 @@ func refresh() -> void:
 		fish.configure(data,sources[data.species],get_parent().get_node("Walker"))
 		add_child(fish)
 func _process(_delta: float) -> void:
-	if clock.running and int(clock.hour_at(clock.elapsed))!=hour_key: refresh()
+	if not is_equal_approx(river_level,state.water_level()):
+		river_level=state.water_level();refresh()
+	elif clock.running and int(clock.hour_at(clock.elapsed))!=hour_key: refresh()
 func nearest(species: String,point: Vector3) -> Node3D:
 	var best: Node3D=null
 	var distance := 4.0

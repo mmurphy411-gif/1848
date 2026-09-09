@@ -2,6 +2,7 @@ extends Node3D
 var quitting := false
 ## Scene instances stay posed for tools; launching this as the main scene starts play.
 func _ready() -> void:
+	var mining := preload("res://scripts/mining.gd").new();mining.name="Mining";add_child(mining)
 	get_node("/root/Trip").configure(self)
 	var path:=MeshInstance3D.new();path.name="StoreTrail"
 	var layout=preload("res://scripts/claim_layout.gd")
@@ -33,7 +34,9 @@ func _start_play() -> void:
 			get_node("/root/Trip").depart(true)
 			get_node("/root/Trip").shop.walker.position=Vector3(0,0,1.3)
 			return
-		if state.day>=81 and state.day<=127 and state.start_hour>=5 and state.start_hour<=8:
+		if state.start_work!="":
+			$Mining.focus_site(state.start_work)
+		elif state.day>=81 and state.day<=127 and state.start_hour>=5 and state.start_hour<=8:
 			var layout=preload("res://scripts/claim_layout.gd")
 			var z: float=layout.shore_z(-34)-.8
 			$Walker.position=Vector3(-34,layout.height_at(-34,z)+.05,z)

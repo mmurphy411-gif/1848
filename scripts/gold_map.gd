@@ -5,8 +5,8 @@ const Layout = preload("res://scripts/claim_layout.gd")
 
 static func density_at(x: float, z: float) -> float:
 	var inland := z - Layout.shore_z(x)
-	if absf(x) >= Layout.HALF_LENGTH or z > Layout.back_z(x) or inland < -3.166667:
-		return 0.0 # Canyon, off-claim, or riverbed deeper than 45 cm.
+	if absf(x) >= Layout.HALF_LENGTH or z > Layout.back_z(x) or inland < -7.0:
+		return 0.0 # Access depth is now checked by the worker, not the geology.
 	# Coarse gravel settles first at the upstream head; fine inland sand is lean.
 	var shore_strength := 1.0 - smoothstep(3.0, 12.0, inland)
 	var upstream := lerpf(1.0, 0.25, clampf((x + 40.0) / 80.0, 0.0, 1.0))

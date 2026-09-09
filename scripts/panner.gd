@@ -45,11 +45,7 @@ func can_pan() -> bool:
 	var activities := walker.get_parent().get_node_or_null("Activities")
 	if activities and (activities.busy or activities.ui_open()): return false
 	var point := walker.global_position
-	var inland := point.z - Layout.shore_z(point.x)
-	var depth: float = walker.river.depth_at(point)
-	var shallows := depth > 0.0 and depth <= 0.45
-	var dry_edge := depth == 0.0 and inland >= -0.7 and inland <= 1.5
-	return state == State.IDLE and absf(point.x) < 40.0 and point.z <= Layout.back_z(point.x) and (shallows or dry_edge)
+	return state == State.IDLE and walker.river.work_edge(point,walker.wade_limit())
 
 func start_pan() -> bool:
 	if not can_pan():
@@ -91,7 +87,7 @@ func _physics_process(delta: float) -> void:
 					segment = SEGMENTS[i]
 					walker.get_node("Visual").play_pan(segment, i-1 if segment=="pan_swirl" else 0)
 				break
-		if walker.river.depth_at(walker.global_position) > 0.45:
+		if not walker.river.work_edge(walker.global_position,walker.wade_limit()):
 			_reset() # Cancel without awarding the held result.
 		elif elapsed >= PAN_DURATION:
 			state = State.SHOWING

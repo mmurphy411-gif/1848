@@ -12,9 +12,10 @@ func reset() -> void:
 	rng.seed=game.seed^game.day^184809
 func eligible(point: Vector3,hour: float) -> String:
 	var inland := point.z-Layout.shore_z(point.x)
-	if absf(point.x)>=40 or inland< -1 or point.z>Layout.back_z(point.x): return ""
+	var wet_edge: float=point.z-get_parent().get_node("Greybox/River").shore_z(point.x)
+	if absf(point.x)>=40 or wet_edge< -.35 or point.z>Layout.back_z(point.x): return ""
 	if inland>=3 and inland<=6 and used.firewood<10: return "firewood"
-	if absf(inland)<1 and used.hellgrammite<4:
+	if absf(wet_edge)<1 and used.hellgrammite<4:
 		for b in Layout.BOULDERS:
 			if Vector2(point.x-b.x,point.z-b.y).length()<b.z+3: return "hellgrammite"
 		for b in Layout.BEDROCK:

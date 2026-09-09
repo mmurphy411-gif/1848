@@ -5,6 +5,7 @@ extends Node3D
 const Layout = preload("res://scripts/claim_layout.gd")
 const Assets = preload("res://scripts/asset_library.gd")
 const MATERIAL_COUNT := 5
+var river_level := INF
 
 func _ready() -> void:
 	_build_ground()
@@ -12,6 +13,17 @@ func _ready() -> void:
 	_build_boulders()
 	_build_bedrock()
 	_build_cliff_boulders()
+	if not Engine.is_editor_hint(): get_node("/root/GameState").changed.connect(_sync_river)
+	_sync_river()
+
+func _sync_river() -> void:
+	if not is_inside_tree(): return
+	var level: float = $River.water_level()
+	if is_equal_approx(level,river_level): return
+	river_level=level
+	$River.position.y=level
+	_build_river(level)
+	Assets.terrain().set_shader_parameter("water_level",level)
 
 func _build_ground() -> void:
 	var surfaces: Array[SurfaceTool] = []
@@ -188,27 +200,31 @@ func _triangle(surfaces: Array[SurfaceTool], a: Vector3, b: Vector3, c: Vector3)
 	for point in [a, b, c]:
 		surface.add_vertex(point)
 
-func _build_river() -> void:
+func _build_river(level := 0.0) -> void:
 	var river: Area3D = $River
+	for child in river.get_children():
+		if child is CollisionShape3D:
+			river.remove_child(child);child.queue_free()
+	var model = preload("res://scripts/river_model.gd")
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var columns := _columns()
 	for column in columns.size() - 1:
 		var x: float = columns[column]
 		var next_x: float = columns[column + 1]
-		var a := Vector3(x, 0, Layout.canyon_shore_z(x) - 0.666667)
-		var b := Vector3(next_x, 0, Layout.canyon_shore_z(next_x) - 0.666667)
-		var c := Vector3(x, 0, Layout.canyon_shore_z(x) - 27.27619 - Layout.canyon_far_offset(x))
-		var d := Vector3(next_x, 0, Layout.canyon_shore_z(next_x) - 27.27619 - Layout.canyon_far_offset(next_x))
+		var a := Vector3(x, 0, model.shore_z(x,level))
+		var b := Vector3(next_x, 0, model.shore_z(next_x,level))
+		var c := Vector3(x, 0, model.far_z(x,level))
+		var d := Vector3(next_x, 0, model.far_z(next_x,level))
 		var steps := ceili(maxf(a.distance_to(c), b.distance_to(d)))
 		for row in steps:
 			var t0 := float(row) / steps
 			var t1 := float(row + 1) / steps
 			for point in [a.lerp(c, t0), a.lerp(c, t1), b.lerp(d, t0), b.lerp(d, t0), a.lerp(c, t1), b.lerp(d, t1)]:
-				var across := inverse_lerp(Layout.canyon_shore_z(point.x) - 0.666667, Layout.canyon_shore_z(point.x) - 27.27619 - Layout.canyon_far_offset(point.x), point.z)
+				var across := inverse_lerp(model.shore_z(point.x,level),model.far_z(point.x,level),point.z)
 				var flow := Vector2(1, 0.015 * clampf(point.x, -42, 42)).normalized()
 				var speed := 0.2 + 0.8 * sin(PI * clampf(across, 0, 1))
-				surface.set_color(Color(flow.x * 0.5 + 0.5, flow.y * 0.5 + 0.5, speed, clampf(-Layout.height_at(point.x, point.z) / 5.0, 0, 1)))
+				surface.set_color(Color(flow.x * 0.5 + 0.5, flow.y * 0.5 + 0.5, speed, clampf((level-Layout.height_at(point.x, point.z)) / 5.0, 0, 1)))
 				surface.add_vertex(point)
 		var volume := CollisionShape3D.new()
 		var shape := ConvexPolygonShape3D.new()
@@ -220,6 +236,10 @@ func _build_river() -> void:
 		river.add_child(volume)
 	surface.index()
 	surface.generate_normals()
+	var existing := river.get_node_or_null("WaterSurface")
+	if existing:
+		existing.mesh=surface.commit()
+		return
 	var water := MeshInstance3D.new()
 	water.name = "WaterSurface"
 	# Exclude the screen-reading water from its own reflection capture.

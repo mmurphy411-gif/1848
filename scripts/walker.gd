@@ -14,11 +14,14 @@ const STEP_HEIGHT := 0.25
 @onready var panner: Node = $Panner
 var water_depth := 0.0
 
+func wade_limit() -> float:
+	return preload("res://scripts/river_model.gd").wade_limit(get_node("/root/GameState").inventory)
+
 func _physics_process(delta: float) -> void:
 	var axes := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	var fisher := get_node_or_null("Fisher")
 	var activities := get_parent().get_node_or_null("Activities")
-	if activities and activities.holds_at_fire():
+	if activities and (activities.holds_at_fire() or (activities.busy and activities.action in ["crevice","rocker","build_rocker"])):
 		velocity=Vector3.ZERO
 		return
 	if panner.state != panner.State.IDLE or (fisher and fisher.state>1) or (activities and (activities.busy or activities.ui_open())):
@@ -26,8 +29,8 @@ func _physics_process(delta: float) -> void:
 	var direction := Basis(Vector3.UP, camera_rig.rotation.y) * Vector3(axes.x, 0, axes.y)
 	water_depth = river.depth_at(global_position)
 	var wade: float=preload("res://scripts/condition_model.gd").wade_speed(get_node("/root/GameState").condition)
-	var speed := lerpf(WALK_SPEED, wade, smoothstep(0.0, 0.45, water_depth))
-	var motion := Boundary.guide_motion(global_position, direction * speed, water_depth)
+	var speed := lerpf(WALK_SPEED, wade, smoothstep(0.0, wade_limit(), water_depth))
+	var motion := Boundary.guide_motion(global_position, direction * speed, water_depth, wade_limit())
 	velocity.x = move_toward(velocity.x, motion.x, ACCELERATION * delta)
 	velocity.z = move_toward(velocity.z, motion.z, ACCELERATION * delta)
 	if is_on_floor():

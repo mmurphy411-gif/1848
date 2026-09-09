@@ -32,6 +32,11 @@ def animate(rig,body,joints,output='miner/miner.glb',source='build_miner'):
         if clip in ['gather','tend_fire']:crouch=math.sin(math.pi*t/2)**2
         if clip=='eat':crouch=.9
         if clip=='cook':crouch=.8
+        if clip in ['crevice','spoon']:crouch=.78
+        if clip=='spoon':crouch=.95
+        if clip=='shovel':crouch=.30+.20*math.sin(t*math.pi)**2
+        if clip=='pick':crouch=.22+.18*math.sin(t*math.pi)**2
+        if clip=='rock':crouch=.16
         if clip=='lie_down':crouch=smooth(t/2)
         lean=math.radians(43)*crouch-math.radians(33)*lift
         hip=Vector((.006*math.sin(t*math.pi*.5)*(1-crouch),.10*crouch,.94-.42*crouch))
@@ -111,6 +116,14 @@ def animate(rig,body,joints,output='miner/miner.glb',source='build_miner'):
             if clip in ['pour','take']:
                 reach=1 if clip=='pour' else math.sin(math.pi*t/1.5)**2
                 target=carried_hand.lerp(Vector((sign*.10,-.53,1.46+.015*math.sin(t*math.tau/3))),reach)
+            if clip in ['crevice','spoon']:
+                target=Vector((sign*.14,-.48,.50))
+                if side=='Right':target+=Vector((.025*math.sin(t*math.pi),-.04*math.cos(t*math.pi),.08*math.sin(t*math.pi)))
+                if clip=='spoon' and side=='Right':target.z-=.20
+            if clip in ['shovel','pick']:
+                stroke=.5-.5*math.cos(t*math.pi)
+                target=Vector((sign*.13,-.37-.12*stroke,.67+.35*stroke+( .20 if side=='Left' else 0)))
+            if clip=='rock':target=Vector((sign*.09+.03*math.sin(t*math.pi*1.3),-.46,.83+.04*math.sin(t*math.pi*1.3)))
             if clip in ['keep_idle','weigh','write','hand_over','shelve']:
                 target=Vector((sign*.21,-.48,1.15))
                 if clip=='weigh':target=Vector((sign*.23,-.64,1.28+.02*math.sin(t*math.pi/3)))
@@ -136,7 +149,7 @@ def animate(rig,body,joints,output='miner/miner.glb',source='build_miner'):
                     relaxed=matrices[side+'Hand']@rest[side+'Hand'].inverted()@rest[name]
                     grip=pan_t
                     # Left hand hooks over the upper lip in the side carry.
-                    if side=='Left' and clip not in ['pour','take','keep_idle','weigh','write','hand_over','shelve','fish_idle','fish_wait','cast','strike','fight','land','gather','tend_fire','cook','eat','lie_down']:
+                    if side=='Left' and clip not in ['crevice','spoon','shovel','pick','rock','pour','take','keep_idle','weigh','write','hand_over','shelve','fish_idle','fish_wait','cast','strike','fight','land','gather','tend_fire','cook','eat','lie_down']:
                         carry_points=[Vector((.225-.011*k,(-.045+f*.021),.105-.01*k)) for k in range(4)]
                         start=pan_matrix@carry_points[j];end=pan_matrix@carry_points[j+1]
                         start=start.lerp(pan_matrix@points[j],pan_t);end=end.lerp(pan_matrix@points[j+1],pan_t)

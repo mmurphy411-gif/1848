@@ -4,6 +4,7 @@ signal new_day
 const Condition = preload("res://scripts/condition_model.gd")
 const Cooking = preload("res://scripts/cooking.gd")
 const Weather = preload("res://scripts/weather.gd")
+const RiverModel = preload("res://scripts/river_model.gd")
 var seed := 1848
 var day := 0
 var dollars := 0.0
@@ -15,9 +16,13 @@ var inventory: Dictionary={"hooks":4,"line_m":20.0,"bait":{"grasshopper":0,"hell
 # Scenario configuration is separate from owned season state.
 var start_hour := 4.75
 var weather_override := "auto"
+var river_override := INF
+var start_work := ""
+var mining: Dictionary = {"taken":[0.0,0.0],"crevice_actions":[0,0],"rocker_position":Vector3.ZERO,"rocker_built":false,"rocker_actions":0}
 func _ready() -> void:
 	inventory.goods={"flour":0.0,"beans":0.0,"pork":0.0,"coffee":0.0,"salt":2.0}
 	inventory.rod=false
+	for tool in preload("res://scripts/mining_model.gd").TOOLS: inventory[tool]=false
 	var args: Dictionary={}
 	for arg in OS.get_cmdline_user_args():
 		var parts := arg.split("=",true,1)
@@ -37,6 +42,9 @@ func apply_scenario(args: Dictionary) -> void:
 			"hour": start_hour=fposmod(value.to_float(),24)
 			"dollars": dollars=maxf(0,value.to_float())
 			"rod": inventory.rod=value=="1"
+			"crowbar","pick","shovel","boots","rocker": inventory[key]=value=="1"
+			"river": river_override=INF if value=="auto" else clampf(value.to_float(),-.75,.14)
+			"work": start_work=value if value in ["crevice","rocker"] else ""
 			"scene":
 				if value in ["claim","store"]: scene=value
 			"condition": condition=clampf(value.to_float(),5,100)
@@ -60,6 +68,7 @@ func apply_scenario(args: Dictionary) -> void:
 	if args.has("hour"): inventory.midday_checked=start_hour>=13
 	changed.emit()
 func weather() -> String: return Weather.state(day,seed) if weather_override=="auto" else weather_override
+func water_level() -> float: return RiverModel.level(day,seed,weather()) if is_inf(river_override) else river_override
 func event(message: String) -> void:
 	inventory.journal.append({"day":day,"text":message})
 	changed.emit()

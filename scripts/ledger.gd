@@ -60,6 +60,10 @@ func refresh() -> void:
 		for item in game.inventory.goods:
 			if game.inventory.goods[item]>0: right.text+="%s %.2f lb\n" % [item.capitalize(),game.inventory.goods[item]]
 		right.text+="%d hooks · %.0f yards\n%s" % [game.inventory.hooks,game.inventory.line_m*1.094,"Willow rod" if game.inventory.rod else "Hand line"]
+	right.text+="\n\nTools\n"
+	for item in preload("res://scripts/mining_model.gd").TOOLS:
+		if game.inventory.get(item,false): right.text+=("Crowbar and horn spoon" if item=="crowbar" else item.capitalize())+"\n"
+	right.text+="Crevice gold: %.3f oz\nCradle loads: %d\n" % [game.mining.taken[0]+game.mining.taken[1],game.mining.rocker_actions]
 func open_book() -> void:
 	opened=true;book.show();Input.mouse_mode=Input.MOUSE_MODE_VISIBLE;refresh()
 func close_book() -> void:

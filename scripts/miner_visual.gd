@@ -3,6 +3,7 @@ extends Node3D
 const CLIPS := {"idle":4.0,"walk":1.0,"wade":1.2,"pan_enter":2.0,"pan_swirl":2.0,"pan_wash":1.5,"pan_lift":1.5,"pan_exit":1.0,"fish_idle":3.0,"cast":1.2,"fish_wait":4.0,"strike":.4,"fight":1.0,"land":2.0,"gather":2.0,"tend_fire":2.0,"cook":3.0,"eat":3.0,"lie_down":2.0}
 const FISH_CLIPS := ["fish_idle","cast","fish_wait","strike","fight","land"]
 const CAMP_CLIPS := ["gather","tend_fire","cook","eat","lie_down"]
+const MINING_CLIPS := ["crevice","spoon","shovel","pick","rock"]
 var activity_clip := ""
 var activity_rate := 1.0
 var handline_attachment: BoneAttachment3D
@@ -55,6 +56,13 @@ func _ready() -> void:
 		player.get_animation_library("").add_animation(clip,clips.get_animation(clip).duplicate())
 	player.get_animation("pour").loop_mode=Animation.LOOP_LINEAR
 	store_clips.free()
+	var mining_clips: Node3D=load("res://assets/mining/miner_clips.glb").instantiate()
+	var mining_player: AnimationPlayer=mining_clips.find_children("*","AnimationPlayer",true,false)[0]
+	for clip in MINING_CLIPS:
+		var animation := mining_player.get_animation(clip).duplicate() as Animation
+		animation.loop_mode=Animation.LOOP_LINEAR
+		player.get_animation_library("").add_animation(clip,animation)
+	mining_clips.free()
 	# Blender's frame-one offset is cropped to the table's exact clip lengths.
 	for name in CLIPS:
 		var animation := player.get_animation(name)
@@ -141,7 +149,7 @@ func _build_tree() -> void:
 			clip.animation=name
 			machine.add_node(name,clip)
 		root_machine.add_node(group,machine)
-	for name in ["pour","take"]:
+	for name in ["pour","take"]+MINING_CLIPS:
 		var clip:=AnimationNodeAnimation.new();clip.animation=name
 		var machine: AnimationNodeStateMachine=root_machine.get_node("camp");machine.add_node(name,clip)
 	for a in ["idle","walk","wade","pan","fishing","camp"]:
@@ -195,7 +203,7 @@ func _physics_process(delta: float) -> void:
 		material.set_shader_parameter("feet_y",walker.global_position.y)
 	for particles in splashes:
 		particles.emitting=depth>.05 and speed>.3
-		particles.global_position = Vector3(particles.get_parent().global_position.x,.015,particles.get_parent().global_position.z)
+		particles.global_position = Vector3(particles.get_parent().global_position.x,get_node("/root/GameState").water_level()+.015,particles.get_parent().global_position.z)
 		particles.global_basis = Basis.IDENTITY
 	if active_pan=="pan_exit":
 		exit_elapsed+=delta
@@ -230,7 +238,7 @@ func _update_shin_foam(depth: float) -> void:
 	for side in ["Left","Right"]:
 		var knee := (skeleton.global_transform*skeleton.get_bone_global_pose(skeleton.find_bone(side+"LowerLeg"))).origin
 		var ankle := (skeleton.global_transform*skeleton.get_bone_global_pose(skeleton.find_bone(side+"Foot"))).origin
-		var shin := ankle.lerp(knee,clampf(-ankle.y/maxf(.01,knee.y-ankle.y),0,1))
+		var shin := ankle.lerp(knee,clampf((get_node("/root/GameState").water_level()-ankle.y)/maxf(.01,knee.y-ankle.y),0,1))
 		contacts.append(Vector4(shin.x,shin.z,0,1 if depth>.05 and is_visible_in_tree() else 0))
 	water_material.set_shader_parameter("shin_contacts",contacts)
 

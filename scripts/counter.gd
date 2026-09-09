@@ -26,6 +26,7 @@ func select(item: String) -> String:
 	if good.is_empty() or not good.for_sale: return "Not this trip"
 	if available(item)<=0: return "Sold out"
 	if item=="rod" and (game.inventory.rod or pile.has("rod")): return "Already have a rod"
+	if item in preload("res://scripts/mining_model.gd").TOOLS and (game.inventory.get(item,false) or pile.has(item)): return "Already owned"
 	if Pack.weight(Pack.add(projected_inventory(),item))>Pack.LIMIT_LB+.00001: return "Too heavy"
 	pile.append(item);shortfall=0;changed.emit();return ""
 func return_last() -> String:

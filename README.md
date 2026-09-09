@@ -1,9 +1,10 @@
 # 1848
 
-Phase 2, milestone 10 review build: Lambert's store, a day trip, seasonal prices,
-finite provisions, a willow rod, new recipes and a priced visit ledger, built
-on the panning, fishing and camp prototype. See [STORE_GUIDE.md](STORE_GUIDE.md)
-for the two-visit test and the milestone section below for open balance findings.
+Phase 2, milestone 11 playable build: the falling river, exposed bedrock,
+crevicing, boots, pick and shovel, and a buildable rocker join Lambert's store,
+fishing and camp. See [MINING_GUIDE.md](MINING_GUIDE.md) for quick work scenarios
+and [STORE_GUIDE.md](STORE_GUIDE.md) for the two-visit store test. Earlier balance
+findings remain documented below.
 Built with **Godot 4.7.2 standard**, GDScript, and the Forward+ renderer.
 
 ## Play
@@ -1511,3 +1512,75 @@ The price board uses Patrick Hand, under SIL Open Font License 1.1; the local
 licence is `assets/fonts/PatrickHand-OFL.txt`. Source:
 [Google Fonts metadata](https://github.com/google/fonts/blob/main/ofl/patrickhand/METADATA.pb).
 Slate and ledger reuse Cedarville Cursive with its existing bundled licence.
+
+## Milestone 11 — tools and the falling river
+
+M10 was committed as `f9e4d93` at the user's request. The subsequent M11 work
+implements the Phase 2 tools/river feature list. [MINING_GUIDE.md](MINING_GUIDE.md)
+contains immediate playtest commands; [MILESTONE_11.md](MILESTONE_11.md) records
+the scope, tuning and two explicit changes to old store assertions.
+
+The river now controls its mesh, physics volume, wet gravel, working bands and
+water-contact effects from one seasonal model. Tall boots extend working depth
+to .70 m. Lambert sells the crowbar/spoon, pick, shovel, boots and rocker kit.
+Crevices have persistent finite reserves. A cradle is built on dry shoreline
+gravel with a wet intake, loads faster with a pick, and washes ten normal pan
+rolls in 40 seconds after loading. Cancelled or flooded work awards no gold.
+Tools, depletion and the built cradle survive store trips. The F4 panel and
+command-line scenarios expose these mechanics without playing through summer.
+
+The old gold-map access cutoff expands to the shallow riverbed exposed by this
+milestone; its pocket locations, strengths and gradients are unchanged. The
+original terrain geometry, panning animations and water shader are unchanged.
+The crowbar includes the spoon; the rocker kit travels as a separate lumber
+bundle. Those interpretations and the initial reserve/river values are explicit
+in the M11 memo. M10 balance findings and M9 deferred notes remain outstanding.
+
+### Verification
+
+Milestones 1–10, M6 notes, M9 models, fishing tension, fishery pressure, camp
+layout and camp movement pass. Only the two documented M10 catalogue assertions
+changed. M11 model and integration suites pass, including actual G interaction,
+flood cancellation, boots access, live fish height, and a real store round trip.
+
+The 133-day equal-time tool comparison records **2.643 oz** from cradle loads
+versus **0.655 oz** from hand pans on the same lean ground, and **10.262 oz**
+from the two finite crevices. It uses 48-second work sessions and a shared
+geological field; it does not replace the M10 whole-economy simulation or claim
+to establish its unresolved balance targets. Outputs are `season-tools.csv`
+and `season-tools.json` in ignored `artifacts/`.
+
+The actual rocking/rain scene at 1920×1080 on the RTX 5080 measured **2.824 ms
+median, 3.272 ms p95**, over 600 uncapped frames after 240 warm-up frames.
+All six captures pass the composition guard. Visible miner coverage is
+7.40%/7.04% for crowbar/spoon and 6.85%/6.79% for loading/rocking; the cradle
+covers 6.16%/6.13%. The review lenses were tightened to give the subjects enough
+space in the frame; no existing camera probe was relocated or relaxed.
+
+The cradle is 1,516 triangles; hand tools are 72–80 each. New Blender sources
+and five baked work clips are retained. Existing scoop/wash foley accompanies
+the work. Engine logs retain the environment's certificate-store and shader-cache
+write diagnostics, and store teardown may report retained engine objects; the
+passing checks contain no gameplay script errors.
+
+### Visual review
+
+Each final capture was opened and inspected. The earlier upside-down crowbar
+and pick were corrected; the spoon now reaches down toward the crack. The
+cradle has a two-hand grip, visible hopper gravel, riffles and moving runners.
+
+| Capture | Art review / further polish |
+| --- | --- |
+| June bank | Water covers the slab; the foreground boulder still draws more attention than the submerged work site. |
+| September bank | The matching view clearly reveals exposed slab and new gravel; the old slab silhouette looks too rectangular. |
+| Crevice | Crowbar toe is now at the crack and the working pose is readable; fingers need a tighter closure on the shaft. |
+| Spoon | The lower reach reads as cleaning rather than prying; a more concave spoon bowl would improve its silhouette. |
+| Loading | Pick head faces the gravel and the hopper is readable; the loading arc could show a more deliberate transfer into the box. |
+| Rocking | Hands meet the handle area and the cradle rocks independently; the existing rigid backpack and uniform plank wear remain obvious. |
+
+Automated verification does not yet measure hand/tool contact over every frame,
+test on a mid-range GPU, or optimize an entire season's tool-buying policy.
+These limits are recorded rather than counted as passing coverage. Human motion
+review and final sound/art balancing remain appropriate for the polish pass.
+
+![Working the cradle](artifacts/m11-rocking.png)
