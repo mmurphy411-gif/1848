@@ -1,8 +1,9 @@
 # 1848
 
-Phase 2, milestone 9 review build: hand-line fishing, visible river fish, bait
-gathering, camp cooking and sleep, condition, weather, a written ledger and a
-development sandbox, built on the completed panning prototype.
+Phase 2, milestone 10 review build: Lambert's store, a day trip, seasonal prices,
+finite provisions, a willow rod, new recipes and a priced visit ledger, built
+on the panning, fishing and camp prototype. See [STORE_GUIDE.md](STORE_GUIDE.md)
+for the two-visit test and the milestone section below for open balance findings.
 Built with **Godot 4.7.2 standard**, GDScript, and the Forward+ renderer.
 
 ## Play
@@ -1280,3 +1281,233 @@ milestone 10. This supersedes the notes' prerequisite to finish the entire notes
 round before starting the store. The pending live wiring, visual revisions and
 omitted tests listed above remain deferred, not passed or completed. The prior
 design-stop status above describes the review before this ruling.
+
+## Milestone 10 — accepted checkpoint
+
+On September 9 the user authorized committing this build and proceeding to
+milestone 11. The balance findings and visual review notes below are retained
+as follow-up work, not claimed resolved. M10 model and integration suites pass
+on this checkpoint. Camp movement now steps over low clutter with headroom and
+landing checks; `tests/camp_movement.gd`, camp interactions, and M1 movement pass.
+The review-build status below records the state before this acceptance.
+
+The user's **go ahead and implement** approves the revised storyboard gate.
+Milestone 9's accepted checkpoint remains `ba8fab8`; the previously deferred
+M9 notes are not being claimed complete. Milestone 10 is implemented and
+uncommitted. The season's three design findings below prevent calling the
+whole milestone accepted. Start testing with [STORE_GUIDE.md](STORE_GUIDE.md).
+
+Jean-Baptiste Lambert is a fictional French-Canadian former trapping-brigade
+trader, now selling provisions under canvas. This follows the memo's French
+Camp background, rather than adding an explanatory speech to the game. His
+red shirt, grey hair, moustache, apron and red-and-blue sash distinguish him
+from the miner. The name comes from `Store.KEEPER`; the board, prompt and
+ledger use it. The reused miner rig carries idle, weigh, write, hand-over and
+shelve clips. Only pour and take clips were added to the miner's library.
+
+### Travel, counter and kit
+
+The trail starts six meters inland of camp. G while facing it begins a trip
+only by 09:00, with no active fishing, panning or camp task. One second fades
+frame the four-second rim view. Departure at H arrives at H+6; shopping is a
+paused-clock clearing; return is H+12. A carried smoked fish or cooked portion
+is eaten before the midday check. The claim remains off-tree during shopping,
+preserving its actual nodes, inventory, fish, camp and gold. Twelve hours burn
+down the unattended fire without advancing smoking. The return resumes the
+same claim and clock at the trail. The clearing guides outward walking back
+inward instead of putting up a hard wall.
+
+Lambert stands across the counter and moves between marks beside the scale
+and slate. The board, slate and pour have dedicated focus cameras. Esc releases
+a reading view. Pouring moves 0.25 oz/s, removes actual dust continuously,
+and credits 92% of it on release. The stream, weights and beam move during the
+pour. Shelf selection reserves one unit, slides its prop into the pile, and
+updates the slate. Returning the last item releases the reservation.
+
+Settlement is atomic: fish credit and coin first, then the exact dust shortfall
+at the thumbed rate. Automatic dust settlement visibly pours before Lambert
+writes and hands over. Insufficient funds return the last item and leave
+`SHORT`. Smoked fish offered at the barrel remain owned until settlement.
+Unsettled items and fish offers are returned on departure. Only completed
+transactions enter dated purchases and the visit record.
+
+`Pack.weight` includes food, fish, rod and line, with a 40 lb limit. Hooks and
+gold add no pack weight. The back pack appears above 5 lb and grows at 15 and
+30 lb. The willow rod extends the cast to 12 m and slows tension growth during
+a run to 80%; hand-line behavior remains unchanged. Its tip supplies the
+line's origin. The reused cast has the allowed 40-degree forearm adjustment;
+no additional fishing clips were authored. The low-held reused motion still
+deserves a live art review as an overhead cast.
+
+### Prices and finite stock
+
+`prices.gd` blends seeded noise in five-day buckets around the $16-to-$14 gold
+trend. Wander amplitude is $1.50 and daily noise $0.06, keeping the theoretical
+daily step under $0.75. Fifty seeds give early/late means $15.792/$14.221 and
+a maximum observed step of $0.694, inside the memo's bands. Goods use day
+0/36/67/97/128 inflation checkpoints 1/1.5/2.5/4/6 with item-specific ±8%
+wobble, rounded to cents. Smoked fish pay $0.12 times the index per pound.
+
+Stock is opening plus seven-day shipments beginning day 3, minus dated
+purchases. The listed last day is a cutoff, not an extra delivery. For
+example, hooks last ship on day 108 before their day-112 cutoff. The rod has
+exactly one extra delivery on day 36. There are no invented off-screen buyers.
+
+| Item | Unit | June base | lb/unit | Opening | Shipment | Last day | Sale |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| Hook | each | $0.25 | 0 | 24 | 24 | 112 | yes |
+| Line | 20 m coil | $1.00 | 0.2 | 6 | 4 | 112 | yes |
+| Rod | each | $3.00 | 1.5 | 1 | 1 | 36 | yes |
+| Flour | lb | $0.10 | 1 | 200 | 150 | 119 | yes |
+| Beans | lb | $0.08 | 1 | 120 | 80 | 119 | yes |
+| Pork | lb | $0.20 | 1 | 80 | 60 | 119 | yes |
+| Coffee | lb | $0.25 | 1 | 20 | 15 | 105 | yes |
+| Salt | lb | $0.10 | 1 | 40 | 30 | 119 | yes |
+| Crowbar | each | $6 | 5 | 2 | 1 | 98 | display |
+| Pick | each | $8 | 7 | 2 | 1 | 98 | display |
+| Shovel | each | $8 | 5 | 2 | 1 | 98 | display |
+| Boots | pair | $12 | 3 | 2 | 1 | 84 | display |
+| Rocker | lumber and iron | $25 | 40 | 1 | 1 | 84 | display |
+| Spear | each | $6 | 2 | 1 | 1 | 91 | display |
+| Rifle | each | $60 | 9 | 1 | 0 | — | display |
+| Powder | 20 shots | $4 | 1 | 3 | 2 | 112 | display |
+| Tent | each | $20 | 18 | 1 | 1 | 84 | display |
+
+### Food, ledger and sandbox
+
+The skillet now offers fish, biscuits and pork; the pot offers beans and
+coffee. G cycles a utensil's recipes and F starts one. Biscuits consume 0.5 lb
+flour and 0.02 lb salt over 15 game minutes; another batch before leaving camp
+becomes a carried portion. Beans consume 1 lb and 0.05 lb salt over two hours
+of fire, with one portion eaten and two carried. Pork consumes 0.5 lb over ten
+minutes. Those meals give +20 condition. Coffee consumes 0.1 lb over ten
+minutes, gives +5 once before 10:00, and is not a meal. Carried recipe portions
+keep two days. The tripod pot moves over the fire during pot recipes and
+returns afterward. Smoking costs 0.1 lb salt; the default 2 lb covers twenty
+fish. At the crate, 0.25 lb pork and the knife produce four pork baits.
+
+The ledger's left page records the latest completed store visit, actual and
+weighed ounces, purchase quantities and prices, and coin. The right page
+compares the latest prices to the preceding visit in smaller margin figures,
+then lists season totals and the pack. The store HUD has one ounces-and-coin
+readout; camp returns to the original sack readout.
+
+F4 adds fractional food quantities, rod ownership, a current gold/flour price
+line, Go to store and Home. The shortcuts bypass travel eligibility for tests.
+Scenario keys include `goods.flour`, `goods.beans`, `goods.pork`, `goods.coffee`,
+`goods.salt`, `rod=1` and `scene=store`. Store scenario entry starts at the
+counter. Gold is set through the sandbox. Session state is not a disk save.
+
+### Season results and outstanding balance findings
+
+`tests/simulate_season.gd` runs 132 days with a 1,200-second daylight budget.
+Walking, bait gathering, waiting, fighting, landing, wood gathering, tending,
+recipes, panning and travel spend time. It calls the actual gold, pan, fish,
+fight, condition, recipe, price and counter models, including pan-tier decline,
+local fishing pressure, finite goods, pack capacity and the 92% sale rate.
+The careful policy supplies food, tends a smoking fire and pans rich ground;
+careless spends daylight panning without meals; spendthrift shops weekly for
+pork and coffee and pans middling ground. These authored policies are test
+strategies, not predictions of human behavior. No gold subsidy or price tuning
+was introduced to obtain these results.
+
+| Policy | End value | Condition | Trips | Hook purchases | Trail meals | October two-meal days |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Careful | $19,325.34 | 100 | 8 | 4 | 4 | 31/31 |
+| Careless | $15,121.48 | 5 | 0 | 0 | 0 | 0/31 |
+| Spendthrift | $173.32 | 100 | 19 | 0 | 1 | 31/31 |
+
+Both hard stop conditions pass: careful ends ahead and can purchase hooks by
+the second visit. Deterministic replay and a different seed are checked.
+Three acceptance assertions fail, so the simulation deliberately exits 2:
+
+- Starting with no food and no coin produces trips on days 0, 1, 2, 3 and 5,
+  followed by days 39, 69 and 105. The first two are not thirty days apart.
+- Salt is replenished before it is exhausted, rather than forcing the first
+  store visit after twenty smoked fish.
+- The specified shipments outpace spendthrift purchases, so it never sees
+  sold-out stock. The real policy also fails the six-fewer-objects October
+  shelf probe: the display grows from 68 to 640 objects, including pegs.
+
+The four required outputs are `artifacts/season-careful.csv`,
+`season-careless.csv`, `season-spendthrift.csv` and `season-summary.md`.
+The October capture uses that CSV purchase history, not a fabricated sellout.
+These findings are preserved for the user's balance decision.
+
+### Verification and visual review
+
+Regression suites 1–9, milestone 6 notes, milestone 9 models, fishing tension,
+camp layout and fishery pressure passed. No milestone 9 notes suite exists at
+this checkpoint. M10 model and integration suites pass, including actual G
+input, 8/12 m aim, pack refusal, SHORT, offer undo, exact automatic settlement,
+travel state, two-visit ledger, recipes and sandbox. The final changes were
+rechecked with M10, M9, tension and camp-layout suites. The protected gold map,
+pan result, claim-layout values, boundary and water shader are unchanged.
+
+At 1920×1080 on the RTX 5080, 600 uncapped store frames after 240 warm-up
+frames give median **2.223 ms**, p95 **2.339 ms**, below 4.5 ms. Lambert animates,
+October stock is present and all rain particles are enabled. A separate GPU
+mask sample finds zero rain pixels below the canvas in twelve samples, with
+3,882 outside rain pixels as the positive control.
+The unchanged claim night/fire/rain/24-fish benchmark also passes: median
+3.09 ms and p95 3.32 ms over 600 warmed frames.
+
+Measured board glyph lines are at least **32 px**, with **9.3:1** contrast.
+The pile/slate capture's minimum is **28 px**. Visible subject masks give the
+pour **12.83%** coverage and **13.47%** counter; Lambert's face/hand regions
+give **6.03%**. Those masks use bone-centered anatomical regions, not a
+claim that every pixel is exposed skin. The composition guard passes the
+delivered store frames and sequence frames. Numerical probes do not replace
+the art review below. The final rim uses (12, 28, 40), looking at (0, 2, 0),
+44-degree FOV, with **34.45%** visible bar/river coverage. Its probe preserves
+foliage alpha cutouts. The season and stock-depletion assertions remain red.
+
+The kit has 2,676 triangles, all goods/fill states 2,864, Lambert 13,492, the
+two miner clips' mesh 13,812, and the rod 24. Blender sources are retained.
+Store and goods share one 2048 atlas. Imported atlas duplicates are ignored;
+the authored source is retained. New large binaries follow existing Git LFS
+rules. Godot logs include this environment's certificate-store and shader-cache
+write diagnostics, plus some engine shutdown resource diagnostics; no gameplay
+script errors remain in the passing suites.
+
+![Store review contact sheet](artifacts/milestone-10-contact.png)
+
+| Render | Art-director review / remaining work |
+| --- | --- |
+| Rim dawn | The live fire and smoke replace the storyboard fixture; the higher oblique view passes landscape coverage, though foliage still competes with camp for attention. |
+| Arrival | The curved approach reveals the board and counter at a three-quarter angle; terrain and trail edges remain visibly procedural and deserve a softer art pass. |
+| Board | The dated price list fills its own reading camera and clears the supporting post; retain this measured legibility during further texture work. |
+| Weighing | Sack, stream, pans, hands and beam share the view inside the real tent; the thumb contact and weight placement need the human motion review. |
+| Lambert | Hair, moustache, apron and sash distinguish him; the face remains stylized and the lower hand needs more breathing room despite passing the region-coverage check. |
+| Shelves June | Three tiers and distinct item silhouettes are visible; the food sacks still look too regular. |
+| Shelves October | This is the actual spendthrift history and visibly fuller stock; sparse shelves require a balance decision, not an art fixture. |
+| Counter | Flour, hook paper and coil are separate on the wood, with every slate line inside its face; more convincing scoop and paper details would strengthen the sale. |
+| Rain store | The canopy shelters the counter and the GPU cutoff passes; canvas sag and its worn texture remain visually coarse. |
+| Rim dusk | The same camera has evening light and an extinguished fire; it retains the dawn view's foliage limitation. |
+| Ledger prices | Actual visits on days 30 and 65 show differing goods prices in the margin; the scrollable pack section continues below the initial page. |
+| Rod cast | The corrected socket keeps the rod out of the ground and the tip feeds the line; the reused low-held cast needs human approval before any further animation work. |
+| SHORT | A real unaffordable settlement produces the large shortfall text; review its persistence while choosing a cheaper pile. |
+| Empty peg | A real exhausted line-stock fixture leaves the peg bare; the surrounding loose merchandise could use clearer spacing. |
+
+![Weigh and settle sequence](artifacts/store-sequence-sheet.png)
+![Travel sequence](artifacts/trip-sequence-sheet.png)
+
+The sequence directories contain 180 weigh/settle frames and 120 travel frames
+for review; they are ignored and are not committed. The camera and pose code
+is in `tests/store_sequences.gd`; `tests/build_store_contacts.py` rebuilds the
+contact sheets. Final stills come from `tests/store_capture.gd` and
+`tests/store_extra_capture.gd`; the latter uses the current production rim
+camera. Sequence sampling uses every fifth physics tick at a fixed 60 Hz,
+giving 12 fps, ten seconds of travel and fifteen seconds at the counter.
+
+The revised thirteen-frame storyboard and its original art notes remain in
+`artifacts/storyboard/` and the prior review history. It was the entry gate,
+not final acceptance. Remaining human review follows the memo: dawn rim,
+arrival, Lambert, weigh/settle, ledger, then a live day-30 trip and another on
+day 65. The second visit should prompt an unprompted remark about the prices.
+No milestone-10 completion commit has been made.
+
+The price board uses Patrick Hand, under SIL Open Font License 1.1; the local
+licence is `assets/fonts/PatrickHand-OFL.txt`. Source:
+[Google Fonts metadata](https://github.com/google/fonts/blob/main/ofl/patrickhand/METADATA.pb).
+Slate and ledger reuse Cedarville Cursive with its existing bundled licence.

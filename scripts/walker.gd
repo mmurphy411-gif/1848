@@ -6,6 +6,7 @@ const WALK_SPEED := 2.4
 const WADE_SPEED := 1.05
 const ACCELERATION := 7.0
 const GRAVITY := 18.0
+const STEP_HEIGHT := 0.25
 
 @export var camera_rig: Node3D
 @export var river: Area3D
@@ -31,11 +32,34 @@ func _physics_process(delta: float) -> void:
 	velocity.z = move_toward(velocity.z, motion.z, ACCELERATION * delta)
 	if is_on_floor():
 		velocity.y = 0.0
+		_step_up(Vector3(velocity.x, 0, velocity.z) * delta)
 	else:
 		velocity.y -= GRAVITY * delta
 	move_and_slide()
 	if direction.length_squared() > 0.01:
 		visual.rotation.y = lerp_angle(visual.rotation.y, atan2(-direction.x, -direction.z), 1.0 - exp(-8.0 * delta))
+
+func _step_up(motion: Vector3) -> void:
+	if motion.length_squared() < .000001: return
+	var obstacle := KinematicCollision3D.new()
+	if not test_move(global_transform, motion, obstacle): return
+	# Ordinary walkable slopes already work through move_and_slide.
+	if obstacle.get_normal().dot(Vector3.UP) >= cos(floor_max_angle): return
+	var lift := Vector3.UP * STEP_HEIGHT
+	if test_move(global_transform, lift): return
+	var raised := global_transform
+	raised.origin += lift
+	# Look past the capsule's rounded toe, even when a wall has stopped velocity.
+	var probe := motion.normalized() * maxf(motion.length(), .32)
+	if test_move(raised, probe): return
+	raised.origin += probe
+	var landing := KinematicCollision3D.new()
+	if not test_move(raised, -lift, landing): return
+	if landing.get_normal().dot(Vector3.UP) < cos(floor_max_angle): return
+	var rise := STEP_HEIGHT + landing.get_travel().y
+	if rise <= .001: return
+	# Only lift the feet; normal movement still resolves the horizontal travel.
+	global_position.y += rise
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:

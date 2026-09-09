@@ -12,6 +12,7 @@ var crickets: Array[AudioStreamPlayer3D] = []
 var loops: Array[AudioStreamPlayer3D] = []
 var winds: Array[AudioStreamPlayer3D] = []
 var wind_time := 0.0
+var store_bed := false
 
 func _ready() -> void:
 	rng.seed = 184807
@@ -50,6 +51,13 @@ func start() -> void:
 	if active: return
 	active = true
 	for voice in loops: voice.play(rng.randf()*voice.stream.get_length())
+	if store_bed:
+		for voice in loops:
+			if voice.name.begins_with("River") or voice.name.begins_with("Rapids"): voice.volume_db=-34
+
+func trip_bed(thin: bool) -> void:
+	for voice in loops:
+		if not voice in winds: voice.volume_db=-60 if thin else -19
 
 func stop() -> void:
 	active = false

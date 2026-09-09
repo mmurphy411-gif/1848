@@ -122,7 +122,7 @@ func aim() -> Vector3:
 		point=camera.global_position+direction*(-camera.global_position.y/direction.y)
 	var origin := Vector2(walker.position.x,walker.position.z)
 	var horizontal := Vector2(point.x,point.z)-origin
-	horizontal=horizontal.limit_length(8)
+	horizontal=horizontal.limit_length(12 if game.inventory.get("rod",false) else 8)
 	point=Vector3(origin.x+horizontal.x,.025,origin.y+horizontal.y)
 	if point.z>Layout.shore_z(point.x)-1:
 		point=walker.global_position-Layout.inland_normal(walker.position.x)*5
@@ -134,7 +134,7 @@ func cast() -> void:
 		if game.inventory.bait[bait_type]<=0: cycle_bait();return
 		game.inventory.bait[bait_type]-=1;game.changed.emit()
 		bait_loaded=true
-	target=aim();cast_from=visual.handline_attachment.global_position
+	target=aim();cast_from=visual.fishing_origin()
 	line.ring.hide();line.mesh.show();line.bait.show()
 	change(State.CAST,"cast")
 func snag_chance(point: Vector3) -> float:
@@ -146,6 +146,15 @@ func snag_chance(point: Vector3) -> float:
 func drift() -> void:
 	change(State.DRIFT,"fish_wait")
 	hazard=-log(maxf(.00001,rng.randf()));bite_in=-1
+static func step_with_rod(old: Dictionary,delta: float,pull: bool,rod: bool) -> Dictionary:
+	var input:=old.duplicate()
+	if rod and pull and input.elapsed+delta>=input.run_at and input.elapsed+delta<input.run_at+.8:
+		input.tension-=Fight.RUN_TENSION_RATE*.2*delta
+	var next:=Fight.step(input,delta,pull)
+	if rod and not next.broken and not old.landed:
+		next.distance=clampf(old.distance+(-1.2 if pull else .5)*delta,.65,12)
+		next.landed=next.stamina<=0 and next.distance<=1
+	return next
 func _physics_process(delta: float) -> void:
 	if state==State.IDLE: return
 	elapsed+=delta
@@ -167,7 +176,7 @@ func _physics_process(delta: float) -> void:
 		if flow_time<=0: flow=sample_flow(target);flow_time=1.0
 		var speed := .6 if bait_type=="grasshopper" else .25
 		var point := target+Vector3(flow.x,0,flow.y)*speed*delta
-		if Vector2(point.x-walker.position.x,point.z-walker.position.z).length()<=8: target=point
+		if Vector2(point.x-walker.position.x,point.z-walker.position.z).length()<=(12 if game.inventory.get("rod",false) else 8): target=point
 		target.y=.025+sin(elapsed*3)*.008 if bait_type=="grasshopper" else Layout.height_at(target.x,target.z)*.6
 		if bite_in>=0:
 			bite_in-=delta
@@ -203,7 +212,7 @@ func _physics_process(delta: float) -> void:
 		if is_instance_valid(fish) and fight.run_at-fight.elapsed<.4:
 			fish.approach_target=target+Vector3(-.35,0,0)
 		if elapsed>.4 and visual.activity_clip=="strike": visual.play_activity("fight")
-		fight=Fight.step(fight,delta,Input.is_action_pressed("fish"))
+		fight=step_with_rod(fight,delta,Input.is_action_pressed("fish"),game.inventory.get("rod",false))
 		visual.activity_rate=1.25 if Input.is_action_pressed("fish") else .5
 		var direction := (target-walker.position).normalized()
 		target=walker.position+direction*fight.distance
@@ -231,7 +240,7 @@ func _physics_process(delta: float) -> void:
 			if rng.randf()>=.5: game.lose_hook();bait_loaded=false;message("Hook lost")
 			else: message("Line freed")
 			stance()
-	line.draw_line(visual.handline_attachment.global_position,end,state in [State.FIGHT,State.SNAGGED])
+	line.draw_line(visual.fishing_origin(),end,state in [State.FIGHT,State.SNAGGED])
 func land() -> void:
 	if is_instance_valid(fish): fish.retired=true
 	trophy=MeshInstance3D.new();trophy.mesh=school.sources[hooked_species]

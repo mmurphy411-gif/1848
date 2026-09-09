@@ -82,6 +82,13 @@ func notify(text: String,seconds := 1.5) -> void:
 	notice=text;notice_time=seconds
 
 func _process(delta: float) -> void:
+	if get_parent().has_method("prompt"):
+		var game: Node=get_node("/root/GameState")
+		label.offset_left=-300;label.text="%.2f oz · $%.2f" % [get_node("/root/Sack").ounces,game.dollars]
+		notice_time=maxf(0,notice_time-delta)
+		action_label.text=notice if notice_time>0 else get_parent().prompt()
+		if get_parent().get_node("Sandbox").opened: action_label.text=""
+		return
 	if not get_parent().has_node("Activities"): return
 	notice_time=maxf(0,notice_time-delta)
 	var activities: Node=get_parent().get_node("Activities")
@@ -95,11 +102,15 @@ func _process(delta: float) -> void:
 		action_label.text="%s · %d bait · %d hooks" % [str(fisher.bait_type).capitalize(),game.inventory.bait.get(fisher.bait_type,0)+(1 if fisher.bait_loaded else 0),game.inventory.hooks]
 		return
 	if not activities.idle():
-		action_label.text={"cook":"Frying fish","fire":"Tending fire","eat":"Eating"}.get(activities.action,"")
+		var recipe: String=get_parent().get_node("Camp").recipe
+		action_label.text={"cook":"Cooking "+recipe if recipe!="" else "Frying fish","fire":"Tending fire","eat":"Eating"}.get(activities.action,"")
 		return
+	var trip: Node=get_node("/root/Trip")
+	if trip.travelling: action_label.text="";return
+	if trip.at_trail(): action_label.text="G / X · "+trip.prompt();return
 	var camp: Node=get_parent().get_node("Camp")
 	var target: String=camp.target(activities.walker)
-	var names := {"FireRing":"Add wood" if camp.burning() else "Light fire · 3 driftwood","Skillet":"Skillet","Rack":"Smoke fish","Cache":"Food cache","Bedroll":"Sleep","Crate":"Open ledger"}
+	var names := {"FireRing":"Add wood" if camp.burning() else "Light fire · 3 driftwood","Skillet":"Skillet","Pot":"Pot","Rack":"Need salt to smoke" if game.inventory.goods.salt<.1 else "Smoke fish","Cache":"Food cache","Bedroll":"Sleep","Crate":"Eat · carried food" if camp.has_stored() else "Cut bait" if game.inventory.goods.pork>=.25 else "Open ledger"}
 	if target!="": action_label.text="G / X · "+names[target];return
 	var bait: String=get_parent().get_node("BaitSources").eligible(activities.walker.position,activities.clock.hour_at(activities.clock.elapsed))
 	if bait!="": action_label.text="G / X · Gather "+bait

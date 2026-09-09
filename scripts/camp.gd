@@ -17,6 +17,10 @@ var last_hour := 4.75
 var phase := 0.0
 var skillet_rest := Transform3D.IDENTITY
 var cooking_food: MeshInstance3D
+var recipe := ""
+var coffee_day := -1
+var biscuit_day := -1
+var pot_rest := Transform3D.IDENTITY
 @onready var game: Node=get_node("/root/GameState")
 @onready var clock: Node=get_parent().get_node("Daylight/Clock")
 func _ready() -> void:
@@ -48,6 +52,7 @@ func _ready() -> void:
 		body.add_child(collider);props[key]=body
 	asset.free()
 	skillet_rest=props.Skillet.transform
+	pot_rest=props.Pot.transform
 	cooking_food=MeshInstance3D.new();cooking_food.visible=false
 	# FishSchool is later in the scene; resolve its mesh when cooking begins.
 	cooking_food.scale=Vector3(.65,.35,.65);cooking_food.position=Vector3(0,.085,0)
@@ -65,7 +70,8 @@ func _ready() -> void:
 	light.position=Vector3(0,.55,0);light.light_color=Color(1,.48,.15);light.omni_range=9;light.shadow_enabled=true
 	add_child(light)
 	_particles(flame,60,Color(1,.36,.055),.45,.13,Vector3(0,.8,0))
-	_particles(smoke,24,Color(.25,.26,.27,.25),3,.30,Vector3(.22,.65,.06))
+	_particles(smoke,48,Color(.25,.26,.27,.25),7,.36,Vector3(.10,.40,.025))
+	smoke.visibility_aabb=AABB(Vector3(-4,0,-4),Vector3(10,18,10))
 	fire_sound.stream=preload("res://assets/audio/fire.wav").duplicate()
 	fire_sound.stream.loop_mode=AudioStreamWAV.LOOP_FORWARD
 	fire_sound.stream.loop_end=roundi(fire_sound.stream.get_length()*fire_sound.stream.mix_rate)
@@ -99,7 +105,7 @@ func light_fire() -> bool:
 func target(walker: Node3D) -> String:
 	var nearest := 1.5
 	var result := ""
-	for key in ["FireRing","Skillet","Rack","Cache","Bedroll","Crate"]:
+	for key in ["FireRing","Skillet","Pot","Rack","Cache","Bedroll","Crate"]:
 		if not props.has(key): continue
 		var delta: Vector3=props[key].global_position-walker.global_position
 		delta.y=0
@@ -119,13 +125,18 @@ func wake_position() -> Vector3:
 	point.y=Layout.height_at(point.x,point.z)+.02
 	return point
 func restore_skillet() -> void:
+	props.Pot.transform=pot_rest;props.Pot.collision_layer=1
 	props.Skillet.transform=skillet_rest
 	props.Skillet.show()
 	props.Skillet.collision_layer=1
 	cooking_food.hide()
 func _physics_process(_delta: float) -> void:
+	if biscuit_day>=0 and get_parent().get_node("Walker").global_position.distance_to(global_position)>3.5: biscuit_day=-1
 	var activities: Node=get_parent().get_node("Activities")
 	if not activities.busy or activities.action!="cook": return
+	if recipe in ["beans","coffee"]:
+		props.Pot.global_position=global_position+Vector3(0,.05,0);props.Pot.collision_layer=0
+		return
 	var hand: Node3D=get_parent().get_node("Walker/Visual").right_hand
 	# The authored handle extends along +X; turn it riverward toward the grip.
 	props.Skillet.global_basis=Basis(Vector3.UP,PI/2)
@@ -140,7 +151,8 @@ func fry() -> bool:
 	game.changed.emit();return true
 func hang() -> bool:
 	var i := fresh_index()
-	if i<0 or not burning() or not smoking.is_empty(): return false
+	if i<0 or not burning() or not smoking.is_empty() or game.inventory.goods.salt<.1: return false
+	game.inventory.goods.salt=maxf(0,game.inventory.goods.salt-.1)
 	smoking=game.inventory.fish.pop_at(i);smoke_hours=0;game.event("Hung a fish on the rack.");return true
 func eat_stored() -> bool:
 	for i in game.inventory.fish.size():
@@ -148,6 +160,27 @@ func eat_stored() -> bool:
 		if f.state=="smoked" or f.get("cooked",false):
 			game.inventory.fish.remove_at(i);game.eat(f.state=="smoked");return true
 	return false
+func has_stored() -> bool:
+	return game.inventory.fish.any(func(f):return f.state=="smoked" or f.get("cooked",false))
+func cut_bait() -> bool:
+	if not game.inventory.knife or game.inventory.goods.pork<.25: return false
+	game.inventory.goods.pork-=.25;game.inventory.bait.pork+=4;game.event("Cut pork for bait.");return true
+func start_recipe(kind: String) -> bool:
+	if recipe!="" or not cooking_fish.is_empty(): return false
+	if not Cooking.can_cook(kind,game.inventory.goods,fire_hours,clock.hour_at(clock.elapsed),coffee_day==game.day): return false
+	for item in Cooking.RECIPES[kind].needs: game.inventory.goods[item]-=Cooking.RECIPES[kind].needs[item]
+	recipe=kind;cook_hours=Cooking.RECIPES[kind].hours;game.changed.emit();return true
+func finish_recipe() -> void:
+	if recipe=="coffee":
+		game.condition=minf(100,game.condition+5);coffee_day=game.day;game.event("Coffee.")
+	else:
+		var carried: int=Cooking.RECIPES[recipe].portions-1
+		if recipe=="biscuits" and biscuit_day==game.day: carried=1
+		else: game.condition=minf(100,game.condition+20);game.inventory.meals_today+=1
+		if recipe=="biscuits": biscuit_day=game.day
+		for i in carried: game.inventory.fish.append({"species":recipe,"weight_lb":.5,"state":"fresh","cooked":true,"day":game.day,"keeps_until":game.day+2})
+		game.event("Cooked "+recipe+".")
+	recipe="";get_parent().get_node("Activities").finish_cooking()
 func swap_cache() -> void:
 	if not game.inventory.fish.is_empty():
 		game.inventory.cache.append_array(game.inventory.fish);game.inventory.fish=[]
@@ -155,6 +188,11 @@ func swap_cache() -> void:
 		game.inventory.fish=game.inventory.cache;game.inventory.cache=[]
 	game.event("Checked the hanging cache.")
 func day_end() -> void:
+	if recipe!="":
+		game.event("The unfinished meal spoiled.")
+		get_parent().get_node("Activities").busy=false;get_parent().get_node("Activities").action=""
+		get_parent().get_node("Walker/Visual").stop_activity();restore_skillet()
+	recipe=""
 	if not cooking_fish.is_empty():
 		game.event("The unfinished meal spoiled.")
 		cooking_fish={}
@@ -166,6 +204,9 @@ func day_end() -> void:
 	last_hour=clock.DAWN
 func advance(hours: float) -> void:
 	var lit := minf(hours,fire_hours)
+	if recipe!="":
+		cook_hours-=lit
+		if cook_hours<=.000001: finish_recipe()
 	if not smoking.is_empty():
 		smoke_hours+=lit
 		if smoke_hours>=4:

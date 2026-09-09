@@ -19,6 +19,9 @@ __pycache__/
 /assets/miner/handline_camp_atlas.png*
 /assets/camp/camp_camp_atlas.png*
 /assets/fish/fish_fish_atlas.png*
+/assets/miner/rod_store_atlas.png*
+/assets/store/goods_store_atlas.png*
+/assets/store/store_store_atlas.png*
 
 # OS / editors
 Thumbs.db

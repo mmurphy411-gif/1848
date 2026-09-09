@@ -6,6 +6,8 @@ var fields: Dictionary={}
 var weather := OptionButton.new()
 var fire := CheckButton.new()
 var date_label := Label.new()
+var price_label := Label.new()
+var rod := CheckButton.new()
 @onready var game: Node=get_node("/root/GameState")
 @onready var claim: Node3D=get_parent()
 func _ready() -> void:
@@ -16,27 +18,45 @@ func _ready() -> void:
 	var scroll := ScrollContainer.new();panel.add_child(scroll)
 	var column := VBoxContainer.new();column.size_flags_horizontal=Control.SIZE_EXPAND_FILL;scroll.add_child(column)
 	var title := Label.new();title.text="SEASON SANDBOX  ·  F4";column.add_child(title);column.add_child(date_label)
-	for key in ["seed","day","hour","dollars","gold","condition","hooks","line","firewood","bait.grasshopper","bait.hellgrammite","bait.worm","bait.pork","fish.fresh","fish.smoked"]:
+	for key in ["seed","day","hour","dollars","gold","condition","hooks","line","firewood","bait.grasshopper","bait.hellgrammite","bait.worm","bait.pork","fish.fresh","fish.smoked","goods.flour","goods.beans","goods.pork","goods.coffee","goods.salt"]:
 		var row := HBoxContainer.new();column.add_child(row)
 		var label := Label.new();label.text=key;label.custom_minimum_size.x=170;row.add_child(label)
 		var value := SpinBox.new();value.min_value=0;value.max_value=2147483647 if key=="seed" else 132 if key=="day" else 24 if key=="hour" else 100000
-		value.step=.25 if key in ["hour","gold","dollars","condition","line"] else 1
+		value.step=.01 if key.begins_with("goods.") else .25 if key in ["hour","gold","dollars","condition","line"] else 1
 		value.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 		row.add_child(value);fields[key]=value
 	for name in ["auto","clear","hot","rain","frost"]: weather.add_item(name)
 	column.add_child(weather);fire.text="Fire lit";column.add_child(fire)
-	for name in ["Apply","Dawn","Dusk","Next day","Sleep","Refresh fish"]:
+	rod.text="Willow rod";column.add_child(rod);column.add_child(price_label)
+	for name in ["Apply","Dawn","Dusk","Next day","Sleep","Refresh fish","Go to store","Home"]:
 		var button := Button.new();button.text=name;button.pressed.connect(command.bind(name));column.add_child(button)
 	panel.hide()
 func refresh_fields() -> void:
 	var values := {"seed":game.seed,"day":game.day,"hour":claim.get_node("Daylight/Clock").hour_at(claim.get_node("Daylight/Clock").elapsed),"dollars":game.dollars,"gold":get_node("/root/Sack").ounces,"condition":game.condition,"hooks":game.inventory.hooks,"line":game.inventory.line_m,"firewood":game.inventory.firewood}
 	for bait in game.inventory.bait: values["bait."+bait]=game.inventory.bait[bait]
+	for item in game.inventory.goods: values["goods."+item]=game.inventory.goods[item]
 	for kind in ["fresh","smoked"]: values["fish."+kind]=game.inventory.fish.filter(func(f):return f.state==kind).size()
 	for key in fields: fields[key].value=values[key]
 	date_label.text=Calendar.date_string(game.day)
-	weather.select(["auto","clear","hot","rain","frost"].find(game.weather_override));fire.button_pressed=claim.get_node("Camp").burning()
+	weather.select(["auto","clear","hot","rain","frost"].find(game.weather_override));fire.button_pressed=claim.has_node("Camp") and claim.get_node("Camp").burning()
+	rod.button_pressed=game.inventory.rod
+	var prices=preload("res://scripts/prices.gd")
+	price_label.text="Gold $%.2f · Flour $%.2f" % [prices.gold_price(game.day,game.seed),prices.price("flour",game.day,game.seed)]
 func command(name: String) -> void:
 	var clock: Node=claim.get_node("Daylight/Clock")
+	if name=="Go to store":
+		close_panel();get_node("/root/Trip").depart(true);return
+	if name=="Home":
+		close_panel();get_node("/root/Trip").home(true);return
+	if game.scene=="store":
+		if name=="Apply" and not claim.busy:
+			var args: Dictionary={"rod":"1" if rod.button_pressed else "0","weather":weather.get_item_text(weather.selected)}
+			for key in fields:
+				if key!="gold": args[key]=str(fields[key].value)
+			game.apply_scenario(args);get_node("/root/Sack").ounces=fields.gold.value;get_node("/root/Sack").changed.emit(fields.gold.value)
+			clock.start(game.start_hour);claim.get_node("Daylight").apply(game.start_hour)
+			claim.counter.abandon();claim.counter.begin_visit();claim.board.refresh();claim.refresh()
+		refresh_fields();return
 	match name:
 		"Apply":
 			if claim.get_node("Activities").busy: return
@@ -46,6 +66,7 @@ func command(name: String) -> void:
 			for key in fields:
 				if key!="gold": args[key]=str(fields[key].value)
 			args.weather=weather.get_item_text(weather.selected)
+			args.rod="1" if rod.button_pressed else "0"
 			game.apply_scenario(args)
 			get_node("/root/Sack").ounces=fields.gold.value;get_node("/root/Sack").changed.emit(fields.gold.value)
 			clock.start(game.start_hour)

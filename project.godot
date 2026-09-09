@@ -17,6 +17,7 @@ window/stretch/mode="canvas_items"
 [autoload]
 Sack="*res://scripts/sack.gd"
 GameState="*res://scripts/game_state.gd"
+Trip="*res://scripts/trip.gd"
 
 [input]
 

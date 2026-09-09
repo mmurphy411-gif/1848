@@ -7,12 +7,17 @@ const Weather = preload("res://scripts/weather.gd")
 var seed := 1848
 var day := 0
 var dollars := 0.0
+var purchases: Array[Dictionary]=[]
+var ledger: Array[Dictionary]=[]
+var scene := "claim"
 var condition := 85.0
 var inventory: Dictionary={"hooks":4,"line_m":20.0,"bait":{"grasshopper":0,"hellgrammite":0,"worm":0,"pork":0},"firewood":0,"fish":[],"knife":true,"meals_today":0,"cache":[],"journal":[],"catches":{},"hooks_lost":0,"midday_checked":false}
 # Scenario configuration is separate from owned season state.
 var start_hour := 4.75
 var weather_override := "auto"
 func _ready() -> void:
+	inventory.goods={"flour":0.0,"beans":0.0,"pork":0.0,"coffee":0.0,"salt":2.0}
+	inventory.rod=false
 	var args: Dictionary={}
 	for arg in OS.get_cmdline_user_args():
 		var parts := arg.split("=",true,1)
@@ -31,12 +36,16 @@ func apply_scenario(args: Dictionary) -> void:
 			"day": day=clampi(value.to_int(),0,132)
 			"hour": start_hour=fposmod(value.to_float(),24)
 			"dollars": dollars=maxf(0,value.to_float())
+			"rod": inventory.rod=value=="1"
+			"scene":
+				if value in ["claim","store"]: scene=value
 			"condition": condition=clampf(value.to_float(),5,100)
 			"hooks","firewood": inventory[key]=maxi(0,value.to_int())
 			"line": inventory.line_m=maxf(0,value.to_float())
 			"weather":
 				if value in ["auto","clear","hot","rain","frost"]: weather_override=value
 			_:
+				if key.begins_with("goods.") and inventory.goods.has(key.substr(6)): inventory.goods[key.substr(6)]=maxf(0,value.to_float())
 				if key.begins_with("bait.") and inventory.bait.has(key.substr(5)): inventory.bait[key.substr(5)]=maxi(0,value.to_int())
 				if key in ["fish.fresh","fish.smoked"]:
 					var kind: String=key.substr(5)

@@ -4,6 +4,9 @@ var timer := 0.0
 var action := ""
 var item := ""
 var cooking_menu := false
+var recipes: Array[String]=[]
+var recipe_index := 0
+var crate_step := 0
 var sleep_phase := 0
 var work_from := Vector3.ZERO
 var work_elapsed := 0.0
@@ -23,11 +26,15 @@ func ui_open() -> bool:
 	return false
 func idle() -> bool: return not busy and walker.panner.state==0 and walker.get_node("Fisher").state==0 and not ui_open()
 func _unhandled_input(event: InputEvent) -> void:
+	if cooking_menu and event.is_action_pressed("interact"):
+		recipe_index=posmod(recipe_index+1,recipes.size());recipe_prompt();get_viewport().set_input_as_handled();return
 	if cooking_menu and event.is_action_pressed("ui_cancel"):
 		cooking_menu=false;hud.notify("",0);get_viewport().set_input_as_handled();return
 	if cooking_menu and event.is_action_pressed("fish"):
 		cooking_menu=false
-		if camp.fry(): start("cook","cook",999)
+		var selected: String=recipes[recipe_index]
+		if camp.fry() if selected=="fried" else camp.start_recipe(selected): start("cook","cook",999)
+		else: hud.notify("Need ingredients and enough fire")
 		get_viewport().set_input_as_handled();return
 	if not event.is_action_pressed("interact") or event.is_echo() or not idle(): return
 	var target: String=camp.target(walker)
@@ -35,20 +42,23 @@ func _unhandled_input(event: InputEvent) -> void:
 		"FireRing":
 			if get_node("/root/GameState").inventory.firewood<(1 if camp.burning() else 3): hud.notify("Need 3 driftwood")
 			else: start("fire","tend_fire",2)
-		"Skillet":
+		"Skillet","Pot":
 			if camp.eat_stored(): start("eat","eat",3)
-			elif camp.burning() and camp.fresh_index()>=0: cooking_menu=true;hud.notify("Fry fish   ·   F / Y",30)
-			else: hud.notify("No fresh fish" if camp.fresh_index()<0 else "Light the fire first")
+			else:
+				recipes.assign(["fried","biscuits","pork"] if target=="Skillet" else ["beans","coffee"])
+				recipe_index=0;cooking_menu=true;recipe_prompt()
 		"Rack": hud.notify("Fish hung" if camp.hang() else "Need fresh fish and a burning fire")
 		"Cache": camp.swap_cache()
 		"Bedroll": sleep()
-		"Crate": get_parent().get_node("Ledger").open_book()
+		"Crate":
+			if crate_step==0 and camp.eat_stored(): crate_step=1;start("eat","eat",3)
+			elif crate_step<2 and camp.cut_bait(): crate_step=2;hud.notify("Cut pork bait")
+			else: crate_step=0;get_parent().get_node("Ledger").open_book()
 		_:
-			if camp.eat_stored(): start("eat","eat",3)
-			else:
-				item=bait.eligible(walker.position,clock.hour_at(clock.elapsed))
-				if item!="": start("gather","gather",2)
+			item=bait.eligible(walker.position,clock.hour_at(clock.elapsed))
+			if item!="": start("gather","gather",2)
 	get_viewport().set_input_as_handled()
+func recipe_prompt() -> void: hud.notify(recipes[recipe_index].capitalize()+" · F / Y cook · G / X next",30)
 func start(kind: String,clip: String,seconds: float) -> void:
 	if action=="eat": camp.restore_skillet()
 	busy=true;action=kind;timer=seconds

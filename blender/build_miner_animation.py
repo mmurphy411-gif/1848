@@ -16,7 +16,7 @@ def ik(root,target,l1,l2,pole):
     bend=Vector(pole)-root;bend=(bend-axis*bend.dot(axis)).normalized()
     along=(l1*l1-l2*l2+d*d)/(2*d);height=math.sqrt(max(0,l1*l1-along*along))
     return root+axis*along+bend*height,root+axis*d
-def animate(rig,body,joints):
+def animate(rig,body,joints,output='miner/miner.glb',source='build_miner'):
     scene=bpy.context.scene;scene.render.fps=30
     rig.animation_data_create()
     rest={n:rig.data.bones[n].matrix_local.copy() for n in joints}
@@ -108,6 +108,15 @@ def animate(rig,body,joints):
             if clip=='cook':
                 target=Vector((-.14,-.58,.46+.008*math.sin(t*math.tau/3))) if side=='Right' else Vector((.25,-.23,.54))
             if clip=='lie_down':target=Vector((sign*.3,0,.75-.5*crouch))
+            if clip in ['pour','take']:
+                reach=1 if clip=='pour' else math.sin(math.pi*t/1.5)**2
+                target=carried_hand.lerp(Vector((sign*.10,-.53,1.46+.015*math.sin(t*math.tau/3))),reach)
+            if clip in ['keep_idle','weigh','write','hand_over','shelve']:
+                target=Vector((sign*.21,-.48,1.15))
+                if clip=='weigh':target=Vector((sign*.23,-.64,1.28+.02*math.sin(t*math.pi/3)))
+                if clip=='write':target=Vector((sign*.13,-.44,1.30+.015*math.sin(t*30)))
+                if clip=='hand_over':target.y-=.12*math.sin(math.pi*t/1.5)
+                if clip=='shelve':target.y+=.50*math.sin(math.pi*t/2)
             # Keep elbows close to the ribs, with a slight outward pole so the
             # forearms do not intersect during circular shaking.
             l1=(Vector(joints[side+'UpperArm'][1])-Vector(joints[side+'UpperArm'][0])).length
@@ -116,6 +125,7 @@ def animate(rig,body,joints):
             bone(side+'UpperArm',shoulder,elbow);bone(side+'LowerArm',elbow,wrist)
             hand_dir=Vector((sign*.025,0,-.085)).lerp(pan_matrix.to_3x3()@Vector((0,0,-.08)),pan_t)
             if side=='Left':hand_dir=(pan_matrix.to_3x3()@Vector((-.065,0,.035))).lerp(pan_matrix.to_3x3()@Vector((0,0,-.08)),pan_t)
+            if clip=='keep_idle':hand_dir=Vector((sign*.015,-.095,0))
             bone(side+'Hand',wrist,wrist+hand_dir)
             for f,label in enumerate(['Thumb','Index','Middle','Ring','Little']):
                 angle=[-.42,-.20,-.065,.07,.205][f]
@@ -126,7 +136,7 @@ def animate(rig,body,joints):
                     relaxed=matrices[side+'Hand']@rest[side+'Hand'].inverted()@rest[name]
                     grip=pan_t
                     # Left hand hooks over the upper lip in the side carry.
-                    if side=='Left' and clip not in ['fish_idle','fish_wait','cast','strike','fight','land','gather','tend_fire','cook','eat','lie_down']:
+                    if side=='Left' and clip not in ['pour','take','keep_idle','weigh','write','hand_over','shelve','fish_idle','fish_wait','cast','strike','fight','land','gather','tend_fire','cook','eat','lie_down']:
                         carry_points=[Vector((.225-.011*k,(-.045+f*.021),.105-.01*k)) for k in range(4)]
                         start=pan_matrix@carry_points[j];end=pan_matrix@carry_points[j+1]
                         start=start.lerp(pan_matrix@points[j],pan_t);end=end.lerp(pan_matrix@points[j+1],pan_t)
@@ -159,8 +169,8 @@ def animate(rig,body,joints):
     scene.frame_start=1;scene.frame_end=121
     for pb in rig.pose.bones:pb.matrix_basis=Matrix.Identity(4)
     bpy.context.view_layer.update()
-    save('build_miner')
+    save(source)
     for track in rig.animation_data.nla_tracks:track.mute=False
     bpy.ops.object.select_all(action='DESELECT');rig.select_set(True);body.select_set(True);bpy.context.view_layer.objects.active=rig
-    bpy.ops.export_scene.gltf(filepath=str(ASSETS/'miner/miner.glb'),export_format='GLB',use_selection=True,export_yup=True,export_apply=False,export_normals=True,export_tangents=True,export_animations=True,export_animation_mode='NLA_TRACKS',export_skins=True,export_materials='PLACEHOLDER',export_all_influences=False,export_cameras=False,export_lights=False)
+    bpy.ops.export_scene.gltf(filepath=str(ASSETS/output),export_format='GLB',use_selection=True,export_yup=True,export_apply=False,export_normals=True,export_tangents=True,export_animations=True,export_animation_mode='NLA_TRACKS',export_skins=True,export_materials='EXPORT' if 'shopkeeper' in output else 'PLACEHOLDER',export_all_influences=False,export_cameras=False,export_lights=False)
     print('MINER_CLIPS',CLIPS)

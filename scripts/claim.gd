@@ -2,6 +2,19 @@ extends Node3D
 var quitting := false
 ## Scene instances stay posed for tools; launching this as the main scene starts play.
 func _ready() -> void:
+	get_node("/root/Trip").configure(self)
+	var path:=MeshInstance3D.new();path.name="StoreTrail"
+	var layout=preload("res://scripts/claim_layout.gd")
+	var surface:=SurfaceTool.new();surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var trail: Vector3=get_node("/root/Trip").trail
+	for step in 24:
+		for corner in [Vector2(0,0),Vector2(1,1),Vector2(1,0),Vector2(0,0),Vector2(0,1),Vector2(1,1)]:
+			var point:=trail+Vector3((corner.x-.5)*1.2,0,-1+(step+corner.y)*.25)
+			point.y=layout.height_at(point.x,point.z)+.025
+			surface.add_vertex(point)
+	surface.generate_normals();path.mesh=surface.commit()
+	var mat:=StandardMaterial3D.new();mat.albedo_color=Color(.31,.25,.16,.6);mat.transparency=BaseMaterial3D.TRANSPARENCY_ALPHA
+	path.material_override=mat;add_child(path)
 	_start_play.call_deferred()
 
 func _start_play() -> void:
@@ -15,6 +28,11 @@ func _start_play() -> void:
 			$Daylight/Clock.advanced.connect(state.check_midday)
 		$Daylight/Clock.start(state.start_hour)
 		$Soundscape.start()
+		if state.scene=="store":
+			$Daylight/Clock.start(7)
+			get_node("/root/Trip").depart(true)
+			get_node("/root/Trip").shop.walker.position=Vector3(0,0,1.3)
+			return
 		if state.day>=81 and state.day<=127 and state.start_hour>=5 and state.start_hour<=8:
 			var layout=preload("res://scripts/claim_layout.gd")
 			var z: float=layout.shore_z(-34)-.8

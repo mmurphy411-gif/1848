@@ -18,6 +18,7 @@ func _ready() -> void:
 		page.add_theme_font_override("normal_font",preload("res://assets/fonts/Cedarville-Cursive.ttf"))
 		page.add_theme_font_size_override("normal_font_size",22)
 		page.add_theme_color_override("default_color",Color(.15,.12,.075));page.scroll_active=true
+		page.bbcode_enabled=true
 		row.add_child(page)
 	game.changed.connect(refresh)
 	book.hide()
@@ -37,6 +38,28 @@ func refresh() -> void:
 	for f in game.inventory.fish+game.inventory.cache:
 		if f.state=="smoked": smoked+=1
 	right.text+="\n%d smoked fish in store\n%d fish in the cache\n%.2f ounces of gold\n$%.2f in coin\n%d hooks lost\n\nPrices\n____________________\n____________________" % [smoked,game.inventory.cache.size(),get_node("/root/Sack").ounces,game.dollars,game.inventory.hooks_lost]
+	if not game.ledger.is_empty():
+		var visit: Dictionary=game.ledger.back()
+		left.text=Calendar.date_string(visit.day)+"\n\nWalked to %s's.\n" % preload("res://scripts/store.gd").KEEPER
+		if visit.sold_oz>0: left.text+="Sold %.2f oz at $%.2f.\nHe called it %.2f.\n" % [visit.sold_oz,visit.gold_price,visit.weighed_oz]
+		for bought in visit.bought: left.text+="Bought %d %s at $%.2f.\n" % [bought.count,bought.item,bought.price]
+		left.text+="$%.2f in coin.\nHome at dusk." % game.dollars
+		right.text="Prices at %s's\n" % preload("res://scripts/store.gd").KEEPER+Calendar.date_string(visit.day)+"\n"
+		var previous: Dictionary=game.ledger[-2] if game.ledger.size()>1 else {}
+		for item in ["Gold","Flour","Beans","Pork","Hooks"]:
+			var key: String=item.to_lower().trim_suffix("s") if item=="Hooks" else item.to_lower()
+			var price: float=visit.gold_price if key=="gold" else visit.prices[key]
+			right.text+="%s $%.2f" % [item,price]
+			if not previous.is_empty(): right.text+="  [font_size=16](was $%.2f, %s)[/font_size]" % [previous.gold_price if key=="gold" else previous.prices[key],Calendar.date_string(previous.day)]
+			right.text+="\n"
+		var spent:=0.0;var sold:=0.0
+		for entry in game.ledger:
+			sold+=entry.sold_oz
+			for bought in entry.bought: spent+=bought.price*bought.count
+		right.text+="\nSpent this season $%.2f\nSold this season %.2f oz\n\nPack\n" % [spent,sold]
+		for item in game.inventory.goods:
+			if game.inventory.goods[item]>0: right.text+="%s %.2f lb\n" % [item.capitalize(),game.inventory.goods[item]]
+		right.text+="%d hooks · %.0f yards\n%s" % [game.inventory.hooks,game.inventory.line_m*1.094,"Willow rod" if game.inventory.rod else "Hand line"]
 func open_book() -> void:
 	opened=true;book.show();Input.mouse_mode=Input.MOUSE_MODE_VISIBLE;refresh()
 func close_book() -> void:

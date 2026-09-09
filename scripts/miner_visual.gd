@@ -10,6 +10,10 @@ var right_hand: BoneAttachment3D
 var handline: Node3D
 var physical_pan: Node3D
 var eating_pan: MeshInstance3D
+var rod_visual: Node3D
+var pack_visual: MeshInstance3D
+var pack_stage := 0
+var cast_elapsed := 0.0
 const SWIRL_VARIANTS := ["pan_swirl", "pan_swirl_2", "pan_swirl_3"]
 var miner: Node3D
 var skeleton: Skeleton3D
@@ -45,6 +49,12 @@ func _ready() -> void:
 	add_child(miner)
 	skeleton = miner.find_children("*","Skeleton3D",true,false)[0]
 	player = miner.find_children("*","AnimationPlayer",true,false)[0]
+	var store_clips: Node3D=load("res://assets/store/miner_clips.glb").instantiate()
+	var clips: AnimationPlayer=store_clips.find_children("*","AnimationPlayer",true,false)[0]
+	for clip in ["pour","take"]:
+		player.get_animation_library("").add_animation(clip,clips.get_animation(clip).duplicate())
+	player.get_animation("pour").loop_mode=Animation.LOOP_LINEAR
+	store_clips.free()
 	# Blender's frame-one offset is cropped to the table's exact clip lengths.
 	for name in CLIPS:
 		var animation := player.get_animation(name)
@@ -79,6 +89,11 @@ func _ready() -> void:
 	handline=preload("res://assets/miner/handline.glb").instantiate()
 	handline_attachment.add_child(handline)
 	handline.hide()
+	rod_visual=load("res://assets/miner/rod.glb").instantiate();handline_attachment.add_child(rod_visual);rod_visual.hide()
+	rod_visual.rotation.x=PI
+	pack_visual=MeshInstance3D.new();var pack_mesh:=BoxMesh.new();pack_mesh.size=Vector3(.34,.44,.20);pack_visual.mesh=pack_mesh
+	var cloth:=StandardMaterial3D.new();cloth.albedo_color=Color(.34,.28,.17);pack_visual.material_override=cloth
+	var back:=_attachment("PackSocket","Chest");back.add_child(pack_visual);pack_visual.position=Vector3(0,.06,-.19)
 	sack_attachment = _attachment("SackSocket","Hips")
 	sack_visual = preload("res://assets/miner/sack.glb").instantiate()
 	sack_attachment.add_child(sack_visual)
@@ -90,7 +105,8 @@ func _ready() -> void:
 	get_node("/root/Sack").changed.connect(_sack_changed)
 	_sack_changed(get_node("/root/Sack").ounces)
 	_build_tree()
-	water_material = walker.get_parent().get_node("Greybox/River/WaterSurface").material_override
+	var water:=walker.get_parent().get_node_or_null("Greybox/River/WaterSurface")
+	if water: water_material=water.material_override
 	for side in ["Left","Right"]: _splash(side)
 	# Advance after controller and panner so result transforms/camera agree.
 	process_physics_priority = 10
@@ -125,6 +141,9 @@ func _build_tree() -> void:
 			clip.animation=name
 			machine.add_node(name,clip)
 		root_machine.add_node(group,machine)
+	for name in ["pour","take"]:
+		var clip:=AnimationNodeAnimation.new();clip.animation=name
+		var machine: AnimationNodeStateMachine=root_machine.get_node("camp");machine.add_node(name,clip)
 	for a in ["idle","walk","wade","pan","fishing","camp"]:
 		for b in ["idle","walk","wade","pan","fishing","camp"]:
 			if a==b: continue
@@ -153,6 +172,12 @@ func play_pan(clip: String, cycle := 0) -> void:
 
 func _physics_process(delta: float) -> void:
 	if not tree: return
+	var inventory: Dictionary=get_node("/root/GameState").inventory
+	var pounds:=preload("res://scripts/pack.gd").weight(inventory)
+	pack_stage=0 if pounds<=5 else 1 if pounds<15 else 2 if pounds<30 else 3
+	pack_visual.visible=pack_stage>0;pack_visual.scale=Vector3.ONE*(.8+pack_stage*.16)
+	rod_visual.visible=inventory.get("rod",false) and activity_clip in FISH_CLIPS
+	if rod_visual.visible: handline.hide()
 	if turn_elapsed<.3:
 		turn_elapsed = minf(.3,turn_elapsed+delta)
 		rotation.y = lerp_angle(turn_start,turn_target,smoothstep(0,.3,turn_elapsed))
@@ -184,6 +209,11 @@ func _physics_process(delta: float) -> void:
 		tree.advance(delta*locomotion_rate)
 	else:
 		tree.advance(delta*walker.panner.speed_scale)
+	if rod_visual.visible and activity_clip=="cast":
+		cast_elapsed+=delta
+		var forearm:=skeleton.find_bone("LeftLowerArm")
+		var flick:=deg_to_rad(40)*sin(PI*clampf(cast_elapsed/1.2,0,1))
+		skeleton.set_bone_pose_rotation(forearm,skeleton.get_bone_pose_rotation(forearm)*Quaternion(Vector3.RIGHT,flick))
 	_update_shin_foam(depth)
 	$Pan.global_transform = pan_attachment.global_transform
 	if is_instance_valid(eating_pan) and eating_pan.visible: eating_pan.global_rotation=Vector3.ZERO
@@ -193,6 +223,7 @@ func _physics_process(delta: float) -> void:
 	sack_visual.global_rotation = Vector3(0,rotation.y,sin(sack_time*TAU*2)*.055*sack_sway)
 
 func _update_shin_foam(depth: float) -> void:
+	if water_material==null: return
 	# A depth-buffer intersection was enough for the capsule but loses most
 	# of the narrow shin collar. Place a small surface ring at each real leg.
 	var contacts := PackedVector4Array()
@@ -204,12 +235,14 @@ func _update_shin_foam(depth: float) -> void:
 	water_material.set_shader_parameter("shin_contacts",contacts)
 
 func _sack_changed(_ounces: float) -> void:
+	if not is_inside_tree(): return
 	var stage: int = get_node("/root/Sack").stage()
 	sack_visual.scale = Vector3(.65+.12*stage,.85+.075*stage,.28+.20*stage)
 	sack_material.set_shader_parameter("growth",sack_visual.scale)
 
 func play_activity(clip: String) -> void:
 	activity_clip=clip
+	cast_elapsed=0
 	activity_rate=1.0
 	var group := "fishing" if clip in FISH_CLIPS else "camp"
 	playback.start(group,true)
@@ -224,6 +257,9 @@ func play_activity(clip: String) -> void:
 		eating_pan.position=Vector3(0,.015,0)
 	if eating_pan: eating_pan.visible=clip=="eat"
 	tree.advance(0)
+
+func fishing_origin() -> Vector3:
+	return rod_visual.to_global(Vector3(.09,1.8,0)) if rod_visual.visible else handline_attachment.global_position
 
 func stop_activity() -> void:
 	activity_clip=""

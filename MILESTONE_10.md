@@ -1,5 +1,18 @@
 # Milestone 10 — The Store
 
+Acceptance checkpoint (2026-09-09): the user authorized committing milestone 10
+and starting milestone 11. The three season-balance findings below remain
+documented follow-up work; this approval does not turn their failed assertions
+into passing tests. M10 model and integration tests were rerun and passed.
+The checkpoint also includes the camp clutter step-up fix and its regression test.
+
+Implementation status (2026-09-08): the revised storyboard was approved by
+the user's instruction to implement. The playable build and test guide are
+now on disk; see `STORE_GUIDE.md` and the README's Milestone 10 section for
+verification and the three unresolved season-balance findings. Final human
+review and the completion commit remain pending. The acceptance targets below
+are preserved, including the stock-depletion target the specified model misses.
+
 Read `PHASE2_BRIEF.md` first, then the standing rules in `ASTRA_BRIEF.md`, then
 `MILESTONE_9_NOTES.md`, whose round must be complete and committed before this
 one starts. This milestone turns gold into things. It adds the trip, the store
@@ -53,9 +66,13 @@ constant, `Store.KEEPER`, so it can be changed in one place.
 ## Part 0 — Storyboard first
 
 Before any asset or interaction code, greybox the trip as eleven beats and
-render each from the camera the player will have. Boxes, capsules, and the
-existing miner. Write the beat number and one line of what happens in the frame
-corner. Put them in `artifacts/storyboard/` and a contact sheet in the README.
+render each from its named player camera, using the board, slate and pour focus
+cameras below. Where a player camera hides the action, a clearly labelled
+review camera may replace it for this gate. Boxes, capsules, and the existing
+miner are enough, but pose hands and props so the beat itself is visible.
+Captions record beat, action, input, state change and time. Put the frames in
+`artifacts/storyboard/` and a contact sheet in the README. Add two supplemental
+review frames: the slate reading `SHORT`, and an empty line peg (`Sold out`).
 **This is a human review gate.** Parts 3 onward do not start until the sheet is
 approved, because the counter in the wrong place is cheapest to find here.
 
@@ -230,6 +247,23 @@ the pack weight, and `SHORT $x.xx` in a different hand when he cannot cover it.
 The player reads prices here and nowhere else. Standing within 1.5 m of the
 counter, `CameraRig.focus` frames the board on the left and the slate on the
 right depending on which he faces; `ui_cancel` or stepping back releases.
+
+**Camera and staging amendment — storyboard review, September 8, 2026.**
+The board and slate each have a dedicated close focus camera, with the whole
+reading surface inside the frame and the miner clear of the text. The named
+**pour focus camera** is a three-quarter view from Lambert's side of the counter:
+beam, receiving pan, pouring sack, miner's hands and Lambert's thumb must be
+visible together. Begin this focus on pour and retain it until release and
+settling; return smoothly to the counter camera afterward. Review cameras may
+use a labelled wall cutaway in the greybox, but the final player pour camera
+must fit the tent without clipping walls or bodies.
+
+Lambert's working marks are fixed relative to the interaction, not the shelves:
+at the scale he stands directly opposite the receiving pan, his front about
+0.15 m behind the counter's rear edge; at the slate he shifts laterally to the
+mark directly opposite it at the same counter clearance. His hands reach over
+the counter, with the thumb at the pan's rim in the weighing pose. The scale,
+slate and standing marks are reviewed as one arrangement before finished art.
 
 ## Part 5 — The catalogue
 
@@ -536,7 +570,8 @@ Scene:
 All 1080p, guard on, art-director sentence for each in the README.
 
 - `storyboard-01.png` through `storyboard-11.png`: the Part 0 greybox, one per
-  beat, plus `storyboard-sheet.png`. Reviewed before Part 3.
+  beat, plus `storyboard-12.png` (`SHORT`), `storyboard-13.png` (empty line peg),
+  and `storyboard-sheet.png`. Reviewed before Part 3.
 - `milestone-10-rim-dawn.png`: beat 2 at 07:00, day 30, fire lit. **Probe:**
   the bar and river together cover at least 30 percent of the frame; the smoke
   column is present above the ring's projected position; no single surface
@@ -546,7 +581,7 @@ All 1080p, guard on, art-director sentence for each in the README.
 - `milestone-10-board.png`: the board focused. **Probe:** the smallest text
   line is at least 22 px high; chalk against plank contrast at least 4 to 1.
 - `milestone-10-weighing.png`: Lambert mid-`weigh`, the miner pouring, from
-  the player camera. **Probe:** scale, hands, and sack together at least 12
+  the named pour focus camera. **Probe:** scale, hands, and sack together at least 12
   percent; counter at most 50 percent.
 - `milestone-10-lambert.png`: three-quarter at the counter in `keep_idle`.
   **Probe:** face and hands at least 6 percent; no single surface over 50
