@@ -124,3 +124,7 @@ colors where no tint is authored, and retains subtle surface-normal guard
 hairs. Wildlife materials are shared at runtime. See
 [WILDLIFE_REVIEW.md](../WILDLIFE_REVIEW.md) for measured geometry budgets and
 candid limitations of this first animal pass.
+
+## Phase 2 expedition additions
+
+`build_expedition_props.py` writes separately editable spear, rifle, tent and hide collections to `expedition_props.blend`, and exports their GLBs to `assets/expedition/`. `build_expedition_animation.py` exports two new clips against the unchanged miner skeleton and saves `build_expedition_miner.blend`. See `PHASE2_CLOSEOUT.md` for remaining visual acceptance work.

@@ -18,10 +18,11 @@ func wade_limit() -> float:
 	return preload("res://scripts/river_model.gd").wade_limit(get_node("/root/GameState").inventory)
 
 func _physics_process(delta: float) -> void:
+	if get_node("/root/GameState").season_ended: velocity=Vector3.ZERO;return
 	var axes := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	var fisher := get_node_or_null("Fisher")
 	var activities := get_parent().get_node_or_null("Activities")
-	if activities and (activities.holds_at_fire() or (activities.busy and activities.action in ["crevice","rocker","build_rocker"])):
+	if activities and (activities.holds_at_fire() or (activities.busy and activities.action in ["crevice","rocker","build_rocker","spear","rifle","harvest"])):
 		velocity=Vector3.ZERO
 		return
 	if panner.state != panner.State.IDLE or (fisher and fisher.state>1) or (activities and (activities.busy or activities.ui_open())):

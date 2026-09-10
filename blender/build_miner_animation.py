@@ -37,6 +37,8 @@ def animate(rig,body,joints,output='miner/miner.glb',source='build_miner'):
         if clip=='shovel':crouch=.30+.20*math.sin(t*math.pi)**2
         if clip=='pick':crouch=.22+.18*math.sin(t*math.pi)**2
         if clip=='rock':crouch=.16
+        if clip=='spear':crouch=.28
+        if clip=='rifle':crouch=.06
         if clip=='lie_down':crouch=smooth(t/2)
         lean=math.radians(43)*crouch-math.radians(33)*lift
         hip=Vector((.006*math.sin(t*math.pi*.5)*(1-crouch),.10*crouch,.94-.42*crouch))
@@ -134,6 +136,10 @@ def animate(rig,body,joints,output='miner/miner.glb',source='build_miner'):
             if clip in ['shovel','pick']:
                 # Both grips lie on the same shaft; the left hand is higher.
                 target.x=.025
+            if clip=='rifle':target=Vector((-.14,-(.24 if side=='Right' else .52),1.32+math.sin(t*math.tau/3)*.003))
+            if clip=='spear':
+                thrust=.08*math.sin(math.pi*t/1.4)
+                target=Vector((-.04,-(.36 if side=='Right' else .60)-thrust,1.02 if side=='Right' else .88))
             if clip in ['keep_idle','weigh','write','hand_over','shelve']:
                 target=Vector((sign*.21,-.48,1.15))
                 if clip=='weigh':target=Vector((sign*.23,-.64,1.28+.02*math.sin(t*math.pi/3)))
@@ -149,7 +155,7 @@ def animate(rig,body,joints,output='miner/miner.glb',source='build_miner'):
             hand_dir=Vector((sign*.025,0,-.085)).lerp(pan_matrix.to_3x3()@Vector((0,0,-.08)),pan_t)
             if side=='Left':hand_dir=(pan_matrix.to_3x3()@Vector((-.065,0,.035))).lerp(pan_matrix.to_3x3()@Vector((0,0,-.08)),pan_t)
             if clip=='keep_idle':hand_dir=Vector((sign*.015,-.095,0))
-            if clip in ['crevice','shovel','pick','spoon']:hand_dir=Vector((0,-.085,0))
+            if clip in ['crevice','shovel','pick','spoon','rifle','spear']:hand_dir=Vector((0,-.085,0))
             if clip=='rock':hand_dir=Vector((0,0,-.085))
             bone(side+'Hand',wrist,wrist+hand_dir)
             for f,label in enumerate(['Thumb','Index','Middle','Ring','Little']):
@@ -160,9 +166,9 @@ def animate(rig,body,joints,output='miner/miner.glb',source='build_miner'):
                     name=side+label+segment
                     relaxed=matrices[side+'Hand']@rest[side+'Hand'].inverted()@rest[name]
                     grip=pan_t
-                    mining_grip=clip in ['crevice','shovel','pick','rock'] or (clip=='spoon' and side=='Right')
+                    mining_grip=clip in ['rifle','spear','crevice','shovel','pick','rock'] or (clip=='spoon' and side=='Right')
                     # Left hand hooks over the upper lip in the side carry.
-                    if side=='Left' and clip not in ['crevice','spoon','shovel','pick','rock','pour','take','keep_idle','weigh','write','hand_over','shelve','fish_idle','fish_wait','cast','strike','fight','land','gather','tend_fire','cook','eat','lie_down']:
+                    if side=='Left' and clip not in ['rifle','spear','crevice','spoon','shovel','pick','rock','pour','take','keep_idle','weigh','write','hand_over','shelve','fish_idle','fish_wait','cast','strike','fight','land','gather','tend_fire','cook','eat','lie_down']:
                         carry_points=[Vector((.225-.011*k,(-.045+f*.021),.105-.01*k)) for k in range(4)]
                         start=pan_matrix@carry_points[j];end=pan_matrix@carry_points[j+1]
                         start=start.lerp(pan_matrix@points[j],pan_t);end=end.lerp(pan_matrix@points[j+1],pan_t)

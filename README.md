@@ -1,10 +1,13 @@
 # 1848
 
-Phase 2, milestone 11 playable build: the falling river, exposed bedrock,
-crevicing, boots, pick and shovel, and a buildable rocker join Lambert's store,
-fishing and camp. See [MINING_GUIDE.md](MINING_GUIDE.md) for quick work scenarios
-and [STORE_GUIDE.md](STORE_GUIDE.md) for the two-visit store test. Earlier balance
-findings remain documented below.
+Phase 2 playable closeout candidate: salmon spearing, camp-raiding bears, rifle
+hunting, hide sales, a tent upgrade, and the first-snow final ledger now join
+the store, fishing, camp and mining loops. See [PHASE2_CLOSEOUT.md](PHASE2_CLOSEOUT.md)
+for launch presets, tests, renders, performance and the remaining acceptance work.
+The three older economy findings and unfinished visual/audio checks remain open;
+this is not full Phase 2 sign-off.
+See [MINING_GUIDE.md](MINING_GUIDE.md) and [STORE_GUIDE.md](STORE_GUIDE.md) for the
+earlier work and shopping scenarios.
 Built with **Godot 4.7.2 standard**, GDScript, and the Forward+ renderer.
 
 The playable miner now uses the baked Pass 17 character, with removable travel

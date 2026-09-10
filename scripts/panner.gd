@@ -40,6 +40,7 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 func can_pan() -> bool:
+	if get_node("/root/GameState").season_ended: return false
 	var fisher := walker.get_node_or_null("Fisher")
 	if fisher and fisher.state!=0: return false
 	var activities := walker.get_parent().get_node_or_null("Activities")

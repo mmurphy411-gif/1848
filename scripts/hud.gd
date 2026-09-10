@@ -103,17 +103,20 @@ func _process(delta: float) -> void:
 		return
 	if not activities.idle():
 		var recipe: String=get_parent().get_node("Camp").recipe
-		action_label.text={"cook":"Cooking "+recipe if recipe!="" else "Frying fish","fire":"Tending fire","eat":"Eating","crevice":"Cleaning the crevice · Esc to stop","rocker":"Working the cradle · Esc to stop","build_rocker":"Building the cradle"}.get(activities.action,"")
+		action_label.text={"rifle":"Steadying rifle · Esc to stop","harvest":"Dressing game","spear":"Spearing salmon · Esc to stop","cook":"Cooking "+recipe if recipe!="" else "Frying fish","fire":"Tending fire","eat":"Eating","crevice":"Cleaning the crevice · Esc to stop","rocker":"Working the cradle · Esc to stop","build_rocker":"Building the cradle"}.get(activities.action,"")
 		return
 	var trip: Node=get_node("/root/Trip")
 	if trip.travelling: action_label.text="";return
 	if trip.at_trail(): action_label.text="G / X · "+trip.prompt();return
+	if get_parent().has_node("Expedition"):
+		var encounter_prompt: String=get_parent().get_node("Expedition").prompt()
+		if encounter_prompt!="": action_label.text="G / X · "+encounter_prompt;return
 	if get_parent().has_node("Mining"):
 		var mining_prompt: String=get_parent().get_node("Mining").prompt()
 		if mining_prompt!="": action_label.text="G / X · "+mining_prompt;return
 	var camp: Node=get_parent().get_node("Camp")
 	var target: String=camp.target(activities.walker)
-	var names := {"FireRing":"Add wood" if camp.burning() else "Light fire · 3 driftwood","Skillet":"Skillet","Pot":"Pot","Rack":"Need salt to smoke" if game.inventory.goods.salt<.1 else "Smoke fish","Cache":"Food cache","Bedroll":"Sleep","Crate":"Eat · carried food" if camp.has_stored() else "Cut bait" if game.inventory.goods.pork>=.25 else "Open ledger"}
+	var names := {"FireRing":"Add wood" if camp.burning() else "Light fire · 3 driftwood","Skillet":"Skillet","Pot":"Pot","Rack":"Need salt to smoke" if game.inventory.goods.salt<.1 else "Smoke fish or meat","Cache":"Food cache","Bedroll":"Sleep","Crate":"Eat · carried food" if camp.has_stored() else "Cut bait" if game.inventory.goods.pork>=.25 else "Open ledger"}
 	if target!="": action_label.text="G / X · "+names[target];return
 	var bait: String=get_parent().get_node("BaitSources").eligible(activities.walker.position,activities.clock.hour_at(activities.clock.elapsed))
 	if bait!="": action_label.text="G / X · Gather "+bait

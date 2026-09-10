@@ -5,6 +5,12 @@ const Condition = preload("res://scripts/condition_model.gd")
 const Cooking = preload("res://scripts/cooking.gd")
 const Weather = preload("res://scripts/weather.gd")
 const RiverModel = preload("res://scripts/river_model.gd")
+const Expedition=preload("res://scripts/expedition_model.gd")
+var expedition: Dictionary=Expedition.initial()
+var start_encounter := ""
+var season_ended:=false
+var final_ledger: Dictionary={}
+signal season_finished
 var seed := 1848
 var day := 0
 var dollars := 0.0
@@ -22,6 +28,9 @@ var mining: Dictionary = {"taken":[0.0,0.0],"crevice_actions":[0,0],"rocker_posi
 func _ready() -> void:
 	inventory.goods={"flour":0.0,"beans":0.0,"pork":0.0,"coffee":0.0,"salt":2.0}
 	inventory.rod=false
+	inventory.hides=[]
+	inventory.rack={}
+	inventory.ammo=0
 	for tool in preload("res://scripts/mining_model.gd").TOOLS: inventory[tool]=false
 	var args: Dictionary={}
 	for arg in OS.get_cmdline_user_args():
@@ -42,13 +51,14 @@ func apply_scenario(args: Dictionary) -> void:
 			"hour": start_hour=fposmod(value.to_float(),24)
 			"dollars": dollars=maxf(0,value.to_float())
 			"rod": inventory.rod=value=="1"
-			"crowbar","pick","shovel","boots","rocker": inventory[key]=value=="1"
+			"tent","rifle","spear","crowbar","pick","shovel","boots","rocker": inventory[key]=value=="1"
 			"river": river_override=INF if value=="auto" else clampf(value.to_float(),-.75,.14)
+			"encounter": start_encounter=value
 			"work": start_work=value if value in ["crevice","rocker"] else ""
 			"scene":
 				if value in ["claim","store"]: scene=value
 			"condition": condition=clampf(value.to_float(),5,100)
-			"hooks","firewood": inventory[key]=maxi(0,value.to_int())
+			"ammo","hooks","firewood": inventory[key]=maxi(0,value.to_int())
 			"line": inventory.line_m=maxf(0,value.to_float())
 			"weather":
 				if value in ["auto","clear","hot","rain","frost"]: weather_override=value
@@ -66,6 +76,8 @@ func apply_scenario(args: Dictionary) -> void:
 						inventory.fish.append(f)
 	# A scenario is an exact snapshot, not simulated travel through skipped hours.
 	if args.has("hour"): inventory.midday_checked=start_hour>=13
+	if day<132 and season_ended:
+		season_ended=false;final_ledger={}
 	changed.emit()
 func weather() -> String: return Weather.state(day,seed) if weather_override=="auto" else weather_override
 func water_level() -> float: return RiverModel.level(day,seed,weather()) if is_inf(river_override) else river_override
@@ -78,7 +90,19 @@ func check_midday(hour: float) -> void:
 		if inventory.meals_today<1:
 			condition=Condition.missed(condition)
 			event("No midday meal.")
+func resolve_raid() -> void:
+	if not Expedition.raid_due(expedition,day): return
+	expedition.raided_day=day
+	var result:=Expedition.raid_food(inventory.fish)
+	inventory.fish=result.kept
+	if not inventory.get("rack",{}).is_empty():
+		var rack_food:=Expedition.raid_food([inventory.rack])
+		if rack_food.lost_lb>0: inventory.rack={}
+		result.lost_lb+=rack_food.lost_lb
+	if result.lost_lb>0: event("A bear took %.2f lb of exposed food. The hanging cache was safe." % result.lost_lb)
 func end_day() -> void:
+	if season_ended: return
+	resolve_raid()
 	# Sleeping before noon still closes both of the day's meal checks.
 	check_midday(13)
 	if inventory.meals_today<2:
@@ -90,16 +114,17 @@ func end_day() -> void:
 			if Cooking.spoiled(f,day): event("A %s spoiled." % f.species)
 			else: kept.append(f)
 		inventory[container]=kept
-	day+=1
+	day=mini(day+1,132)
 	inventory.meals_today=0
 	inventory.midday_checked=false
 	event(weather().capitalize()+".")
 	new_day.emit()
+	if day>=132: finish_season()
 	changed.emit()
 func eat(smoked := false) -> void:
 	condition=Condition.eat(condition,smoked)
 	inventory.meals_today+=1
-	event("Ate smoked fish." if smoked else "Ate fried fish.")
+	event("Ate smoked food." if smoked else "Ate a hot meal.")
 func caught(fish: Dictionary) -> void:
 	inventory.fish.append(fish)
 	inventory.catches[fish.species]=inventory.catches.get(fish.species,0)+1
@@ -109,3 +134,9 @@ func lose_hook() -> void:
 	inventory.line_m=maxf(0,inventory.line_m-2)
 	inventory.hooks_lost+=1
 	event("Line broke at the water.")
+func finish_season() -> void:
+	if season_ended: return
+	day=132;season_ended=true
+	final_ledger=preload("res://scripts/season_model.gd").summary(inventory,purchases,ledger,expedition,dollars,get_node("/root/Sack").ounces,condition,seed)
+	event("November 5. First snow. Time to leave the river.")
+	season_finished.emit()

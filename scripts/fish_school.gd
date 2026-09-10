@@ -17,7 +17,10 @@ func refresh() -> void:
 	for fish in get_children(): fish.retired=true
 	var hour: float=clock.hour_at(clock.elapsed) if clock.running else get_parent().get_node("Daylight").current_hour
 	hour_key=int(hour)
+	var skipped := 0
 	for data in Fishery.expected_population(state.day,hour,state.seed,state.weather()):
+		if data.species=="salmon" and skipped<int(state.expedition.salmon_taken.get(state.day,0)):
+			skipped+=1;continue
 		var fish := Fish.new()
 		fish.configure(data,sources[data.species],get_parent().get_node("Walker"))
 		add_child(fish)

@@ -1,4 +1,5 @@
 shader_type spatial;
+uniform float snow_amount = 0.0;
 // Seven samples on cliffs (three albedos/normals and dominant-plane ORM).
 uniform sampler2D granite_albedo : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2D granite_normal : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
@@ -82,6 +83,8 @@ void fragment() {
    a*=mix(1.0,.56,wet); o.g=mix(o.g,.46,wet);
  }
  ALBEDO=a*(kind>2.5 && kind<3.5 ? .60+.65*noise(world.xy*.09)+.17*noise(world.zy*.38) : .94+.10*macro);
+ float snow=snow_amount*smoothstep(.45,.9,geom_normal.y)*smoothstep(water_level+.12,water_level+.3,world.y);
+ ALBEDO=mix(ALBEDO,vec3(.78,.81,.83),snow);
  ROUGHNESS=clamp(o.g+(macro-.5)*.06,0.0,1.0); AO=o.r;
  float strength=1.0-smoothstep(40.0,70.0,distance(CAMERA_POSITION_WORLD,world));
  NORMAL=normalize((VIEW_MATRIX*vec4(normalize(mix(geom_normal,n,strength*.8)),0)).xyz);

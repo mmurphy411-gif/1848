@@ -69,7 +69,7 @@ func _physics_process(delta: float) -> void:
 	var walker: Node3D=manager.get_parent().get_node("Walker")
 	var distance := global_position.distance_to(walker.global_position)
 	var noise := 1.25 if walker.velocity.length()>2.0 else 1.0
-	if retiring or distance<Model.FLEE[species]*noise:
+	if retiring or (species!="bear" and distance<Model.FLEE[species]*noise):
 		transition(State.FLEE)
 	elif state==State.IDLE and distance<Model.ALERT[species]*noise:
 		transition(State.ALERT)

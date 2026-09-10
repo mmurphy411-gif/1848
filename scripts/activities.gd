@@ -24,8 +24,10 @@ func ui_open() -> bool:
 		var ui := get_parent().get_node_or_null(name)
 		if ui and ui.opened: return true
 	return false
-func idle() -> bool: return not busy and walker.panner.state==0 and walker.get_node("Fisher").state==0 and not ui_open()
+func idle() -> bool: return not get_node("/root/GameState").season_ended and not busy and walker.panner.state==0 and walker.get_node("Fisher").state==0 and not ui_open()
 func _unhandled_input(event: InputEvent) -> void:
+	if busy and action in ["spear","rifle","harvest"] and event.is_action_pressed("ui_cancel"):
+		get_parent().get_node("Expedition").cancel();get_viewport().set_input_as_handled();return
 	if busy and action in ["crevice","rocker","build_rocker"] and event.is_action_pressed("ui_cancel"):
 		get_parent().get_node("Mining").cancel();get_viewport().set_input_as_handled();return
 	if cooking_menu and event.is_action_pressed("interact"):
@@ -39,6 +41,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		else: hud.notify("Need ingredients and enough fire")
 		get_viewport().set_input_as_handled();return
 	if not event.is_action_pressed("interact") or event.is_echo() or not idle(): return
+	if get_parent().has_node("Expedition") and get_parent().get_node("Expedition").interact():
+		get_viewport().set_input_as_handled();return
 	if get_parent().has_node("Mining") and get_parent().get_node("Mining").interact():
 		get_viewport().set_input_as_handled();return
 	var target: String=camp.target(walker)
@@ -93,6 +97,8 @@ func _process(delta: float) -> void:
 	if timer>0: return
 	if action=="sleep" and sleep_phase==0:
 		clock.end_day()
+		if get_node("/root/GameState").season_ended:
+			fade.color.a=0;busy=false;action="";return
 		walker.global_position=camp.wake_position()
 		walker.velocity=Vector3.ZERO
 		sleep_phase=1;timer=1.5
@@ -101,6 +107,7 @@ func _process(delta: float) -> void:
 	if action=="fire": camp.light_fire()
 	elif action=="gather": hud.notify("Gathered "+item if bait.gather(item) else "Nothing this time")
 	elif action=="eat": camp.restore_skillet()
+	elif action in ["spear","rifle","harvest"]: get_parent().get_node("Expedition").complete(action)
 	elif action in ["crevice","rocker","build_rocker"]: get_parent().get_node("Mining").complete(action)
 	fade.color.a=0;busy=false;action=""
 	walker.get_node("Visual").stop_activity()

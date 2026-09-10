@@ -4,6 +4,8 @@ var quitting := false
 func _ready() -> void:
 	var mining := preload("res://scripts/mining.gd").new();mining.name="Mining";add_child(mining)
 	var wildlife := preload("res://scripts/wildlife.gd").new();wildlife.name="Wildlife";add_child(wildlife)
+	var expedition := preload("res://scripts/expedition.gd").new();expedition.name="Expedition";add_child(expedition)
+	var season := preload("res://scripts/season_end.gd").new();season.name="SeasonEnd";add_child(season)
 	get_node("/root/Trip").configure(self)
 	var path:=MeshInstance3D.new();path.name="StoreTrail"
 	var layout=preload("res://scripts/claim_layout.gd")
@@ -30,12 +32,15 @@ func _start_play() -> void:
 			$Daylight/Clock.advanced.connect(state.check_midday)
 		$Daylight/Clock.start(state.start_hour)
 		$Soundscape.start()
+		if state.day>=132: state.finish_season();return
 		if state.scene=="store":
 			$Daylight/Clock.start(7)
 			get_node("/root/Trip").depart(true)
 			get_node("/root/Trip").shop.walker.position=Vector3(0,0,1.3)
 			return
-		if state.start_work!="":
+		if state.start_encounter!="":
+			$Expedition.focus(state.start_encounter)
+		elif state.start_work!="":
 			$Mining.focus_site(state.start_work)
 		elif state.day>=81 and state.day<=127 and state.start_hour>=5 and state.start_hour<=8:
 			var layout=preload("res://scripts/claim_layout.gd")

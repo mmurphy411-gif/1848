@@ -113,6 +113,9 @@ func refresh() -> void:
 		var prop: Node3D=shelves.object(counter.pile[i]);pile_visual.add_child(prop);prop.position=Layout.PILE+Vector3((i%3)*.36-.35,(i/3)*.1,0)
 	for i in counter.fish_offer.size():
 		var fish:=MeshInstance3D.new();fish.mesh=Library.mesh("res://assets/fish/fish.glb") if ResourceLoader.exists("res://assets/fish/fish.glb") else CapsuleMesh.new();pile_visual.add_child(fish);fish.position=Layout.BARREL+Vector3(i*.1-.2,0,0);fish.scale=Vector3(.2,.2,.2)
+	for i in mini(3,counter.hide_offer.size()):
+		var hide: Node3D=load("res://assets/expedition/hide.glb").instantiate();pile_visual.add_child(hide)
+		hide.position=Layout.BARREL+Vector3(0,.03*i+.04,0);hide.scale=Vector3.ONE*.65
 func target() -> String:
 	var camera: Camera3D=camera_rig.camera
 	var result:="";var best:=.82
@@ -132,10 +135,10 @@ func prompt() -> String:
 	var id:=target()
 	match id:
 		"scale": return "Weigh out · hold" if get_node("/root/Sack").ounces>0 else "Sack empty"
-		"slate": return "Settle" if not counter.pile.is_empty() or not counter.fish_offer.is_empty() else "Slate"
+		"slate": return "Settle" if not counter.pile.is_empty() or (not counter.fish_offer.is_empty() or not counter.hide_offer.is_empty()) else "Slate"
 		"board": return "Prices"
 		"pile": return "Return last item"
-		"barrel": return "Take fish back" if not counter.fish_offer.is_empty() else "Sell smoked fish"
+		"barrel": return "Take offered food and hides back" if (not counter.fish_offer.is_empty() or not counter.hide_offer.is_empty()) else "Sell smoked food and hides"
 		"home": return "Home · by dusk"
 		"": return ""
 	var game: Node=get_node("/root/GameState")
@@ -161,7 +164,7 @@ func interact(id: String) -> void:
 		"barrel": counter.toggle_fish()
 		"slate":
 			# Show the required dust crossing the scale before the atomic exchange.
-			var needed: float=maxf(0,counter.total()-counter.game.dollars-counter.fish_credit())/(counter.visit.gold_price*.92)
+			var needed: float=maxf(0,counter.total()-counter.game.dollars-counter.trade_credit())/(counter.visit.gold_price*.92)
 			if needed>.000001 and needed<=counter.sack.ounces and not counter.pile.is_empty():
 				interact("scale");settling=true;auto_pour_limit=needed
 				return

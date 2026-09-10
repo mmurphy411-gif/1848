@@ -41,6 +41,10 @@ func run() -> void:
 		actor._physics_process(1.0/60)
 		check(actor.state==actor.State.ALERT,species+" alerts before fleeing")
 		walker.position=actor.position+Vector3.RIGHT*(Model.FLEE[species]*.65)
+		if species=="bear":
+			actor._physics_process(1.0/60)
+			check(actor.state==actor.State.ALERT,"Bear holds the riffle until driven off")
+			actor.retiring=true
 		var start: Vector3=actor.position
 		var initial: float=start.distance_to(walker.position)
 		var penetration := 0.0
@@ -56,6 +60,7 @@ func run() -> void:
 		check(actor.parts.has("Head") and actor.parts.has("Tail") and actor.parts.has("FrontL"),species+" has articulated anatomy")
 		for i in 520: actor._physics_process(1.0/60)
 		check(actor.departed and not actor.visible,species+" leaves without immediate respawn")
+	for actor in wildlife.actors: actor.retiring=false
 	check(game.inventory==inventory and game.condition==condition,"Wildlife does not damage miner or mutate inventory")
 	for i in 20: wildlife.refresh()
 	check(wildlife.actors.size()==10,"Routine refresh does not replenish frightened wildlife")

@@ -43,7 +43,7 @@ func run() -> void:
 	var counter: Node=store.counter
 	check(counter.select("flour")=="" and counter.pile.size()==1,"select flour")
 	check(is_equal_approx(counter.total(),Prices.price("flour",30,game.seed)),"pile total")
-	check(counter.select("spear")=="Not this trip" and counter.pile.size()==1,"later milestone display refuses sale")
+	check(counter.select("sluice")=="Not this trip" and counter.pile.size()==1,"later milestone display refuses sale")
 	counter.return_last();check(counter.pile.is_empty(),"return restores reservation")
 	game.purchases.append({"day":30,"item":"line","count":Stock.stock("line",30,game.seed,[])})
 	check(counter.select("line")=="Sold out","empty peg refuses selection")

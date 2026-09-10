@@ -54,6 +54,7 @@ func sample_flow(point: Vector3) -> Vector2:
 	var color := flow_colors[index]
 	return Vector2(color.r*2-1,color.g*2-1).normalized()*color.b
 func can_fish() -> bool:
+	if game.season_ended: return false
 	var p := walker.global_position
 	return state==State.IDLE and walker.panner.state==0 and walker.river.work_edge(p,walker.wade_limit()) and game.inventory.hooks>0 and game.inventory.line_m>=6 and has_bait() and not walker.get_parent().get_node("Activities").busy
 func has_bait() -> bool:

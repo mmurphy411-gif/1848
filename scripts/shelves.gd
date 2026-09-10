@@ -9,7 +9,9 @@ func _ready() -> void:
 	var asset: Node3D=load("res://assets/store/goods.glb").instantiate()
 	for node in asset.find_children("*","MeshInstance3D",true,false): sources[str(node.name)]=node.mesh
 	asset.free()
-func object(item: String,fill := 3) -> MeshInstance3D:
+func object(item: String,fill := 3) -> Node3D:
+	if item in ["rifle","spear"]:
+		var prop: Node3D=load("res://assets/expedition/"+item+".glb").instantiate();prop.rotation.x=PI/2;return prop
 	var mesh:=MeshInstance3D.new()
 	mesh.mesh=sources.get(item+"_"+str(fill),sources.get(item))
 	return mesh

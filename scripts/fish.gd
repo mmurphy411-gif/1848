@@ -18,7 +18,8 @@ func configure(data: Dictionary,source: Mesh,w: CharacterBody3D) -> void:
 	var offset := Vector2(sin(data.index*2.4)*1.1,cos(data.index*2.4)*.65)
 	home=Vector3(spot.position.x+offset.x,-.4,spot.position.y+offset.y)
 	var water: float=walker.get_node("/root/GameState").water_level()
-	home.z=minf(home.z,preload("res://scripts/river_model.gd").shore_z(home.x,water)-3.5)
+	if species=="salmon": home.z=preload("res://scripts/river_model.gd").shore_z(home.x,water)-2.15
+	home.z=minf(home.z,preload("res://scripts/river_model.gd").shore_z(home.x,water)-(2.15 if species=="salmon" else 3.5))
 	home.y=water-.4
 	if species in ["sucker","salmon"]: home.y=Layout.height_at(home.x,home.z)+.22
 	elif species=="pikeminnow" or species=="hardhead": home.y=lerpf(water,Layout.height_at(home.x,home.z),.5)
@@ -40,7 +41,7 @@ func _process(delta: float) -> void:
 	material.set_shader_parameter("visibility",fade)
 	if retired and fade<=0: queue_free();return
 	var distance := global_position.distance_to(walker.global_position)
-	if not approach and flee_time<0 and (distance<(4.0 if walker.water_depth>0 else 2.5) or (walker.panner.state!=0 and distance<6)): flee()
+	if not approach and flee_time<0 and (distance<(1.8 if species=="salmon" else 4.0 if walker.water_depth>0 else 2.5) or (walker.panner.state!=0 and distance<6)): flee()
 	var desired := home+Vector3(sin(age*.38)*.8,0,cos(age*.43)*.35)
 	var dart := pow(maxf(0,sin(age*.65)),12)
 	desired.x-=dart*(2.3 if species=="salmon" else 1.2)
@@ -55,7 +56,7 @@ func _process(delta: float) -> void:
 	rotation.y=lerp_angle(rotation.y,heading,delta*4)
 	position=position.move_toward(desired,delta*(3.0 if flee_time>=0 else 1.0 if approach else .6))
 	var water: float=get_node("/root/GameState").water_level()
-	position.z=minf(position.z,preload("res://scripts/river_model.gd").shore_z(position.x,water)-3.5)
+	position.z=minf(position.z,preload("res://scripts/river_model.gd").shore_z(position.x,water)-(2.15 if species=="salmon" else 3.5))
 	var half_height := mesh.get_aabb().size.y*.5*scale.y+.03
 	position.y=clampf(position.y,Layout.height_at(position.x,position.z)+half_height,water-half_height)
 	material.set_shader_parameter("pace",3.0 if flee_time>=0 else 1.8 if approach else .7)

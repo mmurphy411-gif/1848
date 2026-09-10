@@ -24,6 +24,13 @@ func _ready() -> void:
 	book.hide()
 func refresh() -> void:
 	if not opened: return
+	if game.season_ended:
+		var result: Dictionary=game.final_ledger
+		left.text="November 5, 1848\nFirst snow\n\nThe season on the North Yuba is over.\n\n$%.2f in coin\n%.3f ounces of gold\n%.1f lb of food remaining\n\nCondition: %.0f / 100\n\nSpent this season: $%.2f\n%d store visits\n" % [result.coin,result.gold,result.food_lb,result.condition,result.spent,result.visits]
+		right.text="The season's account\nSince June 26\n\n"
+		for species in result.catches: right.text+="%d %s taken\n" % [result.catches[species],species]
+		right.text+="%d deer taken · %d bear taken\n%d hides sold · %d rifle shots\n\nEquipment brought out\n%s\n\nG / X closes or reopens the book." % [result.deer,result.bear,result.hides_sold,result.shots,", ".join(result.tools)]
+		return
 	var condition := "Fit" if game.condition>=70 else "Tired" if game.condition>=40 else "Weak"
 	left.text=Calendar.date_string(game.day)+"\n"+Calendar.weekday(game.day)+" — "+game.weather().capitalize()+"\n\n"+condition+".  %d meals today.\n\n" % game.inventory.meals_today
 	left.text+="%d hooks and %.0f yards of line.\n" % [game.inventory.hooks,game.inventory.line_m*1.094]
@@ -61,8 +68,9 @@ func refresh() -> void:
 			if game.inventory.goods[item]>0: right.text+="%s %.2f lb\n" % [item.capitalize(),game.inventory.goods[item]]
 		right.text+="%d hooks · %.0f yards\n%s" % [game.inventory.hooks,game.inventory.line_m*1.094,"Willow rod" if game.inventory.rod else "Hand line"]
 	right.text+="\n\nTools\n"
-	for item in preload("res://scripts/mining_model.gd").TOOLS:
+	for item in preload("res://scripts/mining_model.gd").TOOLS+["spear","rifle","tent"]:
 		if game.inventory.get(item,false): right.text+=("Crowbar and horn spoon" if item=="crowbar" else item.capitalize())+"\n"
+	right.text+="%d shots of powder and ball\n%d hides carried\n" % [game.inventory.get("ammo",0),game.inventory.get("hides",[]).size()]
 	right.text+="Crevice gold: %.3f oz\nCradle loads: %d\n" % [game.mining.taken[0]+game.mining.taken[1],game.mining.rocker_actions]
 func open_book() -> void:
 	opened=true;book.show();Input.mouse_mode=Input.MOUSE_MODE_VISIBLE;refresh()

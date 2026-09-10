@@ -2,10 +2,13 @@ extends Node3D
 const Layout=preload("res://scripts/claim_layout.gd")
 const Cooking=preload("res://scripts/cooking.gd")
 var props: Dictionary={}
+var tent: Node3D
 var oak := Vector3.ZERO
 var fire_hours := 0.0
 var ember_hours := 0.0
-var smoking: Dictionary={}
+var smoking: Dictionary:
+	get: return get_node("/root/GameState").inventory.get("rack",{})
+	set(value): get_node("/root/GameState").inventory.rack=value
 var smoke_hours := 0.0
 var cook_hours := 0.0
 var cooking_fish: Dictionary={}
@@ -79,6 +82,17 @@ func _ready() -> void:
 	add_child(fire_sound)
 	game.new_day.connect(day_end)
 	last_hour=clock.hour_at(clock.elapsed)
+	game.changed.connect(refresh_tent);refresh_tent()
+func refresh_tent() -> void:
+	var owned: bool=game.inventory.get("tent",false)
+	props.LeanTo.visible=not owned;props.LeanTo.collision_layer=0 if owned else 1
+	if owned and not is_instance_valid(tent):
+		tent=load("res://assets/expedition/tent.glb").instantiate();add_child(tent)
+		tent.position=props.LeanTo.position;tent.rotation.y=PI
+		for model in tent.find_children("*","MeshInstance3D",true,false): model.create_trimesh_collision()
+	if is_instance_valid(tent):
+		tent.visible=owned
+		for body in tent.find_children("*","StaticBody3D",true,false): body.collision_layer=1 if owned else 0
 func _particles(p: GPUParticles3D,count: int,color: Color,life: float,size: float,gravity: Vector3) -> void:
 	p.amount=count;p.lifetime=life;p.position=Vector3(0,.1,0);p.visibility_aabb=AABB(Vector3(-3,0,-3),Vector3(6,7,6))
 	var material := ParticleProcessMaterial.new()
@@ -146,14 +160,30 @@ func fry() -> bool:
 	if i<0 or fire_hours<Cooking.RECIPES.fried.hours or not cooking_fish.is_empty(): return false
 	cooking_fish=game.inventory.fish.pop_at(i);cook_hours=Cooking.RECIPES.fried.hours
 	props.Skillet.collision_layer=0
-	cooking_food.mesh=get_parent().get_node("FishSchool").sources[cooking_fish.species]
+	cooking_food.mesh=get_parent().get_node("FishSchool").sources.get(cooking_fish.species)
+	if cooking_food.mesh==null:
+		var meat:=BoxMesh.new();meat.size=Vector3(.24,.06,.18)
+		var mat:=StandardMaterial3D.new();mat.albedo_color=Color(.25,.10,.06);mat.roughness=.9;meat.material=mat;cooking_food.mesh=meat
 	cooking_food.show()
 	game.changed.emit();return true
 func hang() -> bool:
 	var i := fresh_index()
 	if i<0 or not burning() or not smoking.is_empty() or game.inventory.goods.salt<.1: return false
-	game.inventory.goods.salt=maxf(0,game.inventory.goods.salt-.1)
-	smoking=game.inventory.fish.pop_at(i);smoke_hours=0;game.event("Hung a fish on the rack.");return true
+	var first: Dictionary=game.inventory.fish[i]
+	if first.species in ["salmon","venison","bear meat"]:
+		var batch: Array=[];var mass:=0.0
+		for f in game.inventory.fish:
+			if f.species==first.species and f.state=="fresh" and not f.get("cooked",false) and mass+f.weight_lb<=20:
+				batch.append(f);mass+=f.weight_lb
+		var salt:=maxf(.1,mass*.02)
+		if game.inventory.goods.salt<salt: return false
+		game.inventory.goods.salt-=salt
+		for f in batch: game.inventory.fish.erase(f)
+		smoking=Cooking.fresh(first.species,mass,game.day);smoking.batch=true
+	else:
+		game.inventory.goods.salt=maxf(0,game.inventory.goods.salt-.1)
+		smoking=game.inventory.fish.pop_at(i)
+	smoke_hours=0;game.event("Hung food on the rack.");return true
 func eat_stored() -> bool:
 	for i in game.inventory.fish.size():
 		var f: Dictionary=game.inventory.fish[i]
@@ -210,7 +240,12 @@ func advance(hours: float) -> void:
 	if not smoking.is_empty():
 		smoke_hours+=lit
 		if smoke_hours>=4:
-			smoking.state="smoked";game.inventory.fish.append(smoking);smoking={};game.event("A fish finished smoking.")
+			if smoking.get("batch",false):
+				for f in preload("res://scripts/expedition_model.gd").food(smoking.species,smoking.weight_lb,game.day):
+					f.state="smoked";game.inventory.fish.append(f)
+			else:
+				smoking.state="smoked";game.inventory.fish.append(smoking)
+			smoking={};game.event("Food finished smoking.")
 	if not cooking_fish.is_empty():
 		cook_hours-=lit
 		if cook_hours<=0:

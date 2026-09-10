@@ -37,7 +37,12 @@ func refresh(force := false) -> void:
 	var present: Array=[]
 	for actor in actors:
 		if not actor.retiring: present.append(actor.species)
+	var species_index: Dictionary={}
 	for data in Model.population(game.seed,game.day,hour,game.water_level()):
+		var identity: String=data.species+str(species_index.get(data.species,0))
+		species_index[data.species]=species_index.get(data.species,0)+1
+		if data.species=="deer" and (identity in game.expedition.deer_dead or game.day<game.expedition.deer_spooked_until): continue
+		if data.species=="bear" and (game.expedition.bear_dead or game.expedition.bear_driven_day==game.day): continue
 		if data.species in present: continue
 		var p: Vector3=data.position
 		var found := false
@@ -47,7 +52,7 @@ func refresh(force := false) -> void:
 			if safe(trial,data.species): p=trial;found=true;break
 		if not found: continue
 		var actor := Actor.new();actor.species=data.species;actor.phase=data.phase;actor.manager=self
-		actor.name=data.species+str(actors.size());actor.position=p;actor.scale=Vector3.ONE*data.scale
+		actor.name=identity;actor.set_meta("identity",identity);actor.position=p;actor.scale=Vector3.ONE*data.scale
 		add_child(actor);actors.append(actor)
 
 func safe(p: Vector3, species: String) -> bool:

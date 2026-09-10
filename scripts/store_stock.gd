@@ -15,10 +15,10 @@ const ROWS := [
 	["shovel",8.0,"each",5.0,2,1,98,true],
 	["boots",12.0,"pair",3.0,2,1,84,true],
 	["rocker",25.0,"lumber and iron",40.0,1,1,84,true],
-	["spear",6.0,"each",2.0,1,1,91,false],
-	["rifle",60.0,"each",9.0,1,0,-1,false],
-	["powder",4.0,"20 shots",1.0,3,2,112,false],
-	["tent",20.0,"canvas tent",18.0,1,1,84,false],
+	["spear",6.0,"each",2.0,1,1,91,true],
+	["rifle",60.0,"each",9.0,1,0,-1,true],
+	["powder",4.0,"20 shots",1.0,3,2,112,true],
+	["tent",20.0,"canvas tent",18.0,1,1,84,true],
 ]
 
 static func catalogue() -> Array[Dictionary]:

@@ -3,6 +3,7 @@ extends Node3D
 const CLIPS := {"idle":4.0,"walk":1.0,"wade":1.2,"pan_enter":2.0,"pan_swirl":2.0,"pan_wash":1.5,"pan_lift":1.5,"pan_exit":1.0,"fish_idle":3.0,"cast":1.2,"fish_wait":4.0,"strike":.4,"fight":1.0,"land":2.0,"gather":2.0,"tend_fire":2.0,"cook":3.0,"eat":3.0,"lie_down":2.0}
 const FISH_CLIPS := ["fish_idle","cast","fish_wait","strike","fight","land"]
 const CAMP_CLIPS := ["gather","tend_fire","cook","eat","lie_down"]
+const EXPEDITION_CLIPS := ["spear","rifle"]
 const MINING_CLIPS := ["crevice","spoon","shovel","pick","rock"]
 var activity_clip := ""
 var activity_rate := 1.0
@@ -66,6 +67,13 @@ func _ready() -> void:
 		animation.loop_mode=Animation.LOOP_LINEAR
 		player.get_animation_library("").add_animation(clip,animation)
 	mining_clips.free()
+	var expedition_clips: Node3D=load("res://assets/expedition/miner_clips.glb").instantiate()
+	var expedition_player: AnimationPlayer=expedition_clips.find_children("*","AnimationPlayer",true,false)[0]
+	for clip in EXPEDITION_CLIPS:
+		var animation:=expedition_player.get_animation(clip).duplicate() as Animation
+		animation.loop_mode=Animation.LOOP_LINEAR
+		player.get_animation_library("").add_animation(clip,animation)
+	expedition_clips.free()
 	# Blender's frame-one offset is cropped to the table's exact clip lengths.
 	for name in CLIPS:
 		var animation := player.get_animation(name)
@@ -194,7 +202,7 @@ func _build_tree() -> void:
 			clip.animation=name
 			machine.add_node(name,clip)
 		root_machine.add_node(group,machine)
-	for name in ["pour","take"]+MINING_CLIPS:
+	for name in ["pour","take"]+MINING_CLIPS+EXPEDITION_CLIPS:
 		var clip:=AnimationNodeAnimation.new();clip.animation=name
 		var machine: AnimationNodeStateMachine=root_machine.get_node("camp");machine.add_node(name,clip)
 	for a in ["idle","walk","wade","pan","fishing","camp"]:

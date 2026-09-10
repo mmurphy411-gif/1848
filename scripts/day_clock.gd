@@ -33,7 +33,7 @@ func advance(delta: float) -> void:
 func end_day() -> void:
 	elapsed=0.0
 	day_ended.emit()
-	running=true
+	running=not (has_node("/root/GameState") and get_node("/root/GameState").get("season_ended")==true)
 	advanced.emit(DAWN)
 
 func _process(delta: float) -> void:
