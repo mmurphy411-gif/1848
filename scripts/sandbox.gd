@@ -32,7 +32,7 @@ func _ready() -> void:
 	column.add_child(weather);fire.text="Fire lit";column.add_child(fire)
 	rod.text="Willow rod";column.add_child(rod);column.add_child(price_label)
 	river_auto.text="Seasonal river level";column.add_child(river_auto)
-	for name in ["Apply","Dawn","Dusk","Next day","Sleep","Refresh fish","Crevice","Rocker bank","Go to store","Home"]:
+	for name in ["Apply","Dawn","Dusk","Next day","Sleep","Refresh fish","Crevice","Rocker bank","Watch bear","Watch deer","Watch squirrel","Watch quail","Watch jay","Go to store","Home"]:
 		var button := Button.new();button.text=name;button.pressed.connect(command.bind(name));column.add_child(button)
 	panel.hide()
 func refresh_fields() -> void:
@@ -90,7 +90,11 @@ func command(name: String) -> void:
 		"Crevice","Rocker bank":
 			if claim.get_node("Activities").busy: return
 			close_panel();claim.get_node("Mining").focus_site("crevice" if name=="Crevice" else "rocker")
+		"Watch bear","Watch deer","Watch squirrel","Watch quail","Watch jay":
+			if claim.get_node("Activities").busy: return
+			close_panel();claim.get_node("Wildlife").focus(name.trim_prefix("Watch "))
 	claim.get_node("FishSchool").refresh()
+	claim.get_node("Wildlife").refresh()
 	refresh_fields()
 func close_panel() -> void:
 	opened=false;panel.hide();Input.mouse_mode=Input.MOUSE_MODE_CAPTURED

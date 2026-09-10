@@ -12,7 +12,7 @@ var handline: Node3D
 var physical_pan: Node3D
 var eating_pan: MeshInstance3D
 var rod_visual: Node3D
-var pack_visual: MeshInstance3D
+var pack_visual: Node3D
 var pack_stage := 0
 var cast_elapsed := 0.0
 const SWIRL_VARIANTS := ["pan_swirl", "pan_swirl_2", "pan_swirl_3"]
@@ -74,7 +74,8 @@ func _ready() -> void:
 	for node in miner.find_children("*","MeshInstance3D",true,false):
 		node.lod_bias = 8.0
 		for s in node.mesh.get_surface_count():
-			var label: String = ["Linen","Wool","Leather","Skin","Felt","Beard","Suspenders"][s]
+			# PLACEHOLDER glTF materials intentionally omit names and textures.
+			var label: String = ["Linen","Wool","Leather","Skin","Felt","Beard","Suspenders","Buckle","Ivory"][s]
 			var m := ShaderMaterial.new()
 			m.shader = preload("res://shaders/miner.gdshader")
 			m.set_shader_parameter("body_albedo",preload("res://assets/miner/body_albedo.png"))
@@ -83,10 +84,12 @@ func _ready() -> void:
 				m.set_shader_parameter("body_albedo",preload("res://assets/miner/beard_albedo.png"))
 				m.set_shader_parameter("body_normal",preload("res://assets/miner/beard_normal.png"))
 			m.set_shader_parameter("wettable",label in ["Wool","Leather"])
-			m.set_shader_parameter("normal_strength",.12 if label=="Skin" else .65)
+			m.set_shader_parameter("normal_strength",.04 if label=="Skin" else .08 if label=="Beard" else .22)
 			m.set_shader_parameter("worn_knees",label=="Wool")
-			m.set_shader_parameter("textured",not label in ["Felt","Suspenders"])
-			m.set_shader_parameter("tint",Color(.12,.09,.056) if label=="Felt" else Color(.085,.045,.018) if label=="Beard" else Color(.15,.10,.054))
+			m.set_shader_parameter("textured",label in ["Linen","Wool","Leather","Skin","Beard"])
+			var colors := {"Felt":Color(.12,.09,.056),"Suspenders":Color(.15,.10,.054),"Buckle":Color(.065,.048,.031),"Ivory":Color(.54,.49,.40)}
+			m.set_shader_parameter("tint",colors.get(label,Color.WHITE))
+			m.set_shader_parameter("skin",label=="Skin")
 			node.set_surface_override_material(s,m)
 			wet_materials.append(m)
 	pan_attachment = _attachment("PanSocket","pan_socket")
@@ -99,9 +102,13 @@ func _ready() -> void:
 	handline.hide()
 	rod_visual=load("res://assets/miner/rod.glb").instantiate();handline_attachment.add_child(rod_visual);rod_visual.hide()
 	rod_visual.rotation.x=PI
-	pack_visual=MeshInstance3D.new();var pack_mesh:=BoxMesh.new();pack_mesh.size=Vector3(.34,.44,.20);pack_visual.mesh=pack_mesh
-	var cloth:=StandardMaterial3D.new();cloth.albedo_color=Color(.34,.28,.17);pack_visual.material_override=cloth
-	var back:=_attachment("PackSocket","Chest");back.add_child(pack_visual);pack_visual.position=Vector3(0,.06,-.19)
+	pack_visual=preload("res://assets/miner/pack.glb").instantiate()
+	for mesh in pack_visual.find_children("*","MeshInstance3D",true,false):
+		for s in mesh.mesh.get_surface_count():
+			if mesh.mesh.surface_get_material(s).resource_name=="Pack canvas":
+				var cloth := ShaderMaterial.new();cloth.shader=preload("res://shaders/pack.gdshader")
+				mesh.set_surface_override_material(s,cloth)
+	var back:=_attachment("PackSocket","Chest");back.add_child(pack_visual);pack_visual.position=Vector3(0,.02,-.19)
 	sack_attachment = _attachment("SackSocket","Hips")
 	sack_visual = preload("res://assets/miner/sack.glb").instantiate()
 	sack_attachment.add_child(sack_visual)
@@ -183,7 +190,9 @@ func _physics_process(delta: float) -> void:
 	var inventory: Dictionary=get_node("/root/GameState").inventory
 	var pounds:=preload("res://scripts/pack.gd").weight(inventory)
 	pack_stage=0 if pounds<=5 else 1 if pounds<15 else 2 if pounds<30 else 3
-	pack_visual.visible=pack_stage>0;pack_visual.scale=Vector3.ONE*(.8+pack_stage*.16)
+	pack_visual.visible=pack_stage>0
+	# Contents fill the gusset; shoulder straps keep their fitted length.
+	pack_visual.scale=Vector3(1.0,1.0,.92+pack_stage*.06)
 	rod_visual.visible=inventory.get("rod",false) and activity_clip in FISH_CLIPS
 	if rod_visual.visible: handline.hide()
 	if turn_elapsed<.3:
@@ -268,6 +277,13 @@ func play_activity(clip: String) -> void:
 
 func fishing_origin() -> Vector3:
 	return rod_visual.to_global(Vector3(.09,1.8,0)) if rod_visual.visible else handline_attachment.global_position
+
+func mining_grip(side: String) -> Vector3:
+	# Center of the curled middle finger, rather than the wrist attachment.
+	var knuckle := skeleton.get_bone_global_pose(skeleton.find_bone(side+"MiddleProximal")).origin
+	var distal := skeleton.get_bone_global_pose(skeleton.find_bone(side+"MiddleDistal"))
+	var tip := distal*Vector3(0,.0382,0)
+	return skeleton.to_global((knuckle+tip)*.5)
 
 func stop_activity() -> void:
 	activity_clip=""

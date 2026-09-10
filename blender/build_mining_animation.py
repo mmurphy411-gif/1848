@@ -1,4 +1,4 @@
-"""Export only the new mining clips; retain the accepted original miner asset."""
+"""Export mining clips against the current miner's unchanged skeleton rest joints."""
 import sys
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parent))

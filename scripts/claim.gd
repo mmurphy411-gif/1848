@@ -3,6 +3,7 @@ var quitting := false
 ## Scene instances stay posed for tools; launching this as the main scene starts play.
 func _ready() -> void:
 	var mining := preload("res://scripts/mining.gd").new();mining.name="Mining";add_child(mining)
+	var wildlife := preload("res://scripts/wildlife.gd").new();wildlife.name="Wildlife";add_child(wildlife)
 	get_node("/root/Trip").configure(self)
 	var path:=MeshInstance3D.new();path.name="StoreTrail"
 	var layout=preload("res://scripts/claim_layout.gd")

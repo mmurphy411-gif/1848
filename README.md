@@ -7,6 +7,10 @@ and [STORE_GUIDE.md](STORE_GUIDE.md) for the two-visit store test. Earlier balan
 findings remain documented below.
 Built with **Godot 4.7.2 standard**, GDScript, and the Forward+ renderer.
 
+The latest miner mesh, canvas pack and mining grips are covered in
+[MINER_ART_REVIEW.md](MINER_ART_REVIEW.md), including in-game captures,
+verification results and remaining art limitations.
+
 ## Play
 
 On this machine, double-click **Play.cmd**. It launches directly into the claim
@@ -1584,3 +1588,18 @@ These limits are recorded rather than counted as passing coverage. Human motion
 review and final sound/art balancing remain appropriate for the polish pass.
 
 ![Working the cradle](artifacts/m11-rocking.png)
+
+## Wildlife art and ambient behavior
+
+The claim now includes a seasonal black bear, two black-tailed does, two western
+gray squirrels, four California quail and a Steller's jay. They forage, become
+alert and retreat from the miner; the jay unfolds its wings and flies away.
+Deer visit around dawn and dusk, and the bear appears at dawn during the salmon
+run. **F4 → Watch bear/deer/squirrel/quail/jay** provides immediate playtests.
+
+The new wildlife suite, M9, M11 and camp movement checks pass. With ten animals
+active, 1080p performance on the RTX 5080 measured 5.15 ms p95. The art remains
+stylized: articulated joints and smooth coat surfaces are the most noticeable
+limitations in close-ups. [WILDLIFE_REVIEW.md](WILDLIFE_REVIEW.md) records the
+assets, captures, checks and remaining hunting/bear-raid work. This pass does
+not mark the complete M12 or M13 gameplay milestones finished.

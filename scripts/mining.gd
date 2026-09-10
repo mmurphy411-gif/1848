@@ -172,19 +172,23 @@ func _physics_process(delta: float) -> void:
 
 func _pose_tool() -> void:
 	if not is_instance_valid(tool): return
-	var hand: Vector3=visual.right_hand.global_position
+	var hand: Vector3=visual.mining_grip("Right")
+	var upper: Vector3=visual.mining_grip("Left")
+	var shaft_axis := (upper-hand).normalized()
+	var shaft_basis := Basis(Quaternion(Vector3.UP,shaft_axis))
 	if tool_kind=="crowbar":
-		tool.global_basis=Basis(Vector3.UP,visual.global_rotation.y)
-		tool.global_position=Vector3(hand.x,Layout.height_at(hand.x,hand.z)+.035,hand.z)
+		tool.global_basis=shaft_basis
+		var reach: float=(hand.y-Layout.height_at(hand.x,hand.z)-.035)/maxf(.3,shaft_axis.y)
+		tool.global_position=hand-shaft_axis*reach
 	elif tool_kind=="spoon":
 		tool.global_basis=Basis(Vector3.RIGHT,PI)
 		tool.global_position=hand
 	elif tool_kind=="pick":
-		tool.global_basis=Basis(Vector3.UP,visual.global_rotation.y)*Basis(Vector3.RIGHT,PI)
-		tool.global_position=hand+Vector3.UP*.25
+		tool.global_basis=shaft_basis*Basis(Vector3.RIGHT,PI)
+		tool.global_position=hand+shaft_axis*.25
 	elif tool_kind=="shovel":
-		tool.global_basis=Basis(Vector3.UP,visual.global_rotation.y)
-		tool.global_position=hand-Vector3.UP*.65
+		tool.global_basis=shaft_basis
+		tool.global_position=hand-shaft_axis*.65
 
 func complete(kind: String) -> void:
 	if kind=="crevice" and Model.exposed(selected_slab,game.water_level()):

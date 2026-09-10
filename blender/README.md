@@ -59,7 +59,7 @@ authors `pan_socket` under RightHand, including the transfer to left-hand carry.
 
 Tree and miner GLBs export material placeholders to avoid embedded atlas copies.
 Runtime materials bind shared external maps. Miner surface order is deliberate:
-Linen, Wool, Leather, Skin, Felt, Beard, Suspenders. The miner exporter includes
+Linen, Wool, Leather, Skin, Felt, Beard, Suspenders, Buckle, Ivory. The miner exporter includes
 skin weights and NLA animation; the static-asset export policy above applies only
 to the other builders. Pan and sack retain their exported materials. All binary
 sources and outputs are tracked through Git LFS.
@@ -90,3 +90,28 @@ notes review harness is `tests/miner_notes_capture.gd`; `--stills-only` and
 `--sequences-only` select its two capture jobs. Run
 `python tests/probe_miner_notes.py` for still-image gates and
 `python tests/build_pan_review.py` for contact sheets and animated previews.
+
+## Miner art pass
+
+`miner_detail.py` adds facial anatomy, eyelids, a shaped beard, clothing details
+and boot soles to the existing rig. `build_pack.py` exports the separate canvas
+knapsack and saves `build_pack.blend`. Run it before the Godot import, and run
+`build_mining_animation.py` after `build_miner.py` for the curled mining grips
+and updated rocker hand targets. The original panning joints and paths remain
+compatible. See [MINER_ART_REVIEW.md](../MINER_ART_REVIEW.md) for captures,
+measured budgets, contact checks and remaining art limitations.
+
+## Wildlife
+
+Run `blender --background --python blender/build_wildlife.py` to regenerate
+bear, deer, squirrel, quail and jay GLBs in `assets/wildlife/`, plus the matching
+`build_bear.blend`, `build_deer.blend`, `build_squirrel.blend`,
+`build_quail.blend` and `build_jay.blend` sources. Models use meters, with Blender
++Y facing forward (Godot -Z). Preserve the named Head, Tail, limb, lower-limb
+and wing pivots: `wildlife_actor.gd` uses them for animation and foot placement.
+
+The generator joins static details into moving parts, supplies white vertex
+colors where no tint is authored, and retains subtle surface-normal guard
+hairs. Wildlife materials are shared at runtime. See
+[WILDLIFE_REVIEW.md](../WILDLIFE_REVIEW.md) for measured geometry budgets and
+candid limitations of this first animal pass.

@@ -71,6 +71,7 @@ def bake_body():
 
 materials=bake_body()
 materials += [material('Felt',(.12,.09,.056)),material('Beard',(.085,.045,.018)),material('Suspenders',(.15,.10,.054)),material('Buckle',(.25,.22,.16))]
+materials += [material('Ivory',(.54,.49,.40))]
 # Bake a strand-height field to the beard's own UVs. Its shaped mesh supplies
 # the jaw silhouette; these fine strands only describe the hair surface.
 import numpy as np
@@ -127,8 +128,12 @@ def loft(name,points,radii,depths,slot,bone,sides=24,across_axis=(1,0,0)):
             a=k*math.tau/sides
             gather=1.0
             if slot==0:
-                gather+=.055*math.sin(a*7+j*.65)+.027*math.sin(a*11-j*.9)
-            if slot==5:gather+=.055*math.sin(a*9+j*.7)+.035*math.cos(a*13-j)
+                # Folds gather at the tuck and elbow, fading across taut cloth.
+                edge=math.exp(-((j/(len(points)-1)-.08)/.20)**2)
+                gather+=(.012+.042*edge)*math.sin(a*7+j*.31)+.010*math.sin(a*11-j*.6)
+            if slot==1:
+                gather+=.028*math.sin(a*5+j*.85)+.018*math.cos(a*8-j*.7)
+            if slot==5:gather+=.024*math.sin(a*5+j*.9)
             verts.append(p+(across*math.cos(a)*radii[j]+other*math.sin(a)*depths[j])*gather)
             x=slot%2 if slot<4 else 0;y=slot//2 if slot<4 else 0
             uv=(k/sides,j/max(1,len(points)-1)) if slot==5 else ((x+.04+.92*k/sides)*.5,(y+.04+.92*j/max(1,len(points)-1))*.5)
@@ -140,9 +145,11 @@ def loft(name,points,radii,depths,slot,bone,sides=24,across_axis=(1,0,0)):
 def line(a,b,count):return [Vector(a).lerp(Vector(b),i/(count-1)) for i in range(count)]
 def blend(p,a,b,joint,width=.10):
     t=max(0,min(1,(p.z-joint)/width+.5));return {a:t,b:1-t}
+def shirt_weight(p):
+    return blend(p,'Spine','Hips',1.065,.12) if p.z<1.13 else blend(p,'Chest','Spine',1.24,.20)
 # Closed shirt torso, with overlapping sleeve seams and shaped shoulders.
 heights=[.93,.97,1.02,1.08,1.14,1.20,1.26,1.32,1.38,1.42,1.445]
-loft('Shirt',[(0,0,z) for z in heights],[.16,.183,.19,.185,.181,.193,.21,.223,.224,.18,.073],[.112,.132,.141,.137,.144,.15,.15,.145,.121,.091,.062],0,lambda p:blend(p,'Spine','Hips',1.065,.12) if p.z<1.13 else blend(p,'Chest','Spine',1.24,.20),40)
+loft('Shirt',[(0,0,z) for z in heights],[.16,.183,.19,.185,.181,.193,.21,.223,.224,.18,.073],[.112,.132,.141,.137,.144,.15,.15,.145,.121,.091,.062],0,shirt_weight,40)
 loft('Trouser seat',[(0,.01,z) for z in [.82,.87,.92,.97,1.0]],[.16,.18,.177,.167,.158],[.10,.125,.124,.118,.112],1,'Hips',28)
 for side,sign in [('Left',1),('Right',-1)]:
     hip,knee,ankle=[Vector(joints[side+n][0]) for n in ['UpperLeg','LowerLeg','Foot']]
@@ -152,9 +159,10 @@ for side,sign in [('Left',1),('Right',-1)]:
     loft('Boot upper',[(sign*.11,0,z) for z in [.045,.08,.14,.23,.29]],[.072,.071,.065,.063,.069],[.09,.085,.072,.069,.074],2,side+'Foot',24)
     loft('Boot toe',[(sign*.11,y,.063) for y in [.05,0,-.07,-.16,-.22]],[.063,.077,.081,.075,.054],[.05,.063,.061,.048,.025],2,side+'Foot',24)
     a,b,c=[Vector(joints[side+n][0]) for n in ['UpperArm','LowerArm','Hand']]
-    pts=line(a,b,7)+line(b,b.lerp(c,.35),4)[1:];rs=[.113,.123,.12,.111,.106,.100,.089,.094,.090,.084]
+    pts=[a+Vector((-sign*.035,0,.030))]+line(a,b,7)+line(b,b.lerp(c,.35),4)[1:]
+    rs=[.057,.093,.102,.100,.093,.086,.082,.078,.081,.079,.075]
     loft('Rolled sleeve',pts,rs,rs,0,lambda p,s=side:blend(p,s+'UpperArm',s+'LowerArm',1.12,.13),24)
-    cuff=b.lerp(c,.3);loft('Sleeve roll',[cuff+Vector((0,0,z)) for z in [.028,.016,.006,-.009,-.018]],[.086,.099,.103,.097,.085],[.086,.099,.103,.097,.085],0,side+'LowerArm',28)
+    cuff=b.lerp(c,.3);loft('Sleeve roll',[cuff+Vector((0,0,z)) for z in [.028,.016,.006,-.009,-.018]],[.076,.084,.087,.083,.074],[.076,.084,.087,.083,.074],0,side+'LowerArm',28)
     pts=line(b.lerp(c,.25),c,9);rs=[.050,.050,.049,.047,.044,.040,.035,.031,.028]
     loft('Forearm',pts,rs,rs,3,side+'LowerArm',32)
     # The broad palm axis follows the finger row, including in the rest mesh.
@@ -177,22 +185,21 @@ for side,sign in [('Left',1),('Right',-1)]:
             mid=joints[prefix+'Intermediate'][0][2];tip=joints[prefix+'Distal'][0][2]
             if p.z>mid-.004:return blend(p,prefix+'Proximal',prefix+'Intermediate',mid,.008)
             return blend(p,prefix+'Intermediate',prefix+'Distal',tip,.008)
-        rr=[.009,.010,.0095,.010,.0095,.009,.0095,.0085,.007,.003]
+        taper=[1.03,1.,1.02,.93,.80][f]
+        rr=[r*taper for r in [.009,.010,.009,.0095,.0085,.008,.0085,.0075,.0065,.0025]]
         loft('Continuous finger',pts,rr,rr,3,finger_weight,12)
 loft('Neck',[(0,0,z) for z in [1.415,1.46,1.51,1.54]],[.065]*4,[.061]*4,3,'Neck',32)
-zs=[1.49+i*.20/23 for i in range(24)];r=[.091*math.sin(math.pi*(i+.5)/24)**.6 for i in range(24)]
-loft('Head',[(0,-.007,z) for z in zs],r,[a*.9 for a in r],3,'Head',40)
-loft('Beard',[(0,-.069,z) for z in [1.38,1.415,1.45,1.485,1.515,1.545,1.575,1.60]],[.020,.037,.056,.071,.080,.082,.077,.061],[.018,.033,.045,.052,.054,.051,.041,.025],5,'Head',32)
-loft('Nose',[(0,y,1.604) for y in [-.072,-.095,-.119]],[.019,.023,.011],[.032,.028,.012],3,'Head',12)
+from miner_detail import detail
+detail(loft,verts,faces,uvs,slots,weights,shirt_weight)
 # Felt brim shaped down at its edge; low crown defines the silhouette.
 loft('Hat',[(0,0,z) for z in [1.637,1.645,1.657,1.665,1.68,1.73,1.768,1.78]],[.25,.27,.17,.115,.112,.108,.091,.063],[.218,.238,.15,.102,.099,.094,.081,.057],4,'Head',48)
 loft('Hat band',[(0,0,z) for z in [1.667,1.69]],[.115,.114],[.103,.101],2,'Head',40)
 loft('Belt',[(0,0,z) for z in [.956,.977,.995]],[.182,.181,.174],[.13,.129,.125],2,'Hips',32)
 # Narrow straps follow the torso front/back, never floating above shoulders.
 for sign in [-1,1]:
-    for back in [-1,1]:
-        points=[(sign*(.075+(z-.98)*.09),back*(.136 if z<1.1 else .155 if z<1.34 else .10),z) for z in [.98,1.08,1.2,1.32,1.40,1.438]]
-        loft('Suspender',points,[.020]*6,[.004]*6,6,lambda p:blend(p,'Chest','Spine',1.24,.2),8)
+    front=[(sign*x,-y,z) for x,y,z in [(.075,.134,.98),(.081,.142,1.08),(.089,.151,1.20),(.100,.148,1.32),(.102,.112,1.40),(.095,.075,1.432)]]
+    points=front+[(sign*.091,0,1.446)]+[(x,-y,z) for x,y,z in reversed(front)]
+    loft('Suspender',points,[.014]*len(points),[.003]*len(points),6,shirt_weight,8)
 body=mesh_object('Miner',verts,faces,uvs=uvs,materials=materials,slots=slots)
 for name in joints:body.vertex_groups.new(name=name)
 for i,weight in enumerate(weights):

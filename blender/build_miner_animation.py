@@ -123,7 +123,17 @@ def animate(rig,body,joints,output='miner/miner.glb',source='build_miner'):
             if clip in ['shovel','pick']:
                 stroke=.5-.5*math.cos(t*math.pi)
                 target=Vector((sign*.13,-.37-.12*stroke,.67+.35*stroke+( .20 if side=='Left' else 0)))
-            if clip=='rock':target=Vector((sign*.09+.03*math.sin(t*math.pi*1.3),-.46,.83+.04*math.sin(t*math.pi*1.3)))
+            if clip=='rock':
+                angle=.10*math.sin(t*math.pi*1.3)
+                # The cradle crossbar follows its runners' arc. Wrist height
+                # includes the distance to the center of the curled fingers.
+                target=Vector((sign*.050-.015,-(1-(.55*math.cos(angle)-.85*math.sin(angle))),
+                               .55*math.sin(angle)+.85*math.cos(angle)+.055))
+            if clip=='crevice':
+                target=Vector((.018,-.45,.50+( .14 if side=='Left' else 0)))
+            if clip in ['shovel','pick']:
+                # Both grips lie on the same shaft; the left hand is higher.
+                target.x=.025
             if clip in ['keep_idle','weigh','write','hand_over','shelve']:
                 target=Vector((sign*.21,-.48,1.15))
                 if clip=='weigh':target=Vector((sign*.23,-.64,1.28+.02*math.sin(t*math.pi/3)))
@@ -139,6 +149,8 @@ def animate(rig,body,joints,output='miner/miner.glb',source='build_miner'):
             hand_dir=Vector((sign*.025,0,-.085)).lerp(pan_matrix.to_3x3()@Vector((0,0,-.08)),pan_t)
             if side=='Left':hand_dir=(pan_matrix.to_3x3()@Vector((-.065,0,.035))).lerp(pan_matrix.to_3x3()@Vector((0,0,-.08)),pan_t)
             if clip=='keep_idle':hand_dir=Vector((sign*.015,-.095,0))
+            if clip in ['crevice','shovel','pick','spoon']:hand_dir=Vector((0,-.085,0))
+            if clip=='rock':hand_dir=Vector((0,0,-.085))
             bone(side+'Hand',wrist,wrist+hand_dir)
             for f,label in enumerate(['Thumb','Index','Middle','Ring','Little']):
                 angle=[-.42,-.20,-.065,.07,.205][f]
@@ -148,12 +160,26 @@ def animate(rig,body,joints,output='miner/miner.glb',source='build_miner'):
                     name=side+label+segment
                     relaxed=matrices[side+'Hand']@rest[side+'Hand'].inverted()@rest[name]
                     grip=pan_t
+                    mining_grip=clip in ['crevice','shovel','pick','rock'] or (clip=='spoon' and side=='Right')
                     # Left hand hooks over the upper lip in the side carry.
                     if side=='Left' and clip not in ['crevice','spoon','shovel','pick','rock','pour','take','keep_idle','weigh','write','hand_over','shelve','fish_idle','fish_wait','cast','strike','fight','land','gather','tend_fire','cook','eat','lie_down']:
                         carry_points=[Vector((.225-.011*k,(-.045+f*.021),.105-.01*k)) for k in range(4)]
                         start=pan_matrix@carry_points[j];end=pan_matrix@carry_points[j+1]
                         start=start.lerp(pan_matrix@points[j],pan_t);end=end.lerp(pan_matrix@points[j+1],pan_t)
                         bone(name,start,end)
+                    elif mining_grip:
+                        # Flex the continuous finger chain from its own knuckle;
+                        # opposing thumb closes across the shaft instead of
+                        # translating all five fingertips to one target.
+                        deform=matrices[side+'Hand']@rest[side+'Hand'].inverted()
+                        start=deform@Vector(joints[side+label+'Proximal'][0]) if j==0 else finger_end
+                        length=(Vector(joints[name][1])-Vector(joints[name][0])).length
+                        curl=[.55,1.38,2.20][j]+f*.025
+                        local=Matrix.Rotation(sign*curl,3,'Y')@Vector((0,0,-length))
+                        if f==0:
+                            local=Vector((-sign*length*.35,length*.82,-length*.45))
+                        end=start+deform.to_3x3()@local
+                        bone(name,start,end);finger_end=end
                     else:
                         start=relaxed.translation.lerp(pan_matrix@points[j],grip)
                         end=(relaxed@Vector((0,(Vector(joints[name][1])-Vector(joints[name][0])).length,0))).lerp(pan_matrix@points[j+1],grip)

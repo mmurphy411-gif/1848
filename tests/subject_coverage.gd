@@ -8,7 +8,7 @@ static func classify(node: Node, surface: int) -> String:
 	if node.name=="WaterSurface":return "water"
 	if node.name==nearest_boulder:return "nearest_boulder"
 	if path.ends_with("/Skeleton3D/Miner"):
-		return ["shirt","trousers","leather","skin","hat","beard","suspenders"][surface]
+		return ["shirt","trousers","leather","skin","hat","beard","suspenders","leather","skin"][surface]
 	if "/PanSocket/" in path:return ["pan_outer","pan_interior","pan_rim"][surface]
 	if "/SackSocket/" in path:return "sack"
 	if "/Visual/Pan/" in path:return "pan_contents"
