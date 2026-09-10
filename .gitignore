@@ -20,6 +20,8 @@ __pycache__/
 /assets/camp/camp_camp_atlas.png*
 /assets/fish/fish_fish_atlas.png*
 /assets/miner/rod_store_atlas.png*
+# Godot extracts these images from the self-contained Intrepid Miner GLB.
+/assets/miner/intrepid/miner_*.png*
 /assets/store/goods_store_atlas.png*
 /assets/store/store_store_atlas.png*
 

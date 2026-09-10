@@ -5,7 +5,8 @@ func shot(label: String,eye: Vector3,point: Vector3,fov := 48.0) -> void:
 	camera.position=eye;camera.look_at(point);camera.fov=fov;camera.make_current()
 	for i in 20: await process_frame
 	await RenderingServer.frame_post_draw
-	root.get_texture().get_image().save_png("res://artifacts/miner-art-"+label+".png")
+	var prefix := "res://artifacts/miner-game/live-" if "--intrepid" in OS.get_cmdline_user_args() else "res://artifacts/miner-art-"
+	root.get_texture().get_image().save_png(prefix+label+".png")
 	print("ART CAPTURE ",label)
 
 func run() -> void:

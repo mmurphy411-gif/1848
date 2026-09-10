@@ -93,6 +93,15 @@ notes review harness is `tests/miner_notes_capture.gd`; `--stills-only` and
 
 ## Miner art pass
 
+The playable character now uses the Pass 17 convergence export described in
+[MINER_GAME_INTEGRATION.md](../MINER_GAME_INTEGRATION.md). Its editable art source
+is `miner_convergence_working.blend`; `miner_game_export.blend` is the reduced,
+baked game derivative. Run `export_intrepid_miner.py -- prepare`, then `-- bake`,
+then `-- export` with Blender in background mode. The output is
+`assets/miner/intrepid/miner.glb`, eight modular skinned meshes with baked atlases.
+The original builders below remain the legacy geometry and activity-clip pipeline;
+running `build_miner.py` does not update the playable convergence character.
+
 `miner_detail.py` adds facial anatomy, eyelids, a shaped beard, clothing details
 and boot soles to the existing rig. `build_pack.py` exports the separate canvas
 knapsack and saves `build_pack.blend`. Run it before the Godot import, and run

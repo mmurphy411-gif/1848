@@ -7,9 +7,11 @@ and [STORE_GUIDE.md](STORE_GUIDE.md) for the two-visit store test. Earlier balan
 findings remain documented below.
 Built with **Godot 4.7.2 standard**, GDScript, and the Forward+ renderer.
 
-The latest miner mesh, canvas pack and mining grips are covered in
-[MINER_ART_REVIEW.md](MINER_ART_REVIEW.md), including in-game captures,
-verification results and remaining art limitations.
+The playable miner now uses the baked Pass 17 character, with removable travel
+equipment and the existing gameplay animations. See
+[MINER_GAME_INTEGRATION.md](MINER_GAME_INTEGRATION.md) for captures, verification,
+equipment behavior and the export workflow. The earlier asset review remains in
+[MINER_ART_REVIEW.md](MINER_ART_REVIEW.md).
 
 ## Play
 

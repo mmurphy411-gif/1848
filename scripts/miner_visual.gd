@@ -14,6 +14,9 @@ var eating_pan: MeshInstance3D
 var rod_visual: Node3D
 var pack_visual: Node3D
 var pack_stage := 0
+var equipment: Dictionary = {}
+var equipment_overrides: Dictionary = {}
+var carry_grips: Dictionary = {}
 var cast_elapsed := 0.0
 const SWIRL_VARIANTS := ["pan_swirl", "pan_swirl_2", "pan_swirl_3"]
 var miner: Node3D
@@ -44,7 +47,7 @@ var water_material: ShaderMaterial
 
 func _ready() -> void:
 	# A dedicated loop keeps the skillet at the coals throughout the recipe.
-	miner = preload("res://assets/miner/miner.glb").instantiate()
+	miner = preload("res://assets/miner/intrepid/miner.glb").instantiate()
 	miner.name = "Miner"
 	miner.rotation.y = PI
 	add_child(miner)
@@ -71,27 +74,13 @@ func _ready() -> void:
 	for name in SWIRL_VARIANTS.slice(1):
 		player.get_animation(name).length = 2.0
 		player.get_animation(name).loop_mode = Animation.LOOP_LINEAR
-	for node in miner.find_children("*","MeshInstance3D",true,false):
-		node.lod_bias = 8.0
-		for s in node.mesh.get_surface_count():
-			# PLACEHOLDER glTF materials intentionally omit names and textures.
-			var label: String = ["Linen","Wool","Leather","Skin","Felt","Beard","Suspenders","Buckle","Ivory"][s]
-			var m := ShaderMaterial.new()
-			m.shader = preload("res://shaders/miner.gdshader")
-			m.set_shader_parameter("body_albedo",preload("res://assets/miner/body_albedo.png"))
-			m.set_shader_parameter("body_normal",preload("res://assets/miner/body_normal.png"))
-			if label=="Beard":
-				m.set_shader_parameter("body_albedo",preload("res://assets/miner/beard_albedo.png"))
-				m.set_shader_parameter("body_normal",preload("res://assets/miner/beard_normal.png"))
-			m.set_shader_parameter("wettable",label in ["Wool","Leather"])
-			m.set_shader_parameter("normal_strength",.04 if label=="Skin" else .08 if label=="Beard" else .22)
-			m.set_shader_parameter("worn_knees",label=="Wool")
-			m.set_shader_parameter("textured",label in ["Linen","Wool","Leather","Skin","Beard"])
-			var colors := {"Felt":Color(.12,.09,.056),"Suspenders":Color(.15,.10,.054),"Buckle":Color(.065,.048,.031),"Ivory":Color(.54,.49,.40)}
-			m.set_shader_parameter("tint",colors.get(label,Color.WHITE))
-			m.set_shader_parameter("skin",label=="Skin")
-			node.set_surface_override_material(s,m)
-			wet_materials.append(m)
+	_setup_intrepid_materials()
+	var grip_data: Dictionary = preload("res://assets/miner/intrepid/grips.gd").ROTATIONS
+	for bone in grip_data:
+		var q: Array = grip_data[bone]
+		# Blender stores a delta from rest; Godot expects the complete local bone rotation.
+		var rest_rotation := skeleton.get_bone_rest(skeleton.find_bone(bone)).basis.get_rotation_quaternion()
+		carry_grips[bone] = rest_rotation * Quaternion(q[1], q[2], q[3], q[0])
 	pan_attachment = _attachment("PanSocket","pan_socket")
 	physical_pan = preload("res://assets/miner/pan.glb").instantiate()
 	pan_attachment.add_child(physical_pan)
@@ -102,13 +91,11 @@ func _ready() -> void:
 	handline.hide()
 	rod_visual=load("res://assets/miner/rod.glb").instantiate();handline_attachment.add_child(rod_visual);rod_visual.hide()
 	rod_visual.rotation.x=PI
-	pack_visual=preload("res://assets/miner/pack.glb").instantiate()
-	for mesh in pack_visual.find_children("*","MeshInstance3D",true,false):
-		for s in mesh.mesh.get_surface_count():
-			if mesh.mesh.surface_get_material(s).resource_name=="Pack canvas":
-				var cloth := ShaderMaterial.new();cloth.shader=preload("res://shaders/pack.gdshader")
-				mesh.set_surface_override_material(s,cloth)
-	var back:=_attachment("PackSocket","Chest");back.add_child(pack_visual);pack_visual.position=Vector3(0,.02,-.19)
+	# Skinned pack includes its fitted harness; it must not be scaled away from the shoulders.
+	pack_visual = Node3D.new();pack_visual.name = "TravelPack";miner.add_child(pack_visual)
+	var pack_mesh: MeshInstance3D = equipment.wear_pack
+	pack_mesh.reparent(pack_visual, true);pack_mesh.skeleton = pack_mesh.get_path_to(skeleton)
+	equipment.wear_pack = pack_visual
 	sack_attachment = _attachment("SackSocket","Hips")
 	sack_visual = preload("res://assets/miner/sack.glb").instantiate()
 	sack_attachment.add_child(sack_visual)
@@ -125,6 +112,57 @@ func _ready() -> void:
 	for side in ["Left","Right"]: _splash(side)
 	# Advance after controller and panner so result transforms/camera agree.
 	process_physics_priority = 10
+	_update_equipment()
+
+func _setup_intrepid_materials() -> void:
+	var keys := {"Pack":"wear_pack", "Satchel":"wear_satchel", "Canteen":"wear_canteen", "Pickaxe":"carry_pickaxe", "TravelPan":"carry_pan"}
+	for node: MeshInstance3D in miner.find_children("*", "MeshInstance3D", true, false):
+		node.lod_bias = 1.0
+		# Expanded bounds prevent crouches and high-reaching activity poses from being culled.
+		node.extra_cull_margin = 1.25
+		for surface in node.mesh.get_surface_count():
+			var source := node.mesh.surface_get_material(surface) as StandardMaterial3D
+			assert(source != null and source.resource_name.begins_with("Intrepid_"))
+			var part := source.resource_name.trim_prefix("Intrepid_")
+			var material := ShaderMaterial.new()
+			material.shader = preload("res://shaders/intrepid_miner.gdshader")
+			material.set_shader_parameter("albedo_atlas", source.albedo_texture)
+			material.set_shader_parameter("normal_atlas", source.normal_texture)
+			material.set_shader_parameter("surface_atlas", source.roughness_texture)
+			material.set_shader_parameter("wettable", part in ["Body", "Pack", "Satchel"])
+			node.set_surface_override_material(surface, material)
+			wet_materials.append(material)
+			if keys.has(part):equipment[keys[part]] = node
+
+## Override any of the five loadout items; clearing an override restores inventory/activity behavior.
+func set_equipment(item: String, enabled: bool) -> void:
+	assert(item in equipment, "Unknown equipment: " + item)
+	equipment_overrides[item] = enabled
+	_update_equipment()
+
+func clear_equipment_override(item: String) -> void:
+	equipment_overrides.erase(item)
+	_update_equipment()
+
+func _update_equipment() -> void:
+	var inventory: Dictionary = get_node("/root/GameState").inventory
+	var pounds := preload("res://scripts/pack.gd").weight(inventory)
+	pack_stage = 0 if pounds <= 5 else 1 if pounds < 15 else 2 if pounds < 30 else 3
+	var defaults := {"wear_pack":pack_stage > 0, "wear_satchel":true, "wear_canteen":true, "carry_pickaxe":inventory.get("pick", false), "carry_pan":true}
+	if activity_clip in ["lie_down", "cook", "eat", "tend_fire"]:
+		for item in ["wear_pack", "wear_satchel", "wear_canteen"]:defaults[item] = false
+	var hands_free := activity_clip.is_empty() and active_pan.is_empty()
+	for item in equipment:
+		equipment[item].visible = equipment_overrides.get(item, defaults[item]) and (hands_free or not item.begins_with("carry_"))
+	# The working pan uses the established two-handed socket and result geometry during panning.
+	physical_pan.visible = not active_pan.is_empty() and activity_clip.is_empty()
+
+func _apply_carry_grips() -> void:
+	if not activity_clip.is_empty() or not active_pan.is_empty():return
+	for bone in carry_grips:
+		var item := "carry_pan" if String(bone).begins_with("Left") else "carry_pickaxe"
+		if equipment[item].visible:
+			skeleton.set_bone_pose_rotation(skeleton.find_bone(bone), carry_grips[bone])
 
 func _attachment(label: String,bone: String) -> BoneAttachment3D:
 	var attachment := BoneAttachment3D.new()
@@ -184,15 +222,12 @@ func play_pan(clip: String, cycle := 0) -> void:
 	playback.start("pan",true)
 	pan_playback.start(SWIRL_VARIANTS[clampi(cycle,0,2)] if clip=="pan_swirl" else clip,true)
 	tree.advance(0)
+	_update_equipment()
 
 func _physics_process(delta: float) -> void:
 	if not tree: return
 	var inventory: Dictionary=get_node("/root/GameState").inventory
-	var pounds:=preload("res://scripts/pack.gd").weight(inventory)
-	pack_stage=0 if pounds<=5 else 1 if pounds<15 else 2 if pounds<30 else 3
-	pack_visual.visible=pack_stage>0
-	# Contents fill the gusset; shoulder straps keep their fitted length.
-	pack_visual.scale=Vector3(1.0,1.0,.92+pack_stage*.06)
+	_update_equipment()
 	rod_visual.visible=inventory.get("rod",false) and activity_clip in FISH_CLIPS
 	if rod_visual.visible: handline.hide()
 	if turn_elapsed<.3:
@@ -226,6 +261,7 @@ func _physics_process(delta: float) -> void:
 		tree.advance(delta*locomotion_rate)
 	else:
 		tree.advance(delta*walker.panner.speed_scale)
+	_apply_carry_grips()
 	if rod_visual.visible and activity_clip=="cast":
 		cast_elapsed+=delta
 		var forearm:=skeleton.find_bone("LeftLowerArm")
@@ -274,6 +310,7 @@ func play_activity(clip: String) -> void:
 		eating_pan.position=Vector3(0,.015,0)
 	if eating_pan: eating_pan.visible=clip=="eat"
 	tree.advance(0)
+	_update_equipment()
 
 func fishing_origin() -> Vector3:
 	return rod_visual.to_global(Vector3(.09,1.8,0)) if rod_visual.visible else handline_attachment.global_position
@@ -292,6 +329,7 @@ func stop_activity() -> void:
 	physical_pan.show()
 	if eating_pan: eating_pan.hide()
 	playback.start("idle",true)
+	_update_equipment()
 
 func _splash(side: String) -> void:
 	var foot := _attachment(side+"SplashSocket",side+"Foot")
