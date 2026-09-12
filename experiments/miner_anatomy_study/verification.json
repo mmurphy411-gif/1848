@@ -1,0 +1,360 @@
+{
+  "rest_matrix_max_difference": 0.0,
+  "actions_unchanged": true,
+  "protected_mesh_count": 129,
+  "protected_geometry_unchanged": true,
+  "new_meshes": {
+    "STUDY | anatomical head and neck": {
+      "vertices": 4504,
+      "weight_sum_max_error": 2.9802322387695312e-08,
+      "missing_bone_groups": []
+    },
+    "STUDY | l eye": {
+      "vertices": 922,
+      "weight_sum_max_error": 0.0,
+      "missing_bone_groups": []
+    },
+    "STUDY | l iris": {
+      "vertices": 192,
+      "weight_sum_max_error": 0.0,
+      "missing_bone_groups": []
+    },
+    "STUDY | r eye": {
+      "vertices": 922,
+      "weight_sum_max_error": 0.0,
+      "missing_bone_groups": []
+    },
+    "STUDY | r iris": {
+      "vertices": 192,
+      "weight_sum_max_error": 0.0,
+      "missing_bone_groups": []
+    },
+    "STUDY | swept wavy hair": {
+      "vertices": 90720,
+      "weight_sum_max_error": 0.0,
+      "missing_bone_groups": []
+    },
+    "STUDY | short irregular beard growth": {
+      "vertices": 9000,
+      "weight_sum_max_error": 0.0,
+      "missing_bone_groups": []
+    }
+  },
+  "deformation_samples": [
+    {
+      "action": "cast",
+      "frame": 1,
+      "finite": true
+    },
+    {
+      "action": "cast",
+      "frame": 19,
+      "finite": true
+    },
+    {
+      "action": "cast",
+      "frame": 35,
+      "finite": true
+    },
+    {
+      "action": "cook",
+      "frame": 1,
+      "finite": true
+    },
+    {
+      "action": "cook",
+      "frame": 46,
+      "finite": true
+    },
+    {
+      "action": "cook",
+      "frame": 86,
+      "finite": true
+    },
+    {
+      "action": "eat",
+      "frame": 1,
+      "finite": true
+    },
+    {
+      "action": "eat",
+      "frame": 46,
+      "finite": true
+    },
+    {
+      "action": "eat",
+      "frame": 86,
+      "finite": true
+    },
+    {
+      "action": "fight",
+      "frame": 1,
+      "finite": true
+    },
+    {
+      "action": "fight",
+      "frame": 16,
+      "finite": true
+    },
+    {
+      "action": "fight",
+      "frame": 30,
+      "finite": true
+    },
+    {
+      "action": "fish_idle",
+      "frame": 1,
+      "finite": true
+    },
+    {
+      "action": "fish_idle",
+      "frame": 46,
+      "finite": true
+    },
+    {
+      "action": "fish_idle",
+      "frame": 86,
+      "finite": true
+    },
+    {
+      "action": "fish_wait",
+      "frame": 1,
+      "finite": true
+    },
+    {
+      "action": "fish_wait",
+      "frame": 61,
+      "finite": true
+    },
+    {
+      "action": "fish_wait",
+      "frame": 115,
+      "finite": true
+    },
+    {
+      "action": "gather",
+      "frame": 1,
+      "finite": true
+    },
+    {
+      "action": "gather",
+      "frame": 31,
+      "finite": true
+    },
+    {
+      "action": "gather",
+      "frame": 58,
+      "finite": true
+    },
+    {
+      "action": "idle",
+      "frame": 1,
+      "finite": true
+    },
+    {
+      "action": "idle",
+      "frame": 61,
+      "finite": true
+    },
+    {
+      "action": "idle",
+      "frame": 115,
+      "finite": true
+    },
+    {
+      "action": "land",
+      "frame": 1,
+      "finite": true
+    },
+    {
+      "action": "land",
+      "frame": 31,
+      "finite": true
+    },
+    {
+      "action": "land",
+      "frame": 58,
+      "finite": true
+    },
+    {
+      "action": "lie_down",
+      "frame": 1,
+      "finite": true
+    },
+    {
+      "action": "lie_down",
+      "frame": 31,
+      "finite": true
+    },
+    {
+      "action": "lie_down",
+      "frame": 58,
+      "finite": true
+    },
+    {
+      "action": "pan_enter",
+      "frame": 1,
+      "finite": true
+    },
+    {
+      "action": "pan_enter",
+      "frame": 31,
+      "finite": true
+    },
+    {
+      "action": "pan_enter",
+      "frame": 58,
+      "finite": true
+    },
+    {
+      "action": "pan_exit",
+      "frame": 1,
+      "finite": true
+    },
+    {
+      "action": "pan_exit",
+      "frame": 16,
+      "finite": true
+    },
+    {
+      "action": "pan_exit",
+      "frame": 30,
+      "finite": true
+    },
+    {
+      "action": "pan_lift",
+      "frame": 1,
+      "finite": true
+    },
+    {
+      "action": "pan_lift",
+      "frame": 24,
+      "finite": true
+    },
+    {
+      "action": "pan_lift",
+      "frame": 44,
+      "finite": true
+    },
+    {
+      "action": "pan_swirl",
+      "frame": 1,
+      "finite": true
+    },
+    {
+      "action": "pan_swirl",
+      "frame": 31,
+      "finite": true
+    },
+    {
+      "action": "pan_swirl",
+      "frame": 58,
+      "finite": true
+    },
+    {
+      "action": "pan_swirl_2",
+      "frame": 1,
+      "finite": true
+    },
+    {
+      "action": "pan_swirl_2",
+      "frame": 31,
+      "finite": true
+    },
+    {
+      "action": "pan_swirl_2",
+      "frame": 58,
+      "finite": true
+    },
+    {
+      "action": "pan_swirl_3",
+      "frame": 1,
+      "finite": true
+    },
+    {
+      "action": "pan_swirl_3",
+      "frame": 31,
+      "finite": true
+    },
+    {
+      "action": "pan_swirl_3",
+      "frame": 58,
+      "finite": true
+    },
+    {
+      "action": "pan_wash",
+      "frame": 1,
+      "finite": true
+    },
+    {
+      "action": "pan_wash",
+      "frame": 24,
+      "finite": true
+    },
+    {
+      "action": "pan_wash",
+      "frame": 44,
+      "finite": true
+    },
+    {
+      "action": "strike",
+      "frame": 1,
+      "finite": true
+    },
+    {
+      "action": "strike",
+      "frame": 7,
+      "finite": true
+    },
+    {
+      "action": "strike",
+      "frame": 12,
+      "finite": true
+    },
+    {
+      "action": "tend_fire",
+      "frame": 1,
+      "finite": true
+    },
+    {
+      "action": "tend_fire",
+      "frame": 31,
+      "finite": true
+    },
+    {
+      "action": "tend_fire",
+      "frame": 58,
+      "finite": true
+    },
+    {
+      "action": "wade",
+      "frame": 1,
+      "finite": true
+    },
+    {
+      "action": "wade",
+      "frame": 19,
+      "finite": true
+    },
+    {
+      "action": "wade",
+      "frame": 35,
+      "finite": true
+    },
+    {
+      "action": "walk",
+      "frame": 1,
+      "finite": true
+    },
+    {
+      "action": "walk",
+      "frame": 16,
+      "finite": true
+    },
+    {
+      "action": "walk",
+      "frame": 30,
+      "finite": true
+    }
+  ]
+}

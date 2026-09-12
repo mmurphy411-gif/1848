@@ -137,6 +137,7 @@ func _setup_intrepid_materials() -> void:
 			material.set_shader_parameter("albedo_atlas", source.albedo_texture)
 			material.set_shader_parameter("normal_atlas", source.normal_texture)
 			material.set_shader_parameter("surface_atlas", source.roughness_texture)
+			material.set_shader_parameter("hair_cutout", part == "Hair")
 			material.set_shader_parameter("wettable", part in ["Body", "Pack", "Satchel"])
 			node.set_surface_override_material(surface, material)
 			wet_materials.append(material)

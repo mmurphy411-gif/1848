@@ -1,0 +1,22 @@
+{
+  "input_scene": "../miner_anatomy_candidate.blend",
+  "image_tool": "built-in image_gen.imagegen",
+  "outputs": {
+    "hair_atlas.png": {
+      "bytes": 2518373,
+      "sha256": "1cc1630f96bfe4300d756571021ffcbb89f19f5c9110b8a1a9e632c150a67709"
+    },
+    "fabric_atlas.png": {
+      "bytes": 3602157,
+      "sha256": "a9cbb9f732006ff244431509f7e1bdacf4f5cef53d31121b9aab97cbae616160"
+    },
+    "imagegen_prompts.json": {
+      "bytes": 2439,
+      "sha256": "13fd17e053a01bdc3ad564b5e93c61223f5755a85179e5d0e988836d3c0c89bf"
+    },
+    "sleeve_drape.json": {
+      "bytes": 425571,
+      "sha256": "2999b345bab89618d5fff53b32780070f37dbd990fcad866a70f5af013707314"
+    }
+  }
+}

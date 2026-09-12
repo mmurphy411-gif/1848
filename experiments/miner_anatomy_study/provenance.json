@@ -1,0 +1,56 @@
+{
+  "repository": "https://github.com/makehumancommunity/makehuman",
+  "commit": "a8bc2d54ff0ac92e78ff71431b1023eda42bf482",
+  "asset_license": "CC0 1.0 Universal",
+  "used_shapes": {
+    "caucasian-male-young.target": 0.78,
+    "caucasian-male-old.target": 0.22,
+    "head-rectangular.target": 0.18
+  },
+  "files": {
+    "source\\caucasian-male-old.target": {
+      "bytes": 400125,
+      "sha256": "b0d2b1d58cba0358af59833740e70229265f7da1c20a11240f4123b7192cfd6d"
+    },
+    "source\\caucasian-male-young.target": {
+      "bytes": 396479,
+      "sha256": "70e228ba7164737dae664454394536fc5935fa48d333c1a97d77e2dc6eacc5f5"
+    },
+    "source\\head-age-incr.target": {
+      "bytes": 59255,
+      "sha256": "ff677345bd81e3f439bdf75496bbee620ca3c3f029955a546837afd283abf73a"
+    },
+    "source\\head-rectangular.target": {
+      "bytes": 10633,
+      "sha256": "bbfcbd4d6334df18515e73abb707b8a948adb74e0aba88a728c8e146dd5f4e4b"
+    },
+    "source\\universal-male-old-averagemuscle-averageweight.target": {
+      "bytes": 604,
+      "sha256": "4ba5396ddabda448ece15650a566fbebfbb10239256ccb201e8f883429e12249"
+    },
+    "source\\universal-male-young-averagemuscle-averageweight.target": {
+      "bytes": 604,
+      "sha256": "4ba5396ddabda448ece15650a566fbebfbb10239256ccb201e8f883429e12249"
+    },
+    "source\\base.obj": {
+      "bytes": 1749303,
+      "sha256": "8e761e6624b8f54536409135d1636da63b32486a90d4897f84e121d144f6fb4c"
+    },
+    "source\\LICENSE.md": {
+      "bytes": 3598,
+      "sha256": "edd99571ca62698f78c943fd4fffb159a413c315fa0d4819d3cec5cadaf8b4f1"
+    },
+    "source\\LICENSE.ASSETS.md": {
+      "bytes": 6962,
+      "sha256": "f6089cba01cb570a24712b41ab8a586ccd3cc5ef53dc266ca50b95c288956d2c"
+    },
+    "face_projection_source.png": {
+      "bytes": 2207418,
+      "sha256": "d778e59b4913ae837a7eb41c130036c70dbc6bedfe36a47fe7cf1c643aedc7ec"
+    },
+    "side_projection_source.png": {
+      "bytes": 2256865,
+      "sha256": "07642897f8808589a1e4156bf565a27c4edbf439db8a737fe98e940d65532986"
+    }
+  }
+}

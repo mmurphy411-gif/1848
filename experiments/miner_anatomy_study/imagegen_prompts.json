@@ -1,0 +1,13 @@
+{
+  "tool": "Built-in image_gen.imagegen; no CLI/API fallback",
+  "front": {
+    "input": "characters/miner/ChatGPT Image Sep 9, 2026, 08_29_58 PM.png",
+    "output": "face_projection_source.png",
+    "prompt": "Use case: identity-preserve. Asset type: texture projection source for a real 3D game character, not a presentation render. From the reference's fictional miner, produce a single straight-on orthographic head and neck portrait, symmetric frontal pose, level head and eyes looking straight at camera, mouth closed relaxed with no smile. Preserve this man's identity: rugged adult about forty, strong cheekbones and nose, weathered warm tan skin, dark hazel eyes, dark brown brows, short irregular scruffy beard and moustache with a few grey hairs, medium length dark brown hair tucked behind ears. Remove the hat and all clothing/accessories so the entire forehead, ears, scalp and neck are visible. Flat shadowless cross-polarized diffuse albedo lighting, no directional cast shadows or highlights, no dramatic lighting or ambient occlusion. Plain uniform medium tan backdrop. Face centered and fills most of the square image, entire top of hair and bottom of neck inside frame. Sharp skin pores, mild sun mottling, natural lip coloration, detailed realistic short beard hairs. Only one head, front view, no text, no collage, no watermark. Realistic painted game concept fidelity matching the input, not a cartoon. This is an input texture to wrap around an anatomical mesh."
+  },
+  "side": {
+    "input": "face_projection_source.png",
+    "output": "side_projection_source.png",
+    "prompt": "Use case: identity-preserve. Asset type: side projection albedo reference for the same game character. Show precisely the same fictional man from the input in a true LEFT-FACING SIDE PROFILE: his nose points to the LEFT EDGE of the image, only one eye is visible, the whole visible ear is clear. Camera is orthographic, at head level, exactly 90 degrees to his front, mouth closed and neutral. Preserve his identity, age about forty, warm tan weathered skin, cheekbone, strong straight nose, short dark brown scruffy beard and moustache with a few gray hairs, hazel eye. Pull/tuck all long hair behind the visible ear so the temple, full ear, cheek and jaw can be used as texture. No hat, no clothes, neck and top of shoulders included. Entire head including top scalp and bottom neck in a square image, large centered head. Match the reference's scale, color, skin details and beard density. Even flat diffuse lighting for albedo, no dramatic directional shadow, no shadow from hair on face, no rim lighting, no highlights. Plain uniform tan background. One profile only, no text, no collage."
+  }
+}

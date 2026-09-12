@@ -11,6 +11,9 @@ func _run() -> void:
 		claim.get_node("Soundscape").start()
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	var w: CharacterBody3D=claim.get_node("Walker")
+	if "--without-miner" in OS.get_cmdline_user_args():
+		w.get_node("Visual").hide()
+		print("PERFORMANCE CONTROL: miner visuals hidden; same scene and simulation")
 	var rig: Node3D=claim.get_node("CameraRig")
 	await Lighting._place(self,w,rig,Vector2(-20,Layout.shore_z(-20)+8),-1.1475,-.08)
 	for i in 240:await process_frame

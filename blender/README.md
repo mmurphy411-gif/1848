@@ -1,6 +1,7 @@
 # Procedural asset pipeline
 
-Blender 5.2.1 LTS, bundled Python; no downloaded art or manual edits. Run from any
+Blender 5.2.1 LTS, bundled Python. The original procedural builders use no downloaded art;
+the finished miner uses documented CC0 head anatomy and generated reference textures. Run from any
 directory using `blender --background --python <absolute-script-path>`.
 The scripts resolve output paths from their own locations. Seeds are explicit.
 
@@ -93,10 +94,11 @@ notes review harness is `tests/miner_notes_capture.gd`; `--stills-only` and
 
 ## Miner art pass
 
-The playable character now uses the Pass 17 convergence export described in
+The playable character now uses the finished anatomical miner described in
 [MINER_GAME_INTEGRATION.md](../MINER_GAME_INTEGRATION.md). Its editable art source
-is `miner_convergence_working.blend`; `miner_game_export.blend` is the reduced,
-baked game derivative. Run `export_intrepid_miner.py -- prepare`, then `-- bake`,
+is `miner_finished.blend`, built by `finish_miner.py` from the retained refinement;
+`miner_game_export.blend` is the reduced, baked game derivative.
+Run `export_intrepid_miner.py -- prepare`, then `-- bake`,
 then `-- export` with Blender in background mode. The output is
 `assets/miner/intrepid/miner.glb`, eight modular skinned meshes with baked atlases.
 The original builders below remain the legacy geometry and activity-clip pipeline;

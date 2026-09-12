@@ -1,15 +1,15 @@
-"""Build a baked, modular game asset from Pass 17 without modifying the art source.
+"""Build the baked, modular game asset from the finished anatomical art master.
 
 Blender --background --python blender/export_intrepid_miner.py -- prepare|bake|export
 """
 import bpy,sys,math,json
+import numpy as np
 from pathlib import Path
 from mathutils import Matrix,Vector,Quaternion
 ROOT=Path(__file__).resolve().parents[1]
 OUT=ROOT/'artifacts/miner-game';OUT.mkdir(exist_ok=True,parents=True)
 ASSETS=ROOT/'assets/miner/intrepid';ASSETS.mkdir(exist_ok=True,parents=True)
-STAGE=sys.argv[sys.argv.index('--')+1]
-SIZES={'Body':2048,'Skin':1024,'Hair':1024,'Pack':1024,'Satchel':512,'Canteen':512,'Pickaxe':512,'TravelPan':512}
+SIZES={'Body':2048,'Skin':2048,'Hair':2048,'Pack':1024,'Satchel':512,'Canteen':512,'Pickaxe':512,'TravelPan':512}
 GEAR={'GEAR | backpack':'Pack','GEAR | bedroll':'Pack','GEAR | satchel':'Satchel','GEAR | canteen':'Canteen','GEAR | pickaxe':'Pickaxe','GEAR | pan':'TravelPan'}
 
 def active(o):return o.type in {'MESH','CURVE'} and not o.hide_render and not any(c.hide_render for c in o.users_collection)
@@ -21,7 +21,7 @@ def group(o):
     for c in o.users_collection:
         if c.name in GEAR:return GEAR[c.name]
     if o.type=='CURVE' or any('hair' in c.name.lower() or 'beard' in c.name.lower() for c in o.users_collection):return 'Hair'
-    if any('BODY |' in c.name for c in o.users_collection):return 'Skin'
+    if any('BODY |' in c.name or c.name=='STUDY | head' for c in o.users_collection):return 'Skin'
     if o.get('source_component',-1) in list(range(10,34))+list(range(50,71)):return 'Hair' if o.get('source_component') in [51,55,56,69,70] else 'Skin'
     if o.name.startswith(('Face |','Skin |')):return 'Skin'
     if o.name.startswith(('Hair |','Beard |','Moustache |')):return 'Hair'
@@ -41,7 +41,7 @@ def reset(rig):
     bpy.context.view_layer.update()
 
 def prepare():
-    bpy.ops.wm.open_mainfile(filepath=str(ROOT/'blender/miner_convergence_working.blend'))
+    bpy.ops.wm.open_mainfile(filepath=str(ROOT/'blender/miner_finished.blend'))
     rig=bpy.data.objects['MinerRig'];scene=bpy.context.scene
     review_pose={p.name:{'location':list(p.matrix_basis.to_translation()),'rotation':list(p.matrix_basis.to_quaternion()),'scale':list(p.matrix_basis.to_scale())} for p in rig.pose.bones}
     (OUT/'review_pose.json').write_text(json.dumps(review_pose,indent=2))
@@ -66,6 +66,7 @@ def prepare():
         for mod in list(o.modifiers):
             if mod.type=='ARMATURE':o.modifiers.remove(mod)
             else:
+                if mod.type=='SUBSURF':mod.levels=min(1,mod.levels)
                 try:bpy.ops.object.modifier_apply(modifier=mod.name)
                 except RuntimeError:o.modifiers.remove(mod)
         bpy.ops.object.transform_apply(location=True,rotation=True,scale=True)
@@ -75,18 +76,27 @@ def prepare():
             fallback='Head' if name in ['Skin','Hair'] else 'Chest' if name=='Pack' else 'Hips'
             o.vertex_groups.new(name=fallback).add(list(range(len(o.data.vertices))),1,'REPLACE')
         tris=sum(len(p.vertices)-2 for p in o.data.polygons);before[o.name]=tris
+        if 'continuous forearm and hand' in o.name and tris>8000:
+            dec=o.modifiers.new('Hand deformation mesh budget','DECIMATE');dec.ratio=8000/tris
+            bpy.ops.object.modifier_apply(modifier=dec.name)
         # Reduce the dense cloth shells, retaining face and hand landmarks and small hardware.
         if name=='Body' and tris>3500:
-            dec=o.modifiers.new('Game cloth reduction','DECIMATE');dec.ratio=.60
+            dec=o.modifiers.new('Game cloth reduction','DECIMATE');dec.ratio=.40
             bpy.ops.object.modifier_apply(modifier=dec.name)
         normalize(o,rig);buckets[name].append(o)
     exported=[]
     for name,objects in buckets.items():
         select(objects);bpy.ops.object.join();o=bpy.context.object;o.name=name;o.data.name=name+'Mesh'
+        limit={'Body':40000,'Skin':40000,'Pack':12000}.get(name)
+        triangles=sum(len(p.vertices)-2 for p in o.data.polygons)
+        if limit and triangles>limit:
+            dec=o.modifiers.new('Component triangle budget','DECIMATE');dec.ratio=limit/triangles
+            bpy.ops.object.modifier_apply(modifier=dec.name)
         triangulate=o.modifiers.new('Stable tangent triangulation','TRIANGULATE');bpy.ops.object.modifier_apply(modifier=triangulate.name)
-        # Replace overlapping construction UVs with a unique atlas per detachable component.
-        while o.data.uv_layers:o.data.uv_layers.remove(o.data.uv_layers[0])
-        o.data.uv_layers.new(name='GameUV');bpy.ops.object.mode_set(mode='EDIT');bpy.ops.mesh.select_all(action='SELECT')
+        # Keep named projection/cloth/hair UVs until all channels are baked.
+        # Making GameUV active must not change any source texture coordinates.
+        game_uv=o.data.uv_layers.new(name='GameUV');o.data.uv_layers.active=game_uv;game_uv.active_render=True
+        bpy.ops.object.mode_set(mode='EDIT');bpy.ops.mesh.select_all(action='SELECT')
         bpy.ops.uv.smart_project(angle_limit=math.radians(66),island_margin=.002,area_weight=.2,correct_aspect=True)
         bpy.ops.object.mode_set(mode='OBJECT')
         normalize(o,rig);o.parent=rig;o.matrix_parent_inverse=rig.matrix_world.inverted()
@@ -103,7 +113,7 @@ def prepare():
         scene.cycles.device='GPU'
     except Exception:scene.cycles.device='CPU'
     scene.world.color=(.15,.15,.15)
-    audit={'source':'miner_convergence_working.blend / Pass 17','rest_bones':{p.name:[list(row) for row in p.matrix_local] for p in rig.data.bones},'groups':{o.name:{'triangles':sum(len(p.vertices)-2 for p in o.data.polygons),'vertices':len(o.data.vertices),'source_materials':len(o.data.materials)} for o in exported},'original_actions':[a.name for a in bpy.data.actions]}
+    audit={'source':'blender/miner_finished.blend','rest_bones':{p.name:[list(row) for row in p.matrix_local] for p in rig.data.bones},'groups':{o.name:{'triangles':sum(len(p.vertices)-2 for p in o.data.polygons),'vertices':len(o.data.vertices),'source_materials':len(o.data.materials)} for o in exported},'original_actions':[a.name for a in bpy.data.actions]}
     (OUT/'prepare_audit.json').write_text(json.dumps(audit,indent=2))
     bpy.ops.wm.save_as_mainfile(filepath=str(OUT/'prepared.blend'));print('PREPARED',audit['groups'])
 
@@ -114,8 +124,8 @@ def bake():
         # Use independent copies: shared source materials must not retain bake rewiring between atlases.
         for i,mat in enumerate(materials):o.data.materials[i]=mat.copy()
         materials=list(o.data.materials)
-        for channel in ['albedo','orm','normal']:
-            im=bpy.data.images.new(name+'_'+channel,width=size,height=size,alpha=False)
+        for channel in ['albedo','orm','normal']+(['alpha'] if name=='Hair' else []):
+            im=bpy.data.images.new(name+'_'+channel,width=size,height=size,alpha=(name=='Hair' and channel=='albedo'))
             im.colorspace_settings.name='sRGB' if channel=='albedo' else 'Non-Color'
             restore=[]
             for mat in materials:
@@ -127,9 +137,10 @@ def bake():
                 temporary=[target]
                 if channel!='normal':
                     emit=nodes.new('ShaderNodeEmission');temporary.append(emit)
-                    if channel=='albedo':
-                        inp=principled.inputs['Base Color'] if principled else None
+                    if channel in ['albedo','alpha']:
+                        inp=principled.inputs['Base Color' if channel=='albedo' else 'Alpha'] if principled else None
                         if inp and inp.is_linked:links.new(inp.links[0].from_socket,emit.inputs['Color'])
+                        elif channel=='alpha':emit.inputs['Color'].default_value=(inp.default_value,)*3+(1,) if inp else (1,1,1,1)
                         else:emit.inputs['Color'].default_value=inp.default_value if inp else mat.diffuse_color
                     else:
                         combine=nodes.new('ShaderNodeCombineColor');temporary.append(combine);combine.inputs['Red'].default_value=1
@@ -141,15 +152,26 @@ def bake():
                     links.new(emit.outputs[0],output.inputs['Surface'])
                 restore.append((mat,output,old,temporary))
             bpy.ops.object.bake(type='NORMAL' if channel=='normal' else 'EMIT')
-            im.filepath_raw=str(ASSETS/(name.lower()+'_'+channel+'.png'));im.file_format='PNG';im.save();images[channel]=im
+            im.filepath_raw=str((OUT if channel=='alpha' else ASSETS)/(name.lower()+'_'+channel+'.png'));im.file_format='PNG';im.save();images[channel]=im
             for mat,output,old,temporary in restore:
                 if old:mat.node_tree.links.new(old,output.inputs['Surface'])
                 for n in temporary:mat.node_tree.nodes.remove(n)
             print('BAKED',name,channel,flush=True)
+        if name=='Hair':
+            pixels=np.empty(size*size*4,dtype=np.float32);alpha=np.empty_like(pixels)
+            images['albedo'].pixels.foreach_get(pixels);images.pop('alpha').pixels.foreach_get(alpha)
+            # Changing alpha mode can reload a saved image. Do it before writing pixels.
+            images['albedo'].alpha_mode='STRAIGHT'
+            pixels[3::4]=alpha[0::4];images['albedo'].pixels.foreach_set(pixels);images['albedo'].update();images['albedo'].save()
+        # Source UV maps are no longer needed. One UV channel keeps the GLB lean.
+        for uv in list(o.data.uv_layers):
+            if uv.name!='GameUV':o.data.uv_layers.remove(uv)
         mat=bpy.data.materials.new('Intrepid_'+name);mat.use_nodes=True;n=mat.node_tree.nodes;l=mat.node_tree.links;p=n.get('Principled BSDF')
         for channel,im in images.items():
             tex=n.new('ShaderNodeTexImage');tex.image=im
-            if channel=='albedo':l.new(tex.outputs['Color'],p.inputs['Base Color'])
+            if channel=='albedo':
+                l.new(tex.outputs['Color'],p.inputs['Base Color'])
+                if name=='Hair':l.new(tex.outputs['Alpha'],p.inputs['Alpha'])
             elif channel=='normal':
                 normal=n.new('ShaderNodeNormalMap');l.new(tex.outputs['Color'],normal.inputs['Color']);l.new(normal.outputs[0],p.inputs['Normal'])
             else:
@@ -162,16 +184,8 @@ def bake():
 
 def export():
     bpy.ops.wm.open_mainfile(filepath=str(OUT/'baked.blend'));rig=bpy.data.objects['MinerRig'];reset(rig)
-    # Tall shafts must bend with the calf. The art pose had rigid Foot weights all the way to the knee.
+    # Tall shafts already carry corrected calf weights in the finished source.
     body=bpy.data.objects['Body']
-    for side in ['Left','Right']:
-        foot=body.vertex_groups.get(side+'Foot');calf=body.vertex_groups.get(side+'LowerLeg') or body.vertex_groups.new(name=side+'LowerLeg')
-        for vertex in body.data.vertices:
-            weight=sum(g.weight for g in vertex.groups if g.group==foot.index)
-            if not weight or vertex.co.z<=.11:continue
-            t=max(0,min(1,(vertex.co.z-.11)/.10))
-            existing=sum(g.weight for g in vertex.groups if g.group==calf.index)
-            foot.add([vertex.index],weight*(1-t),'REPLACE');calf.add([vertex.index],existing+weight*t,'REPLACE')
     normalize(body,rig)
     review=json.loads((OUT/'review_pose.json').read_text())
     arm_names=[p.name for p in rig.pose.bones if p.name.startswith(('Left','Right')) and any(t in p.name for t in ['Shoulder','Arm','Hand','Thumb','Index','Middle','Ring','Little'])]
@@ -229,4 +243,6 @@ def export():
     reset(rig);bpy.ops.file.make_paths_relative();bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/'blender/miner_game_export.blend'))
     print('EXPORTED_INTREPID_MINER')
 
-{'prepare':prepare,'bake':bake,'export':export}[STAGE]()
+if __name__=='__main__':
+    stage=sys.argv[sys.argv.index('--')+1]
+    {'prepare':prepare,'bake':bake,'export':export}[stage]()
