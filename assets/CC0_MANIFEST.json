@@ -35,6 +35,28 @@
     },
     {
       "source": "polyhaven",
+      "id": "bark_debris_01",
+      "resolution": "1k",
+      "kind": "model",
+      "name": "Bark Debris 01",
+      "licence": "CC0-1.0",
+      "fetched": "2026-10-02",
+      "page": "https://polyhaven.com/a/bark_debris_01",
+      "authors": ["Greg Zaal", "Jenelle van Heerden"],
+      "outputs": [
+        "assets/clutter/bark_01.glb",
+        "assets/clutter/bark_02.glb"
+      ],
+      "files": [
+        {"path": "bark_debris_01.bin", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/bark_debris_01/bark_debris_01.bin", "size": 4869268, "md5": "2ccb9e30747a8e33b354b0e242386e96", "sha256": "c22b98d6c42741cf9002b237c386d62e10fb90ce11210d974ae179bba9490a17"},
+        {"path": "bark_debris_01_1k.gltf", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/bark_debris_01/bark_debris_01_1k.gltf", "size": 7646, "md5": "fb8033c97ecda56330815ca1e8d944ae", "sha256": "478d222823c79a48c3eb58c2bbb91c81073dd28ce5f307b0d5a1467bd2e4e28b"},
+        {"path": "textures/bark_debris_01_arm_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/bark_debris_01/bark_debris_01_arm_1k.jpg", "size": 1006457, "md5": "6eaf9f99f8e4c9f8d7a5424c1ad276ee", "sha256": "14984c21e543b977837200faee33bdf4da8cbe1b7c0019b3f6254cf75dcd7c4c"},
+        {"path": "textures/bark_debris_01_diff_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/bark_debris_01/bark_debris_01_diff_1k.jpg", "size": 967420, "md5": "35ede1acf485d0b70bee810829ea977e", "sha256": "43cd69bf736a3847e09b5454684c0ec5acc20c1d1d5a96401a9bac5be98378bf"},
+        {"path": "textures/bark_debris_01_nor_gl_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/bark_debris_01/bark_debris_01_nor_gl_1k.jpg", "size": 1216990, "md5": "466940d4520a89476211446a451e9271", "sha256": "ab9ba2ba5c99a1ac56055c3d2a91e986e597e86fc270ebb4ba6707f2fab2ccf6"}
+      ]
+    },
+    {
+      "source": "polyhaven",
       "id": "boulder_01",
       "resolution": "1k",
       "kind": "model",
@@ -43,13 +65,36 @@
       "fetched": "2026-10-02",
       "page": "https://polyhaven.com/a/boulder_01",
       "authors": ["Rico Cilliers"],
-      "outputs": [],
+      "outputs": [
+        "assets/boulders/boulder_04.glb"
+      ],
       "files": [
         {"path": "boulder_01.bin", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/boulder_01/boulder_01.bin", "size": 2938808, "md5": "27a19fa031d8b4c3a09261f19c444dc5", "sha256": "7f5b06503d62bd95bfe9c6b8a354a5cc8ff04a4d271a8cf87a3e3125db4232d7"},
         {"path": "boulder_01_1k.gltf", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/boulder_01/boulder_01_1k.gltf", "size": 2773, "md5": "26e2eef4a1f68c9557c65cd375b21d6c", "sha256": "51487934db898b4c24072780a451e34eca5c02e3ada24a62bbc600bbc4019e92"},
         {"path": "textures/boulder_01_arm_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/boulder_01/boulder_01_arm_1k.jpg", "size": 659386, "md5": "d632159982cc3121ed3d69b89a122146", "sha256": "c57187c5746b6be913fa53846cb44ff78743e7ca5000f131c9627b99563c2b87"},
         {"path": "textures/boulder_01_diff_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/boulder_01/boulder_01_diff_1k.jpg", "size": 987467, "md5": "25f8a843f13369d56d37f49db05ea8c3", "sha256": "c38f0e918f6dc16b8d386ba3cdd89805c78320c119a1ceec85856f82b09a65b8"},
         {"path": "textures/boulder_01_nor_gl_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/boulder_01/boulder_01_nor_gl_1k.jpg", "size": 1183552, "md5": "0c4da644d901144b53e4fe2446f3c389", "sha256": "0810cf6e89d89bb6eb065b4d2e2855288f5dcbd2c15c6e40ab90d462021b50aa"}
+      ]
+    },
+    {
+      "source": "polyhaven",
+      "id": "dead_tree_trunk",
+      "resolution": "1k",
+      "kind": "model",
+      "name": "Dead Tree Trunk",
+      "licence": "CC0-1.0",
+      "fetched": "2026-10-02",
+      "page": "https://polyhaven.com/a/dead_tree_trunk",
+      "authors": ["Rob Tuytel"],
+      "outputs": [
+        "assets/clutter/driftwood_log.glb"
+      ],
+      "files": [
+        {"path": "dead_tree_trunk.bin", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/dead_tree_trunk/dead_tree_trunk.bin", "size": 2293788, "md5": "2a2b05e67a5c51fba5fc7591a7857957", "sha256": "c1ac6b3195246e8647a28eee2fbfdd4712a045c7cf2dcb4f5abcc2d40a446ca6"},
+        {"path": "dead_tree_trunk_1k.gltf", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/dead_tree_trunk/dead_tree_trunk_1k.gltf", "size": 2812, "md5": "7bbf9fc9fdf61b50ed0495a29c03ecab", "sha256": "8baaf1ff66ba1f79acdceed0dc3797a882990a3abb10b18abe56762f34c26e39"},
+        {"path": "textures/dead_tree_trunk_arm_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/dead_tree_trunk/dead_tree_trunk_arm_1k.jpg", "size": 724384, "md5": "548a72849ce709a9f38fa06776732a07", "sha256": "0e0f7d64ac4ee3a7e7861a48f4bbd1ec2c026facd8f48b756f6b5d4557af3fd3"},
+        {"path": "textures/dead_tree_trunk_diff_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/dead_tree_trunk/dead_tree_trunk_diff_1k.jpg", "size": 713480, "md5": "fe92c64532d4684d3239f6edc7733192", "sha256": "bc31d7d23db90d90cfb568c583914eeec11b29716b79096818b706a9e3e0216c"},
+        {"path": "textures/dead_tree_trunk_nor_gl_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/dead_tree_trunk/dead_tree_trunk_nor_gl_1k.jpg", "size": 1053075, "md5": "28992c1123371ae1899e49360953c846", "sha256": "b7c393204c93f0c67535ff3b5d723b26598f9dbb2b5110b74249ab88189f026f"}
       ]
     },
     {
@@ -75,6 +120,29 @@
       ],
       "main": "dense_sand_diff_1k.jpg",
       "options": {}
+    },
+    {
+      "source": "polyhaven",
+      "id": "dry_branches_medium_01",
+      "resolution": "1k",
+      "kind": "model",
+      "name": "Dry Branches Medium 01",
+      "licence": "CC0-1.0",
+      "fetched": "2026-10-02",
+      "page": "https://polyhaven.com/a/dry_branches_medium_01",
+      "authors": ["Rico Cilliers"],
+      "outputs": [
+        "assets/clutter/driftwood_01.glb",
+        "assets/clutter/driftwood_02.glb",
+        "assets/clutter/driftwood_03.glb"
+      ],
+      "files": [
+        {"path": "dry_branches_medium_01.bin", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/dry_branches_medium_01/dry_branches_medium_01.bin", "size": 465172, "md5": "10de852c8bf38e3f3ca5fb1d6c8de9d0", "sha256": "969da1e8cbb2d8201e7fa0fc0dac5b19ef354b32c3d8c62dd9faa7cb3833d8ca"},
+        {"path": "dry_branches_medium_01_1k.gltf", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/dry_branches_medium_01/dry_branches_medium_01_1k.gltf", "size": 5844, "md5": "bd6d60dff97c59a80d770f94f23b566b", "sha256": "23f328ded9be1e151ccd7994b303c70221551544c4857a71474c1c01a14b8a22"},
+        {"path": "textures/dry_branches_medium_01_arm_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/dry_branches_medium_01/dry_branches_medium_01_arm_1k.jpg", "size": 831180, "md5": "a0c5fface8ffdf81a806fcd5cf05788f", "sha256": "6d1ba6f4763d2815301a15bf62eaf68c345cecafb107e2681d12f26fbc657f5a"},
+        {"path": "textures/dry_branches_medium_01_diff_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/dry_branches_medium_01/dry_branches_medium_01_diff_1k.jpg", "size": 778799, "md5": "2b01d9d1613c88496250f64828566f7c", "sha256": "1fbaf810a9ca29d2faf0a179834e8dce10cf4854bafe13f63af111030b3ec660"},
+        {"path": "textures/dry_branches_medium_01_nor_gl_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/dry_branches_medium_01/dry_branches_medium_01_nor_gl_1k.jpg", "size": 1170647, "md5": "d374fbbd8c4829310104cce0de7cd826", "sha256": "62f5205bfec599000bb7a430e003bbada939bc8d7976a7d3ab7709fd5893413c"}
+      ]
     },
     {
       "source": "polyhaven",
@@ -150,6 +218,92 @@
     },
     {
       "source": "polyhaven",
+      "id": "namaqualand_boulder_04",
+      "resolution": "1k",
+      "kind": "model",
+      "name": "Namaqualand Boulder 04",
+      "licence": "CC0-1.0",
+      "fetched": "2026-10-02",
+      "page": "https://polyhaven.com/a/namaqualand_boulder_04",
+      "authors": ["Jenelle van Heerden"],
+      "outputs": [
+        "assets/boulders/boulder_06.glb"
+      ],
+      "files": [
+        {"path": "namaqualand_boulder_04.bin", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/namaqualand_boulder_04/namaqualand_boulder_04.bin", "size": 1319676, "md5": "bd83376dfe39432568dc13a8fb738953", "sha256": "99ba28ddc8da9ba24e1a419e69ed05f14c4b483bf06268a8a77495545985318a"},
+        {"path": "namaqualand_boulder_04_1k.gltf", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/namaqualand_boulder_04/namaqualand_boulder_04_1k.gltf", "size": 2818, "md5": "7cc9f708bf5792f89af6638465cac3b4", "sha256": "04c858a3bdb22873efa988633e0c0d9d1468055f34c94d47742f75165a192078"},
+        {"path": "textures/namaqualand_boulder_04_arm_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/namaqualand_boulder_04/namaqualand_boulder_04_arm_1k.jpg", "size": 600523, "md5": "03f2b36ad3349fc1768dbd20c9b07403", "sha256": "b9556284b65a603cee0c282f1a13f1642ac64cd586db14caa065e7322ec95db2"},
+        {"path": "textures/namaqualand_boulder_04_diff_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/namaqualand_boulder_04/namaqualand_boulder_04_diff_1k.jpg", "size": 886013, "md5": "0ef2c0fe9eaca715efad500c13ce140c", "sha256": "1673e031ebcf5015206fec10bec676e55b049705b01fcef6bb2b2fb79e8de54c"},
+        {"path": "textures/namaqualand_boulder_04_nor_gl_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/namaqualand_boulder_04/namaqualand_boulder_04_nor_gl_1k.jpg", "size": 906782, "md5": "e642a0c62a3b33adf953a7832f9231ae", "sha256": "a7042070d6e369c80d818b7e787b977bf84c1f78b0c83e3ecf690ac2fa17d291"}
+      ]
+    },
+    {
+      "source": "polyhaven",
+      "id": "namaqualand_boulder_05",
+      "resolution": "1k",
+      "kind": "model",
+      "name": "Namaqualand Boulder 05",
+      "licence": "CC0-1.0",
+      "fetched": "2026-10-02",
+      "page": "https://polyhaven.com/a/namaqualand_boulder_05",
+      "authors": ["Dario Barresi", "Jenelle van Heerden"],
+      "outputs": [
+        "assets/boulders/boulder_10.glb"
+      ],
+      "files": [
+        {"path": "namaqualand_boulder_05.bin", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/namaqualand_boulder_05/namaqualand_boulder_05.bin", "size": 2015628, "md5": "64bca194605dee7e361d43beabb3d4b7", "sha256": "a60ade71de8612c873f9112159ed5d93dcba58979007a0915bc10d551a9ed03c"},
+        {"path": "namaqualand_boulder_05_1k.gltf", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/namaqualand_boulder_05/namaqualand_boulder_05_1k.gltf", "size": 2872, "md5": "93b2f39714f9b4d19197335eb22d9283", "sha256": "f8e5fd8fd981e889d621ba4e53170a52c47cd3053b8748ee7025ed1083f36a5f"},
+        {"path": "textures/namaqualand_boulder_05_arm_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/namaqualand_boulder_05/namaqualand_boulder_05_arm_1k.jpg", "size": 713844, "md5": "aa40bbddb8be6e13b0e6cba68c99b3e0", "sha256": "1466c8467188f54c2fb655b05f9e1d0a9a93a366f3cd45878bcf6905487c5f3e"},
+        {"path": "textures/namaqualand_boulder_05_diff_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/namaqualand_boulder_05/namaqualand_boulder_05_diff_1k.jpg", "size": 867775, "md5": "de60e1accb73ea17db74fc2fedda85b5", "sha256": "58d1fba55e16a56fe2d6e016ac75bcddfbc3bb2273ca8c9127f1de497c54db2a"},
+        {"path": "textures/namaqualand_boulder_05_nor_gl_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/namaqualand_boulder_05/namaqualand_boulder_05_nor_gl_1k.jpg", "size": 1099873, "md5": "0337869f7d21c538f307792a927c8db2", "sha256": "027359a8a79febee925cc29af3106cc12bdeed5bc91cb26f1d88f589c77f448d"}
+      ]
+    },
+    {
+      "source": "polyhaven",
+      "id": "namaqualand_boulder_06",
+      "resolution": "1k",
+      "kind": "model",
+      "name": "Namaqualand Boulder 06",
+      "licence": "CC0-1.0",
+      "fetched": "2026-10-02",
+      "page": "https://polyhaven.com/a/namaqualand_boulder_06",
+      "authors": ["Greg Zaal", "Jenelle van Heerden"],
+      "outputs": [
+        "assets/boulders/boulder_05.glb"
+      ],
+      "files": [
+        {"path": "namaqualand_boulder_06.bin", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/namaqualand_boulder_06/namaqualand_boulder_06.bin", "size": 2463356, "md5": "1643b528fa072dc3bf5bc5ad6add1933", "sha256": "c74e1f84fd9b48ba86420263804da0899d4d2d2f470276be801ef450ac5e08f3"},
+        {"path": "namaqualand_boulder_06_1k.gltf", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/namaqualand_boulder_06/namaqualand_boulder_06_1k.gltf", "size": 2880, "md5": "64791b0352526beffa233116758ef9a6", "sha256": "4331febbf2e4b20ebdee384522dd5cb9056a22450285ec45cada819dcb6d49db"},
+        {"path": "textures/namaqualand_boulder_06_arm_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/namaqualand_boulder_06/namaqualand_boulder_06_arm_1k.jpg", "size": 733753, "md5": "f858b35124fdd60f6220c96a9a09c3bf", "sha256": "27675c935809c6d8bffefa47135f76303d1c7668392d83ac65845cdbf6a17a4f"},
+        {"path": "textures/namaqualand_boulder_06_diff_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/namaqualand_boulder_06/namaqualand_boulder_06_diff_1k.jpg", "size": 971983, "md5": "edffd9c1cd6a0acbaccc2b75eeda47ba", "sha256": "b052fcaa6b9a32f871e6d3fa106ff7598ffb8d0c7f900365ee8d2893262295d7"},
+        {"path": "textures/namaqualand_boulder_06_nor_gl_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/namaqualand_boulder_06/namaqualand_boulder_06_nor_gl_1k.jpg", "size": 1080458, "md5": "3798db04e45dbb4bccd35d64ad5dfa20", "sha256": "68ef851810c372e879534249c453289112cd3d0cb670d77e9216d9aeb2d5011c"}
+      ]
+    },
+    {
+      "source": "polyhaven",
+      "id": "namaqualand_boulders_01",
+      "resolution": "1k",
+      "kind": "model",
+      "name": "Namaqualand Boulders 01",
+      "licence": "CC0-1.0",
+      "fetched": "2026-10-02",
+      "page": "https://polyhaven.com/a/namaqualand_boulders_01",
+      "authors": ["Greg Zaal", "Jenelle van Heerden"],
+      "outputs": [
+        "assets/boulders/boulder_12.glb",
+        "assets/boulders/cobble_06.glb",
+        "assets/boulders/cobble_07.glb"
+      ],
+      "files": [
+        {"path": "namaqualand_boulders_01.bin", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/namaqualand_boulders_01/namaqualand_boulders_01.bin", "size": 927724, "md5": "58ed8a29120ad0807320ce49a9d14c2a", "sha256": "0c37e75570ec72a1e8b76fdfc1fa7d5ae62cc4ff1363f244fe06892d12618b78"},
+        {"path": "namaqualand_boulders_01_1k.gltf", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/namaqualand_boulders_01/namaqualand_boulders_01_1k.gltf", "size": 4427, "md5": "904c7349856f65f757b7f6fd36f57641", "sha256": "993be7eab67d98741968d0fa74e32792f6f53437f86c1fba4563c5acce30d94f"},
+        {"path": "textures/namaqualand_boulders_01_arm_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/namaqualand_boulders_01/namaqualand_boulders_01_arm_1k.jpg", "size": 719208, "md5": "9827ad42f724de4fc327b063878939d6", "sha256": "fc030df70560322257f8234c9ee47cf470020de004104da3a43ecafe65dd6568"},
+        {"path": "textures/namaqualand_boulders_01_diff_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/namaqualand_boulders_01/namaqualand_boulders_01_diff_1k.jpg", "size": 830079, "md5": "1ed791727bbb6f26f77246e5de17d901", "sha256": "f3ef4909f97b7087e9b01a655c8c8fe2bd2e820d9fcdcce90958c339f834067d"},
+        {"path": "textures/namaqualand_boulders_01_nor_gl_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/namaqualand_boulders_01/namaqualand_boulders_01_nor_gl_1k.jpg", "size": 1159170, "md5": "0f3ad6c29c72b9fe28fc91dc3cf15c00", "sha256": "bb823e2439fd6e4679c63defa7edfb40a942bba4d7db1fa1bdbbc5a5e8792179"}
+      ]
+    },
+    {
+      "source": "polyhaven",
       "id": "red_dirt_mud_01",
       "resolution": "1k",
       "kind": "texture",
@@ -174,6 +328,49 @@
     },
     {
       "source": "polyhaven",
+      "id": "rock_07",
+      "resolution": "1k",
+      "kind": "model",
+      "name": "Rock 07",
+      "licence": "CC0-1.0",
+      "fetched": "2026-10-02",
+      "page": "https://polyhaven.com/a/rock_07",
+      "authors": ["Jenelle van Heerden"],
+      "outputs": [
+        "assets/boulders/cobble_10.glb"
+      ],
+      "files": [
+        {"path": "rock_07.bin", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/rock_07/rock_07.bin", "size": 468936, "md5": "817b2cfd1626cb06f18a825f87f58ec3", "sha256": "e4a532a6d6cf4a08c288f501b790f32cba0528136a29959ce774c3cd39369e7e"},
+        {"path": "rock_07_1k.gltf", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/rock_07/rock_07_1k.gltf", "size": 2979, "md5": "2bdb563c126a9d284e60e94951759e2f", "sha256": "efcc2dcaa133ff8ad5c865dc2135772e8f5dbc83fa38db2ee2cf25382436b6e6"},
+        {"path": "textures/rock_07_arm_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/rock_07/rock_07_arm_1k.jpg", "size": 309735, "md5": "530bfd2a510fe6f778bb1198a2395574", "sha256": "1ed76e9a8542c76bdc6b7b018720ae1f52cd75d9f5ae719f613de3f5032cf4da"},
+        {"path": "textures/rock_07_diff_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/rock_07/rock_07_diff_1k.jpg", "size": 635452, "md5": "b68ac1824bb3bd3867641b830ad02099", "sha256": "8ff1965aa1664cc4abcc0131c44ee2b97ab14d6e131d7a51429ff261eeb101c8"},
+        {"path": "textures/rock_07_nor_gl_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/rock_07/rock_07_nor_gl_1k.jpg", "size": 766986, "md5": "d3a2a0df0db0177c4df8ef644b003652", "sha256": "57cb2210951aeb376164fce5f7c65f03e5599def04873b56cad0f173c275d78d"}
+      ]
+    },
+    {
+      "source": "polyhaven",
+      "id": "rock_09",
+      "resolution": "1k",
+      "kind": "model",
+      "name": "Rock 09",
+      "licence": "CC0-1.0",
+      "fetched": "2026-10-02",
+      "page": "https://polyhaven.com/a/rock_09",
+      "authors": ["Jenelle van Heerden"],
+      "outputs": [
+        "assets/boulders/boulder_11.glb",
+        "assets/boulders/cobble_08.glb"
+      ],
+      "files": [
+        {"path": "rock_09.bin", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/rock_09/rock_09.bin", "size": 286592, "md5": "6f2f71c9ca594566c1a3b29da27293a1", "sha256": "780c37d6fc11ca3a01c3763535ef883908b6007271a46bd446d2289ded820751"},
+        {"path": "rock_09_1k.gltf", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/rock_09/rock_09_1k.gltf", "size": 2745, "md5": "d12ac6e8433fe1346fe6945154269f66", "sha256": "636e57eb0090889627da18edaec202ff9f65f83101b94f91b7da4d21dc080ab9"},
+        {"path": "textures/rock_09_arm_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/rock_09/rock_09_arm_1k.jpg", "size": 322950, "md5": "323d7cca17cd87656e7f80230a372368", "sha256": "594e2cec49e6bb40bd9bab2649e37dcc261079456cf4d6f680f56770c19db5ea"},
+        {"path": "textures/rock_09_diff_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/rock_09/rock_09_diff_1k.jpg", "size": 595103, "md5": "07f92b23d6e05fbd28cbabecdd98b321", "sha256": "afb7ae5ae82238d304aba589391ac6bc87f7cf1dbfe50980c21f762cfdd87efd"},
+        {"path": "textures/rock_09_nor_gl_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/rock_09/rock_09_nor_gl_1k.jpg", "size": 757031, "md5": "dc1a208133a23006582f792a309c2dcc", "sha256": "2195b5c7da3a23af2a5f93dbb20f38bc069028509b106397bc8d2aee0bc55729"}
+      ]
+    },
+    {
+      "source": "polyhaven",
       "id": "rock_boulder_dry",
       "resolution": "2k",
       "kind": "texture",
@@ -195,6 +392,100 @@
       ],
       "main": "rock_boulder_dry_diff_2k.jpg",
       "options": {}
+    },
+    {
+      "source": "polyhaven",
+      "id": "rock_moss_set_02",
+      "resolution": "4k",
+      "kind": "model",
+      "name": "Rock Moss Set 02",
+      "licence": "CC0-1.0",
+      "fetched": "2026-10-02",
+      "page": "https://polyhaven.com/a/rock_moss_set_02",
+      "authors": ["Kless Gyzen"],
+      "outputs": [
+        "assets/boulders/boulder_07.glb",
+        "assets/boulders/boulder_08.glb",
+        "assets/boulders/boulder_09.glb",
+        "assets/boulders/boulder_13.glb",
+        "assets/boulders/cobble_01.glb",
+        "assets/boulders/cobble_02.glb",
+        "assets/boulders/cobble_03.glb",
+        "assets/boulders/cobble_04.glb",
+        "assets/boulders/cobble_05.glb"
+      ],
+      "files": [
+        {"path": "rock_moss_set_02.bin", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/rock_moss_set_02/rock_moss_set_02.bin", "size": 1316572, "md5": "a63878339f14feceab7347cc28110eaa", "sha256": "2df9d8eaaca4207529b0f613d4886d3962d0b9ffc0cdfd2bc4bf35dbcd391cb5"},
+        {"path": "rock_moss_set_02_4k.gltf", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/4k/rock_moss_set_02/rock_moss_set_02_4k.gltf", "size": 11608, "md5": "f14e2640ad380c371b1d5423fdc362d0", "sha256": "2ee8f3e231ee13250fa5a9340834abec48d604d0715c62df0dfe16d1c1a52296"},
+        {"path": "textures/rock_moss_set_02_diff_4k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/4k/rock_moss_set_02/rock_moss_set_02_diff_4k.jpg", "size": 2893305, "md5": "b16253d14fa2f3b23f182767779cb775", "sha256": "c605c4b3d2cdf92eb4a4b65d825b7ec27d6e6e138a77849de50948bc485710be"},
+        {"path": "textures/rock_moss_set_02_nor_gl_4k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/4k/rock_moss_set_02/rock_moss_set_02_nor_gl_4k.jpg", "size": 3597653, "md5": "a719a2d3f901ba275970f125488ede09", "sha256": "db381487b6b52dce6bd73235dd1d943d0da1b75791714b1a3686bf08eaedf4b1"},
+        {"path": "textures/rock_moss_set_02_rough_4k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/4k/rock_moss_set_02/rock_moss_set_02_rough_4k.jpg", "size": 1663773, "md5": "3a713fbcb0512e69f7c042e954095169", "sha256": "3abc61dd81678c44dd277d7fd0415629ce1a83ee429a44c7e7530ea8a86ef2f3"}
+      ]
+    },
+    {
+      "source": "polyhaven",
+      "id": "rock_moss_set_02",
+      "resolution": "8k",
+      "kind": "model",
+      "name": "Rock Moss Set 02",
+      "licence": "CC0-1.0",
+      "fetched": "2026-10-02",
+      "page": "https://polyhaven.com/a/rock_moss_set_02",
+      "authors": ["Kless Gyzen"],
+      "outputs": [
+        "assets/boulders/boulder_01.glb",
+        "assets/boulders/boulder_03.glb"
+      ],
+      "files": [
+        {"path": "rock_moss_set_02.bin", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/rock_moss_set_02/rock_moss_set_02.bin", "size": 1316572, "md5": "a63878339f14feceab7347cc28110eaa", "sha256": "2df9d8eaaca4207529b0f613d4886d3962d0b9ffc0cdfd2bc4bf35dbcd391cb5"},
+        {"path": "rock_moss_set_02_8k.gltf", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/rock_moss_set_02/rock_moss_set_02_8k.gltf", "size": 11608, "md5": "1aedb6a7fabdec94aac45f37d2b26dd7", "sha256": "7fb24942d4aa11877212a8e492a38ec47344f6411f9019f2e00f8eecc383515e"},
+        {"path": "textures/rock_moss_set_02_diff_8k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/8k/rock_moss_set_02/rock_moss_set_02_diff_8k.jpg", "size": 9962266, "md5": "986ddb0cf19a5631645207a4d426b457", "sha256": "06edde00651745e4b930c6e0ce55502b786589cfecd5bbcccd992deede29109c"},
+        {"path": "textures/rock_moss_set_02_nor_gl_8k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/8k/rock_moss_set_02/rock_moss_set_02_nor_gl_8k.jpg", "size": 12463434, "md5": "f9953300c183825cf5ae0c3bb1df5a6d", "sha256": "3bd65b7c95e60ec1777e603f594cd29a1ef9766d8518ba1bab5e66d54c41dd96"},
+        {"path": "textures/rock_moss_set_02_rough_8k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/8k/rock_moss_set_02/rock_moss_set_02_rough_8k.jpg", "size": 5122594, "md5": "f7db3a505aeaf849acefd9e65fcbaec8", "sha256": "8ef2e5eb5481dab85eec5da8214b308a929064b968ae329864af654c3167c0a3"}
+      ]
+    },
+    {
+      "source": "polyhaven",
+      "id": "stone_01",
+      "resolution": "1k",
+      "kind": "model",
+      "name": "Stone 01",
+      "licence": "CC0-1.0",
+      "fetched": "2026-10-02",
+      "page": "https://polyhaven.com/a/stone_01",
+      "authors": ["Dario Barresi", "Rico Cilliers"],
+      "outputs": [
+        "assets/boulders/boulder_02.glb",
+        "assets/boulders/cobble_09.glb"
+      ],
+      "files": [
+        {"path": "stone_01.bin", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/stone_01/stone_01.bin", "size": 1213536, "md5": "f64c71f0097f1536c030d397b9783078", "sha256": "ad037d15be3619be6aa3ddb144d450aea43b5efb66b670ba756272bf839418e3"},
+        {"path": "stone_01_1k.gltf", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/stone_01/stone_01_1k.gltf", "size": 2750, "md5": "3dd857c5c56ce0194869ba53ad003c88", "sha256": "e06d59972ef910acde1cc64f9450ddb9c12dcd052031bc9982a7c46e108f6111"},
+        {"path": "textures/stone_01_arm_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/stone_01/stone_01_arm_1k.jpg", "size": 846334, "md5": "ab50dacfa41ade6aa3a672935476b320", "sha256": "1cb342823b2883e9885bf7bfe0ed12cd897d2f99a49d3c25b5e2c8f30f38263e"},
+        {"path": "textures/stone_01_diff_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/stone_01/stone_01_diff_1k.jpg", "size": 649135, "md5": "9a552588c7f547ae47724fa457d94839", "sha256": "c3171a6108bf1b3656b4a3576b329065d7acf6e337506a9e1a15511300c8fc88"},
+        {"path": "textures/stone_01_nor_gl_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/stone_01/stone_01_nor_gl_1k.jpg", "size": 1012665, "md5": "600500fc78a5aa5ca2a893c9867f268a", "sha256": "4d08a934f846913e96152260c824f7d5e642350ede76569ce82d6dc50c45f535"}
+      ]
+    },
+    {
+      "source": "polyhaven",
+      "id": "tree_stump_01",
+      "resolution": "1k",
+      "kind": "model",
+      "name": "Tree Stump 01",
+      "licence": "CC0-1.0",
+      "fetched": "2026-10-02",
+      "page": "https://polyhaven.com/a/tree_stump_01",
+      "authors": ["Rob Tuytel"],
+      "outputs": [
+        "assets/clutter/stump_01.glb"
+      ],
+      "files": [
+        {"path": "textures/tree_stump_01_arm_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/tree_stump_01/tree_stump_01_arm_1k.jpg", "size": 825646, "md5": "09b7aa228dccb93f5cf4188ba5530578", "sha256": "d845cd6ab45288c546267d059ebe1f8a737e174330fe9375e5f99e753f2f95d8"},
+        {"path": "textures/tree_stump_01_diff_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/tree_stump_01/tree_stump_01_diff_1k.jpg", "size": 907451, "md5": "c71fe60400276a37b8847048cbec3720", "sha256": "781ebe420ac4d84f2e44b9e9937a596e3d5d90711d978a1392f8bf3771b5bf31"},
+        {"path": "textures/tree_stump_01_nor_gl_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/tree_stump_01/tree_stump_01_nor_gl_1k.jpg", "size": 1238404, "md5": "cc2a3c6e4682a521b15cccc61a416bbf", "sha256": "425117514b0386bb6df41cb64a61a624d2596472e05777483d4021b3285e3ceb"},
+        {"path": "tree_stump_01.bin", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/tree_stump_01/tree_stump_01.bin", "size": 965380, "md5": "acb292727949126b92e58217fd50fca9", "sha256": "b4d9ca70b3c908c4a638fbd6a23ed96c84055bbbf14cf44b89e31ad59fa21e0a"},
+        {"path": "tree_stump_01_1k.gltf", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/tree_stump_01/tree_stump_01_1k.gltf", "size": 2793, "md5": "fedfc620634a8dbaf6345413b13abe1a", "sha256": "9c66ba87d693f35eb404acaa96e0eeff831c295b61a0a903795584cbcc3527c9"}
+      ]
     }
   ]
 }

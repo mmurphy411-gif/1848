@@ -36,9 +36,11 @@ func _asset(path: String, low: int, high: int, wind := false) -> void:
 	_check(config.get_value("params","meshes/generate_lods",false),path+" automatic mesh LOD enabled")
 
 func _run() -> void:
-	for i in 8: _asset("res://assets/boulders/boulder_%02d.glb" % (i+1),1500,3000)
+	# Stage 3: thirteen normalised scans (seven bar boulders, boulder_08 for the cliff and store
+	# rings, five margin rocks) and ten cobbles; ranges unchanged, coverage extended.
+	for i in 13: _asset("res://assets/boulders/boulder_%02d.glb" % (i+1),1500,3000)
 	for i in 2: _asset("res://assets/bedrock/ledge_%02d.glb" % (i+1),1,3000)
-	for i in 3: _asset("res://assets/boulders/cobble_%02d.glb" % (i+1),1,199)
+	for i in 10: _asset("res://assets/boulders/cobble_%02d.glb" % (i+1),1,199)
 	for species in Vegetation.SPECIES:
 		_asset("res://assets/trees/%s.glb" % species,3000,6000,true)
 		var atlas: Texture2D = load("res://assets/textures/foliage_%s_albedo.png" % species)
@@ -95,6 +97,17 @@ func _run() -> void:
 	_check(legal,"Every instance respects depth, shore, slope and boulder exclusions")
 	_check(conifers==600,"Conifer count %d" % conifers)
 	_check(cobbles>=400 and cobbles<=900,"Cobble count %d" % cobbles)
+	# Stage 3 ground clutter is visual only and stays out of the panning strip and the camp.
+	var clutter: Node3D = claim.get_node("GroundClutter")
+	var pieces := 0
+	var clutter_ok: bool = clutter.find_children("*","CollisionObject3D",true,false).is_empty()
+	for key in clutter.placements:
+		for transform in clutter.placements[key]:
+			pieces += 1
+			var p: Vector3 = transform.origin
+			if key == "stump_01": clutter_ok = clutter_ok and p.z > Layout.back_z(p.x)
+			else: clutter_ok = clutter_ok and p.z-Layout.shore_z(p.x) >= 3.999 and clutter.clear_of_camp(p)
+	_check(clutter_ok and pieces>=40,"%d clutter pieces: no collision, clear of the panning strip and camp" % pieces)
 	var cards: int = vegetation.placements.grass.size()*7+(vegetation.placements.lupine.size()+vegetation.placements.poppy.size()+vegetation.placements.yarrow.size())*21
 	_check(cards<3000,"Ground cover %d cards below 3000" % cards)
 	var oaks: Array = vegetation.placements.black_oak

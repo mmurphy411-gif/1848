@@ -1,5 +1,12 @@
-"""Eight rounded jointed granite forms and three small river cobbles."""
+"""Eight rounded jointed granite forms and three small river cobbles (legacy domes).
+
+Superseded in visual-upgrade Stage 3: assets/boulders/ now holds normalised CC0 scans built by
+tools/art/intake_rocks.py. This script would overwrite boulder_01..08 and cobble_01..03 with the
+old domes, so it only runs with `-- --legacy` (build_boulders.blend keeps the old forms inspectable)."""
 import sys, random, math, time
+if '--legacy' not in sys.argv:
+    print('build_boulders.py: superseded by tools/art/intake_rocks.py; pass -- --legacy to rebuild the old domes')
+    sys.exit(0)
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 from common import *

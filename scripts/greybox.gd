@@ -4,6 +4,7 @@ extends Node3D
 
 const Layout = preload("res://scripts/claim_layout.gd")
 const Assets = preload("res://scripts/asset_library.gd")
+const ScanRocks = preload("res://scripts/scan_rocks.gd")
 const MATERIAL_COUNT := 5
 var river_level := INF
 
@@ -24,6 +25,7 @@ func _sync_river() -> void:
 	$River.position.y=level
 	_build_river(level)
 	Assets.set_water_level(level)
+	ScanRocks.set_water_level(level)
 
 func _build_ground() -> void:
 	var surfaces: Array[SurfaceTool] = []
@@ -261,36 +263,22 @@ func _build_river(level := 0.0) -> void:
 	add_child(probe)
 
 func _build_boulders() -> void:
-	var material := Assets.rock()
+	# Normalised granite and quartz scans (tools/art/intake_rocks.py). Dimensions are
+	# baked into each mesh so physics shapes have unit scale; the footprint radius is
+	# exact and the base is buried below the lowest ground under it.
 	for index in Layout.BOULDERS.size():
 		var data: Vector4 = Layout.BOULDERS[index]
+		var look: Array = ScanRocks.BAR_LOOK[index]
 		var rock := MeshInstance3D.new()
 		rock.name = "Boulder%02d" % (index + 1)
-		var mesh := Assets.mesh("res://assets/boulders/boulder_%02d.glb" % (index + 1))
-		# Bake dimensions into the mesh so physics shapes have unit scale.
-		var source := mesh.surface_get_arrays(0)
-		var vertices: PackedVector3Array = source[Mesh.ARRAY_VERTEX]
-		var normals: PackedVector3Array = source[Mesh.ARRAY_NORMAL]
-		var basis := Basis(Vector3.UP, index * 1.71).scaled(Vector3(data.z, data.w, data.z))
-		var radius := 0.0
-		for i in vertices.size():
-			vertices[i] = basis * vertices[i]
-			normals[i] = (basis.inverse().transposed() * normals[i]).normalized()
-			radius = maxf(radius, maxf(absf(vertices[i].x), absf(vertices[i].z)))
-		for i in vertices.size():
-			vertices[i].x *= data.z / radius
-			vertices[i].z *= data.z / radius
-			normals[i] = (normals[i] / Vector3(data.z / radius, 1, data.z / radius)).normalized()
-		source[Mesh.ARRAY_VERTEX] = vertices
-		source[Mesh.ARRAY_NORMAL] = normals
-		var baked := ArrayMesh.new()
-		baked.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, source)
-		rock.mesh = baked
-		rock.material_override = material
+		rock.mesh = ScanRocks.fit_bar_boulder(index)
+		rock.material_override = ScanRocks.material(ScanRocks.BOULDER_PATH % (index + 1), look[1], look[2])
 		rock.gi_mode = GeometryInstance3D.GI_MODE_STATIC
-		rock.position = Vector3(data.x, Layout.height_at(data.x, data.y) + data.w * 0.35, data.y)
+		rock.position = Vector3(data.x, Layout.height_at(data.x, data.y), data.y)
 		add_child(rock)
 		rock.create_convex_collision(true, true)
+	var vegetation := get_parent().get_node_or_null("Vegetation") if get_parent() else null
+	ScanRocks.build_margin(self, vegetation.placements.get("black_oak", []) if vegetation else [])
 
 func _build_bedrock() -> void:
 	for index in Layout.BEDROCK.size():

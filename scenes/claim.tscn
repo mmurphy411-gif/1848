@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=3]
+[gd_scene load_steps=22 format=3]
 
 [ext_resource type="Script" path="res://scripts/greybox.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/walker.tscn" id="2"]
@@ -18,6 +18,7 @@
 [ext_resource type="Script" path="res://scripts/ledger.gd" id="16"]
 [ext_resource type="Script" path="res://scripts/sandbox.gd" id="17"]
 [ext_resource type="Script" path="res://scripts/rain.gd" id="18"]
+[ext_resource type="Script" path="res://scripts/ground_clutter.gd" id="19"]
 [sub_resource type="SphereShape3D" id="CameraShape"]
 radius = 0.22
 [sub_resource type="CameraAttributesPractical" id="CameraAttributes"]
@@ -111,3 +112,6 @@ script = ExtResource("17")
 
 [node name="Rain" type="Node3D" parent="."]
 script = ExtResource("18")
+
+[node name="GroundClutter" type="Node3D" parent="."]
+script = ExtResource("19")

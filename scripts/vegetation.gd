@@ -99,23 +99,9 @@ func _ready() -> void:
 		var group := _instances(species,Assets.plant(species,BARK[i]),near_trees+far_trees)
 		group.multimesh.visible_instance_count=near_trees.size()
 		if not far_trees.is_empty():_instances(species+"_distant",Assets.plant(species,BARK[i],true,true),far_trees)
-	for i in 3:
-		var key := "cobble_%02d" % (i+1)
-		placements[key] = []
-	for attempt in 12000:
-		if placements.cobble_01.size()+placements.cobble_02.size()+placements.cobble_03.size()>=600: break
-		var x := rng.randf_range(-38,38)
-		var inland := 1.5+pow(rng.randf(),1.7)*(Layout.width_at(x)-1.5)
-		var z := Layout.shore_z(x)+inland
-		var p := Vector3(x,Layout.height_at(x,z),z)
-		if not clear_of_boulders(p,.15): continue
-		p.y -= .012
-		placements["cobble_%02d" % (rng.randi_range(1,3))].append(_transform(p,rng.randf_range(.04,.075)))
-	for i in 3:
-		var key := "cobble_%02d" % (i+1)
-		var mesh := Assets.mesh("res://assets/boulders/%s.glb" % key)
-		mesh.surface_set_material(0,Assets.rock("granite",.7))
-		_instances(key,mesh,placements[key],60)
+	# River cobbles: ten scans, 5-25 cm, a rock colour per instance (scripts/cobbles.gd).
+	# It replays the legacy draws on rng, so the ground cover below is unchanged.
+	preload("res://scripts/cobbles.gd").build(self,rng)
 	var names := ["grass","lupine","poppy","yarrow"]
 	var tints := [Color(.15,.29,.055),Color(.19,.16,.55),Color(.9,.25,.018),Color(.85,.85,.73)]
 	for i in names.size():

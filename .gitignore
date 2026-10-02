@@ -24,6 +24,9 @@ __pycache__/
 /assets/miner/intrepid/miner_*.png*
 /assets/store/goods_store_atlas.png*
 /assets/store/store_store_atlas.png*
+# Godot extracts these copies from the normalised scan GLBs (tools/art/intake_rocks.py).
+/assets/boulders/*.jpg*
+/assets/clutter/*.jpg*
 
 # OS / editors
 Thumbs.db

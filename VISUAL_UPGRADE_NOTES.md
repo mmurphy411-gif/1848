@@ -172,7 +172,103 @@ store's own `rock("duff"/"talus"/"sand")` materials changed look with the new se
 
 ## Stage 3 — Rocks and ground clutter
 
-(pending: S3-rocks)
+Done October 2, 2026 (S3-rocks; plan items 1, 2 and 4 — terrain textures are S1-ground's).
+
+**Intake.** `tools/art/intake_rocks.py` rebuilds every file below from the CC0 cache: fetch
+(`fetch_cc0.py`), `blender/extract_piece.py` (new: pulls one piece out of a scan set, crops
+the shared atlas to that piece's UV square so its 1k maps are not 8/9 wasted, optional
+`--round` water-wear smoothing before the bake, `--fit` to a unit footprint), then
+`normalize_asset.py` (weld, decimate, bake, ORM, tint). Sources: `rock_moss_set_02`
+(4k, and 8k for the two 2k crops), `stone_01`, `boulder_01`, `namaqualand_boulder_04/_05/_06`,
+`namaqualand_boulders_01`, `rock_07`, `rock_09`, `dry_branches_medium_01`,
+`dead_tree_trunk`, `tree_stump_01`, `bark_debris_01`. Rock scans are tinted toward pale granite
+(albedo 0.30–0.32 linear, saturation 0.4); boulder_04/05/06 keep 20–40 % of their scan's
+ochre as the iron-stain accent (0.22–0.25), boulder_02 is the white-quartz boulder,
+boulder_11 dark slate. Rebuilds are byte-identical (checked on boulder_07 and cobble_10 with
+`--out-dir`). `blender/build_boulders.py` now refuses to run without `-- --legacy`, so it
+cannot overwrite the scans with the old domes.
+
+**Boulders.** 13 scans replace the 8 domes (`assets/boulders/boulder_01..13.glb`, 2,999–3,000
+tris for 01–08, 2,000 for the margin rocks 09–13; 2k maps on boulder_01 and boulder_03, the two
+the camera meets closest in the tour, 1k on 02–08, 512 on 09–13). `scripts/scan_rocks.gd`
+fits boulder_01..07 to `Layout.BOULDERS` in `greybox.gd::_build_boulders` with the old
+approach (dimensions baked into the mesh, unit-scale convex collider): long axis along the
+flow, footprint half-extent exactly the layout radius (narrow side stretched to at least
+78 %), top 1.35 vertical radii above the centre ground as before (boulder_07 reaches 2.33 of
+2.83 m: vertical stretch is capped at 1.35), base buried below the lowest ground under the
+footprint and at least to the height where the rock reaches 92 % of its girth (capped at
+30 %), so no boulder stands on an undercut foot. 25 margin rocks (seed 184830) sit outside the
+playable bar: both bar ends (|x| 43–85), the far wall's foot at the waterline, and six on the
+back edge (these get baked convex bodies). They draw as one MultiMesh per scan.
+`shaders/scan_rock.gdshader`: baked maps, per-instance tint (instance uniform, or MultiMesh
+colour with the lichen scale in alpha), a wet band 0.22 m above the river's live level
+(`ScanRocks.set_water_level`, called beside the terrain's `water_level` in `_sync_river`),
+lichen on up- and north-facing faces, optional rust under overhangs. The cliff boulders and
+the store ring keep loading boulder_01..08 at unit scale; the scans have their natural height
+(not a 2-unit dome), so those rocks now sit lower.
+
+**Cobbles.** `scripts/cobbles.gd`, called from the cobble block of `vegetation.gd` (one
+three-line hunk): 10 scan meshes (180 tris, 256 px, neutral grey) and 820 stones, 5–25 cm long,
+coarser toward the channel and around the boulders, bedded 25–45 %, coloured per instance
+(granite, tan, iron-stained, slate, greenstone, white quartz). It replays the legacy scatter's
+exact draws on the shared `rng`, so the ground cover after it is unchanged (placement hashes of
+grass, lupine, poppy, yarrow, oaks and conifers verified identical); new draws use its own
+generator (seed 184841). Cobbles cast no shadows.
+
+**Clutter.** `scripts/ground_clutter.gd` on a new `GroundClutter` node in `claim.tscn` (seed
+184851): 81 pieces in 7 MultiMeshes, no collision. Silver driftwood branches and logs in clumps
+along a wavering spring high-water contour 10–15 m inland, branches tucked against the boulders
+on their inland and lee sides, bark and twigs under the oaks, two stumps just past the back of
+the bar. Nothing within 4 m of the June shore (panning and cradle strip), and none in the camp,
+its crew bunks and fire, the trail head, or the camp's path to the river.
+
+Gates (tour `s3rocks` against `baseline`; copied to `artifacts/visual-tour/s3rocks/`):
+
+| Gate | Target | Measured | Result |
+| --- | --- | --- | --- |
+| Distinguishable boulder silhouettes | ≥ 10 | 13 scan shapes, plus the cliff boulders now built from them. boulder_01: wildlife_bear right, crew_work far left; 02 (quartz): downstream_10h left, shoreline_close left; 03: across_river right, crew_work centre, upstream right, under_oak, far_wall; 04: crew_work foreground; 05: camp_10h behind the camp; 06: downstream_10h behind the oaks; 07: upstream_10h left; margin scans at the far-bank waterline (across_river, wildlife_bear, wildlife_deer, far_wall), the bar ends (valley_low, crew_work, upstream) and the back edge (near_wall) | pass |
+| Stage 1 colour gates not worse | ≤ / ≥ baseline | downstream_10h lower luminance 0.665 → 0.655, saturation 0.1226 → 0.1228; 13h 0.681 → 0.678, 0.1184 → 0.1187; 19:25 mean 0.987 × before; 00h 0.991 × before | pass (the absolute Stage 1 targets are S1's and fail on baseline too) |
+| `milestone_5` footprint, placement, collision | pass | radius exact for all seven, sunk, convex only, camera boom retracts on boulder 1, 820 legal cobbles | pass |
+| `milestone_1` boulder blocks walker and boom | pass | pass | pass |
+| Asset audit | exit 0 | 30 new files ok; 72 files, 0 failing | pass |
+
+Lower-half luminance rises only where a dome's shadow or face used to fill the frame:
+`shoreline_close_10h` (0.602 → 0.657; that camera stands inside boulder_03's footprint and the
+dome's shadow covered its foreground), `upstream_10h` (+0.009) and `wildlife_jay` (+0.024).
+
+**Regression amendment.** `tests/milestone_5.gd` keeps both triangle ranges and extends their
+coverage: boulders 1,500–3,000 now apply to boulder_01..13 (was 01..08), cobbles 1–199 to
+cobble_01..10 (was 01..03). It adds one check: the clutter has no collision object, and every
+piece except the stumps is at least 4 m inland of the June shore and clear of the camp. No
+placement or rules assertion changed.
+
+**Suite.** Before 36/37: `miner_game` failed only because a fresh worktree lacks the
+git-ignored `artifacts/miner-game/` folder it writes to (then hung to the timeout). With the
+folder created: 37/37 in 201 s.
+
+**Frame budget.** The machine was shared with other stage agents throughout, and frame times
+swung 3–35 ms between identical runs. Interleaved A/B (`miner_performance`, baseline files
+swapped in and re-imported between runs): best p95 base downstream 3.47 / wade 3.82 /
+overview 4.24 ms, this stage 3.59 / 4.25 / 4.38 ms (all under 5.5; the wade gap is inside the
+run-to-run spread). GPU render time in the one quiet A/B round: downstream 2.79 → 2.82 ms,
+wade 3.03 → 3.04, overview 3.44 → 3.43. Draw calls 718 → 784, 1,031 → 1,094 and 389 → 411;
+primitives 3.28 M → 3.47 M downstream. The margin rocks are batched, and the cobbles and small
+clutter cast no shadows, to hold the draw count.
+
+**Size.** `assets/boulders/` 0.60 MB → 15.56 MB (boulders 14.7, cobbles 0.85) and a new
+`assets/clutter/` of 2.04 MB: +17.0 MB. Godot extracts the embedded JPEGs on import; the copies
+are git-ignored and import lossless (the project default for extracted GLB images): 276 MiB
+of VRAM for all scan maps as RGBA8 with mipmaps. Block compression would cut that to about
+70 MiB, but it needs a project-wide decision on extracted textures (committing the extracted
+copies with VRAM-compressed `.import` files would duplicate the bytes in the repository).
+
+**Still weak.** Scan albedo is soft on the 1k bar boulders within 3 m. boulder_01 keeps a
+modest overhanging lobe (visible in `wildlife_bear`). The rocks read slightly warm in shade
+next to the still-bright gravel; recheck the granite tint (`GRANITE` in `intake_rocks.py`)
+against S1's ground. Cobbles are capped at 900 by `milestone_5`, so the bar reads sparse at a
+distance and the gravel texture has to carry it. There is no leaf-litter asset (bark and twigs
+under the oaks; the terrain's duff carries the rest). The cliff boulders now use the scan
+meshes at unit scale with `Assets.rock()`, which S2 may want to revisit.
 
 ## Stage 4 — Vegetation
 
