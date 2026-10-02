@@ -2,6 +2,22 @@ extends Node3D
 const KEEPER := "Lambert"
 const Layout=preload("res://scripts/store_layout.gd")
 const Library=preload("res://scripts/asset_library.gd")
+const Kit=preload("res://scripts/prop_kit.gd")
+## Stage 6 yard dressing (no collision): [glb or goods name, position, yaw, scale].
+const YARD := [
+	["res://assets/props/barrel.glb",Vector3(3.25,0,-1.75),.3,1.0],
+	["res://assets/props/barrel.glb",Vector3(3.3,0,-.95),1.9,.92],
+	["res://assets/props/crate.glb",Vector3(3.35,0,-2.7),.1,1.0],
+	["res://assets/props/crate.glb",Vector3(3.3,.346,-2.65),.25,.9],
+	["res://assets/props/lantern.glb",Vector3(3.3,.88,-1.75),.6,1.0],
+	["res://assets/props/tub.glb",Vector3(3.35,0,.05),.0,1.0],
+	["res://assets/props/bucket.glb",Vector3(2.95,0,1.35),.9,1.0],
+	["res://assets/props/bench.glb",Vector3(3.9,0,2.3),-.75,1.0],
+	["flour_3",Vector3(-3.05,0,-1.55),.4,1.0],["flour_2",Vector3(-3.45,0,-1.85),1.1,1.0],
+	["beans_3",Vector3(-3.1,0,-2.25),2.0,1.0],["coffee_3",Vector3(-3.55,0,-2.5),.7,1.0],
+]
+## Black oak canopies over the clearing for the terrain shader's duff (store frame).
+var oaks: Array[Vector3]=[]
 var counter: Node3D
 var scale_model: Node3D
 var shelves: Node3D
@@ -47,12 +63,14 @@ func _ready() -> void:
 	daylight.get_node("RiverMist").hide()
 	build_ground()
 	var asset: Node3D=load("res://assets/store/store.glb").instantiate();asset.name="StoreAsset";add_child(asset)
+	Kit.dress_tree(asset)
 	for mesh in asset.find_children("*","MeshInstance3D",true,false):
-		if str(mesh.name).begins_with("Canvas"):
-			var fabric:=ShaderMaterial.new();fabric.shader=load("res://shaders/store_canvas.gdshader");fabric.set_shader_parameter("atlas",load("res://assets/store/store_atlas.png"));mesh.material_override=fabric
+		# The Milestone 10 walls and counter, kept exactly, are the collision; hidden.
+		if "proxy" in str(mesh.name): mesh.visible=false;mesh.create_trimesh_collision();continue
 		if str(mesh.name).begins_with("Beam"): beam=mesh
 		if str(mesh.name).begins_with("Weight"): weights.append(mesh);weight_rest.append(mesh.position)
-		if str(mesh.name).begins_with("Counter") or "log" in str(mesh.name): mesh.create_trimesh_collision()
+	var barrel:=Kit.instance("res://assets/props/barrel.glb");barrel.name="Fish barrel";add_child(barrel);barrel.position=Vector3(Layout.BARREL.x,0,Layout.BARREL.z);barrel.rotation.y=.6
+	dress_yard()
 	var sound: Node=named("soundscape","Soundscape");sound.store_bed=true;sound.start()
 	named("store_rain","Rain")
 	counter=named("counter","Counter")
@@ -91,46 +109,113 @@ func label(text: String,point: Vector3,pixel: float) -> void:
 ## 2.0: crates out front for the claims that hire, with a hand-lettered sign.
 func build_outfitting(game: Node) -> void:
 	for item in ["pan","whiskey"]:
-		var crate:=MeshInstance3D.new();var box:=BoxMesh.new();box.size=Vector3(.6,.36,.45);crate.mesh=box
-		crate.material_override=_crate_material()
-		add_child(crate);crate.position=Layout.item_position(item)-Vector3(0,.18,0)
+		var crate:=Kit.instance("res://assets/props/crate.glb");crate.scale=Vector3(.73,1.03,1.1)
+		add_child(crate);crate.position=Layout.item_position(item)-Vector3(0,.36,0);crate.rotation.y=.05 if item=="pan" else -.08
 	var sign:=Label3D.new();sign.font=preload("res://assets/fonts/PatrickHand-Regular.ttf");sign.font_size=48;sign.pixel_size=.0016
 	sign.modulate=Color(.17,.13,.08);sign.outline_size=0;sign.shaded=true
 	sign.text="OUTFITTING\n"
 	var names:={"pan":"Tin pan","bunk":"Bunk tent, sleeps four","strongbox":"Iron strongbox","whiskey":"Whiskey, the bottle","timber":"Dam timber, by mule"}
 	for item in counter.Stock.OUTFIT: sign.text+="%s  $%.2f\n" % [names[item],counter.Prices.price(item,game.day,game.seed)]
 	add_child(sign);sign.position=Vector3(-4.75,1.25,2.32);sign.rotation.y=.35
-	var post:=MeshInstance3D.new();var pole:=BoxMesh.new();pole.size=Vector3(.08,1.0,.08);post.mesh=pole;post.material_override=_crate_material()
-	add_child(post);post.position=Vector3(-4.75,.5,2.28)
+	var post:=MeshInstance3D.new();var pole:=BoxMesh.new();pole.size=Vector3(.08,1.6,.08);post.mesh=pole;pole.material=Kit.materials().kit_wood
+	add_child(post);post.position=Vector3(-4.75,.75,2.27);post.rotation.y=.35
 	var board:=MeshInstance3D.new();var plank:=BoxMesh.new();plank.size=Vector3(.95,.62,.03);board.mesh=plank
-	var paper:=StandardMaterial3D.new();paper.albedo_color=Color(.86,.80,.64);paper.roughness=.95;board.material_override=paper
+	plank.material=Kit.materials().kit_paper
 	add_child(board);board.position=Vector3(-4.75,1.22,2.29);board.rotation.y=.35
-func _crate_material() -> Material:
-	var mat:=StandardMaterial3D.new();mat.albedo_color=Color(.42,.30,.18);mat.roughness=.9;return mat
+## Stage 6: the clearing is drawn by the claim's terrain shader (its own material
+## instance: no river wetness, oak duff under the clearing's black oaks), ringed by the
+## talus boulders and a mixed forest of near and distant trees on their own seed.
 func build_ground() -> void:
-	var mesh:=MeshInstance3D.new();var plane:=PlaneMesh.new();plane.size=Vector2(100,100);mesh.mesh=plane;mesh.material_override=Library.rock("duff",2);add_child(mesh);mesh.create_trimesh_collision()
 	var rng:=RandomNumberGenerator.new();rng.seed=184810
+	var trees:=RandomNumberGenerator.new();trees.seed=184813
+	var forest:={"black_oak":[],"incense_cedar":[],"douglas_fir":[],"ponderosa":[]}
+	var far:={"incense_cedar":[],"douglas_fir":[],"ponderosa":[]}
+	for i in 12:
+		var angle:=PI*1.06+i*PI*.88/11+trees.randf_range(-.08,.08);var radius:=trees.randf_range(14.5,19.5)
+		var p:=Vector3(cos(angle)*radius,0,sin(angle)*radius+1);oaks.append(p)
+		forest.black_oak.append(Transform3D(Basis(Vector3.UP,trees.randf()*TAU).scaled(Vector3.ONE*trees.randf_range(.55,.85)),p))
+	for i in 32:
+		var angle:=trees.randf()*TAU;var radius:=trees.randf_range(19,27)
+		# Behind and beside the stall the stand is denser; the trail side stays open.
+		if sin(angle)>.55 and trees.randf()<.6: angle=-angle
+		var species: String=["incense_cedar","douglas_fir","ponderosa"][i%3]
+		var size:=trees.randf_range(.28,.62) if radius<24 else trees.randf_range(.45,.8)
+		forest[species].append(Transform3D(Basis(Vector3.UP,trees.randf()*TAU).scaled(Vector3.ONE*size),Vector3(cos(angle)*radius,hill_height(angle,radius),sin(angle)*radius+1)))
+	for i in 70:
+		var angle:=trees.randf()*TAU;var radius:=trees.randf_range(27,52)
+		var species: String=["incense_cedar","douglas_fir","ponderosa"][i%3]
+		far[species].append(Transform3D(Basis(Vector3.UP,trees.randf()*TAU).scaled(Vector3.ONE*trees.randf_range(.6,1.1)),Vector3(cos(angle)*radius,hill_height(angle,radius),sin(angle)*radius+1)))
+	var bark:={"ponderosa":Color(.37,.16,.055),"incense_cedar":Color(.22,.09,.035),"douglas_fir":Color(.15,.105,.075),"black_oak":Color(.12,.105,.08)}
+	for species in forest: _trees(Library.plant(species,bark[species]),forest[species])
+	for species in far: _trees(Library.plant(species,bark[species],true,true),far[species],false)
+	var ground:=Library.terrain().duplicate() as ShaderMaterial
+	ground.set_shader_parameter("water_level",-100.0)
+	# Away from the river the bar's gravel layer is forest litter and its sand patches
+	# are trampled bare earth: same shader, the clearing's own texture sets.
+	for suffix in ["albedo","normal","orm"]:
+		var litter=ground.get_shader_parameter("duff_"+suffix)
+		if litter: ground.set_shader_parameter("gravel_"+suffix,litter)
+	var canopies:=PackedVector4Array()
+	for p in oaks: canopies.append(Vector4(p.x,p.z,0,0))
+	ground.set_shader_parameter("oak_canopies",canopies)
+	var mesh:=MeshInstance3D.new();var plane:=PlaneMesh.new();plane.size=Vector2(100,100);plane.subdivide_width=24;plane.subdivide_depth=24;mesh.mesh=plane;mesh.material_override=ground;add_child(mesh);mesh.create_trimesh_collision()
 	for i in 32:
 		var angle:=i*TAU/32+rng.randf_range(-.07,.07);var radius:=rng.randf_range(16.8,20.5)
 		var rock:=MeshInstance3D.new();rock.mesh=Library.mesh("res://assets/boulders/boulder_%02d.glb" % (1+i%8))
 		rock.material_override=Library.rock("talus",1);add_child(rock);rock.position=Vector3(cos(angle)*radius,.2,sin(angle)*radius+1);rock.scale=Vector3.ONE*rng.randf_range(1,2.3);rock.rotation.y=angle
-	for i in 32:
-		var angle:=rng.randf()*TAU;var radius:=rng.randf_range(20,34);var tree:=MeshInstance3D.new();tree.mesh=Library.plant("ponderosa",Color(.37,.16,.055));add_child(tree);tree.position=Vector3(cos(angle)*radius,0,sin(angle)*radius+1);tree.scale=Vector3.ONE*rng.randf_range(.55,1.2);tree.rotation.y=rng.randf()*TAU
+	# The surrounding hill on the terrain shader's slope rules (vertex colour = wall).
 	var hill:=SurfaceTool.new();hill.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for i in 96:
 		for corners in [[Vector2(i,1),Vector2(i+1,0),Vector2(i,0)],[Vector2(i,1),Vector2(i+1,1),Vector2(i+1,0)]]:
 			for corner in corners:
 				var angle: float=corner.x*TAU/96;var radius:=lerpf(17,55,corner.y)
 				var point:=Vector3(cos(angle)*radius,corner.y*(11+3*sin(angle*3)+1.5*cos(angle*7)),sin(angle)*radius+1)
-				hill.set_uv(Vector2(point.x,point.z));hill.add_vertex(point)
-	hill.generate_normals();var slope:=MeshInstance3D.new();slope.mesh=hill.commit();slope.material_override=Library.rock("talus",3);add_child(slope)
+				hill.set_color(Color(.75,0,0));hill.set_uv(Vector2(point.x,point.z));hill.add_vertex(point)
+	hill.generate_normals();var slope:=MeshInstance3D.new();slope.mesh=hill.commit();slope.material_override=ground;add_child(slope)
+	# The trail home, worn to bare sand with a ragged edge (seeded).
+	var worn:=ground.duplicate() as ShaderMaterial
+	for suffix in ["albedo","normal","orm"]:
+		var bare=worn.get_shader_parameter("sand_"+suffix)
+		if bare: worn.set_shader_parameter("gravel_"+suffix,bare)
+	worn.set_shader_parameter("oak_canopies",PackedVector4Array())
+	var edge:=FastNoiseLite.new();edge.seed=184814;edge.frequency=.55
+	var path:=SurfaceTool.new();path.begin(Mesh.PRIMITIVE_TRIANGLE_STRIP)
+	var points: Array[Vector3]=[]
 	for i in range(1,Layout.TRAIL.size()):
-		var a: Vector3=Layout.TRAIL[i-1];var b: Vector3=Layout.TRAIL[i];var strip:=MeshInstance3D.new();var p:=PlaneMesh.new();p.size=Vector2(1.2,a.distance_to(b)+.2);strip.mesh=p;strip.material_override=Library.rock("sand",1);add_child(strip);strip.position=(a+b)*.5+Vector3(0,.012,0);strip.rotation.y=atan2(b.x-a.x,b.z-a.z)
+		var a: Vector3=Layout.TRAIL[i-1];var b: Vector3=Layout.TRAIL[i]
+		var steps:=maxi(1,ceili(a.distance_to(b)/.45))
+		for s in steps: points.append(a.lerp(b,float(s)/steps))
+	points.append(Layout.TRAIL[-1])
+	for i in points.size():
+		var p: Vector3=points[i]
+		var along: Vector3=(points[mini(i+1,points.size()-1)]-points[maxi(i-1,0)]).normalized()
+		var side:=Vector3(-along.z,0,along.x)
+		var taper:=minf(1.0,float(points.size()-1-i)/3.0+.35)
+		for k in [1,-1]: # strip winding faces up
+			var q: Vector3=p+side*k*(.42+.13*edge.get_noise_2d(i*.45,k*7.0))*taper
+			path.set_normal(Vector3.UP);path.set_uv(Vector2(q.x,q.z));path.add_vertex(Vector3(q.x,.008,q.z))
+	var trail:=MeshInstance3D.new();trail.mesh=path.commit();trail.material_override=worn;trail.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF;add_child(trail)
+## Height of the surrounding hill (below) at a polar position about (0, 1), sunk 0.4 m.
+static func hill_height(angle: float,radius: float) -> float:
+	return clampf((radius-17)/38,0,1)*(11+3*sin(angle*3)+1.5*cos(angle*7))-.4
+func _trees(mesh: Mesh,transforms: Array,shadows := true) -> void:
+	if transforms.is_empty(): return
+	var group:=MultiMeshInstance3D.new();var multi:=MultiMesh.new();multi.transform_format=MultiMesh.TRANSFORM_3D;multi.mesh=mesh
+	multi.instance_count=transforms.size()
+	for i in transforms.size(): multi.set_instance_transform(i,transforms[i])
+	group.multimesh=multi;group.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_DOUBLE_SIDED if shadows else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF;add_child(group)
+## Barrels, crates, sacks and a bench around the stall; set dressing only.
+func dress_yard() -> void:
+	var goods:=Kit.named("res://assets/store/goods.glb")
+	for item in YARD:
+		var node:=MeshInstance3D.new()
+		node.mesh=Kit.mesh(item[0]) if item[0].begins_with("res://") else goods[item[0]]
+		add_child(node);node.position=item[1];node.rotation.y=item[2];node.scale=Vector3.ONE*item[3]
 func refresh() -> void:
 	shelves.refresh();slate.refresh()
 	for node in pile_visual.get_children(): pile_visual.remove_child(node);node.queue_free()
 	for i in counter.pile.size():
-		var prop: Node3D=shelves.object(counter.pile[i]);pile_visual.add_child(prop);prop.position=Layout.PILE+Vector3((i%3)*.36-.35,(i/3)*.1,0)
+		var prop: Node3D=shelves.pile_object(counter.pile[i]);pile_visual.add_child(prop);prop.position=Layout.PILE+Vector3((i%3)*.36-.35,(i/3)*.1,0)
 	for i in counter.fish_offer.size():
 		var fish:=MeshInstance3D.new();fish.mesh=Library.mesh("res://assets/fish/fish.glb") if ResourceLoader.exists("res://assets/fish/fish.glb") else CapsuleMesh.new();pile_visual.add_child(fish);fish.position=Layout.BARREL+Vector3(i*.1-.2,0,0);fish.scale=Vector3(.2,.2,.2)
 	for i in mini(3,counter.hide_offer.size()):

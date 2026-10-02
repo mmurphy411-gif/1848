@@ -52,6 +52,8 @@ const VIEWS := [
 	["wildlife_jay","wildlife"],["wildlife_quail","wildlife"],["wildlife_squirrel","wildlife"],
 	["crew_work_10h","crew"],["crew_supper_1936","crew"],
 	["crew_lineup","crew"],
+	# Stage 6 close-ups (appended): camp props at 4 m and the store's goods.
+	["camp_close_10h","props"],["store_shelves","props"],
 ]
 ## Rig poses shared by paired views: x, metres inland of the June shore, yaw, pitch.
 const DOWNSTREAM := [-20.0, 8.0, -1.1475, -.08]
@@ -459,6 +461,33 @@ func crew_lineup(crew: Node3D) -> void:
 	var target := centre; target.y = Layout.height_at(centre.x, centre.z) + .95
 	view(eye, target, 52)
 	await shot("crew_lineup", "all fourteen hands in roster order, an arc 6 m from the camera, 10:00")
+## Stage 6 close-ups. The store here follows claim views, as it does in play.
+func props_scenes() -> void:
+	await at_slot(view_index("camp_close_10h"))
+	await open_claim({"day": "10", "hour": "10", "weather": "clear", "firewood": "6"}, 10.0)
+	if await begin("camp_close_10h"):
+		var camp: Vector3 = claim.get_node("Camp").global_position
+		view(camp + Vector3(2.6, 1.7, -3.2), camp + Vector3(-1.3, .45, 1.6), 55)
+		await shot("camp_close_10h", "camp props from the fire's river side, 4 m out, 1.7 m up")
+	await close_claim()
+	if not wanted("store_shelves"): return
+	await at_slot(view_index("store_shelves"))
+	scenario = {"seed": SEED, "day": "30", "hour": "13", "weather": "clear"}; game.apply_scenario(scenario)
+	store = load("res://scenes/store.tscn").instantiate(); root.add_child(store)
+	store.set_physics_process(false); store.walker.set_physics_process(false)
+	store.walker.position = Vector3(3, 0, 3)
+	light_hour = 13.0; clock_hour = 13.0
+	store.get_node("Daylight").apply(13)
+	fixed_particles(store)
+	var mount := Node3D.new(); store.add_child(mount)
+	camera = Camera3D.new(); mount.add_child(camera); camera.attributes = store.get_node("Daylight").camera_attributes
+	camera.position = Vector3(-.65, 2.8, 2.5); camera.look_at(Vector3(0, 1.45, -1.3), Vector3.UP)
+	camera.fov = 49; camera.current = true
+	if await begin("store_shelves"):
+		await shot("store_shelves", "Lambert's shelves over the counter, from the customer side")
+	store.get_node("Soundscape").stop(); store.get_node("Rain").sound.stop()
+	store.queue_free(); store = null
+	await frames(5)
 
 func crew_settle(crew: Node3D) -> void:
 	crew.set_process(true)
@@ -505,6 +534,7 @@ func run() -> void:
 	if section_wanted("day100"): await day100()
 	if section_wanted("wildlife"): await wildlife()
 	if section_wanted("crew"): await crew_scenes()
+	if section_wanted("props"): await props_scenes()
 	write_manifest()
 	var seconds := (Time.get_ticks_msec() - started) / 1000.0
 	print("VISUAL TOUR %s: %d views in %.1f s -> %s%s%s" % [label, captured, seconds, out_dir,

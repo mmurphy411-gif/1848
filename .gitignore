@@ -27,6 +27,9 @@ __pycache__/
 # Godot extracts these copies from the normalised scan GLBs (tools/art/intake_rocks.py).
 /assets/boulders/*.jpg*
 /assets/clutter/*.jpg*
+# Godot extracts these copies from the Stage 6 prop GLBs; the maps live inside the GLBs.
+/assets/props/*.jpg*
+/assets/camp/*.jpg*
 
 # OS / editors
 Thumbs.db

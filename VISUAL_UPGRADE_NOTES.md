@@ -370,7 +370,119 @@ scale (hands about 15% wide while walking); the builds preserve it rather than f
 
 ## Stage 6 — Camp, store and props
 
-(pending: S6-props)
+Done October 2, 2026 (agent S6-props, tour label `s6props`).
+
+**Approach.** Collision and layout are untouched by construction. The camp's nine props
+keep the original `camp.glb` meshes as their collision source (`camp.gd` builds shapes from
+them as before; the file was re-exported without its 2k atlas, geometry and node transforms
+verified identical) and draw new meshes instead. The store keeps the Milestone 10 log walls
+and counter, rebuilt with the original code, as hidden `* proxy` meshes that alone get
+collision. Built props share one set of tiling materials: they carry placeholder materials
+named `kit_*`, and `scripts/prop_kit.gd` swaps in the textured ones from
+`assets/props/kit_materials.glb` (2.9 MB, 21 materials: Poly Haven `bark_brown_02`,
+`weathered_planks`, `cotton_jersey`, `hessian_230`, `poly_wool_herringbone`, plus small
+procedural end grain, rope, iron, brass, slate, leather, paper, clay daub, beans, green
+coffee, flour, salt, salt pork; glass). Dirt and contact shading are baked into vertex colour.
+
+**Camp** (`blender/build_camp_kit.py`, `scripts/camp.gd`). Lean-to of forked bark poles with a
+canvas that drapes over the ridge, sags between rafters and lifts between its four pegs,
+lashings and two guy lines (kept behind the front line: the shelter test's 3 m bound still
+holds); Poly Haven `stone_fire_pit` as the fire ring, with charred split wood (the crew's
+supper fire copies it); bedroll of ground cloth, red wool blanket and tied coat roll; tripod
+of bark sticks, chain and cast-iron kettle; cast-iron skillet (handle still on +X for the
+cooking grip); smoking rack with forks, lashings and fish strips that show while smoking;
+burlap cache sack on its rope; split firewood (still scaled by the firewood count); the
+ledger on a Poly Haven chest. Dressing without collision, each beside a prop the walker and
+crew already avoid: barrel and lantern, woodpile, chopping block with axe, stool, bucket,
+pick and spade, gold pan, coffee pot and cups, three sacks (two under the lean-to, parented
+to it so a bought tent hides them). Dressing fades out past 60 m; tools, cookware, embers
+and ledger cast no shadow.
+
+**Store** (`blender/build_store.py`, `scripts/store.gd`, `scripts/shelves.gd`). Bark log
+walls with saddle-notch overhangs, end grain and clay chinking; posts, plates, rafters, a
+rear ridge post; a two-sheet canvas roof sagging between rafters with guy lines; hewn plank
+counter with a boarded front; deep plank shelves with aprons and a peg rail; a brass balance
+(names and pivots as before); price board on legs and slate on an easel; ledger; Poly Haven
+barrel under the fish plank; hitching rail. Goods (`goods.glb`, 34 meshes): sacks built from
+a lathe profile then slumped, leaned and creased with seeded noise (cotton flour and salt tied
+at the neck, open burlap beans and green coffee with rolled mouths), salt pork in brine in the
+Poly Haven tub, all at four fill levels; hook papers in a tray, rope coils on the rail, willow
+rod, boots, rocker kit, powder keg, tent roll, whiskey bottles, iron strongbox, dam timbers,
+bunk rolls, paper parcels for the counter pile, price tags and pegs. Pick, shovel and crowbar
+are Poly Haven tools; the tin pan is the miner's. Shelf stock not on the slate: blankets,
+bolts of cloth, candle boxes, a soap crate. Yard: barrels, crates, lantern, tub, bucket,
+bench, sacks. Display offsets in `shelves.gd` stand goods on the shelves; aim targets and
+reach still use `store_layout.gd`. Ground: the claim's terrain shader through its own
+material instance (no river wetness; duff textures in the gravel slot, sand patches as bare
+earth, oak canopies over the clearing), the hill on the same material as wall, and a
+ragged-edged trail in sand. Trees: 12 black oaks round the clearing, 32 young conifers
+behind it, 70 distant conifers (shadowless) on the hill, all MultiMesh through
+`Assets.plant()`, on their own seed (184813). The store canvas shader and 2k store atlas are
+gone (unreferenced).
+
+**Intake.** Fetched and normalised (rows in `assets/CC0_MANIFEST.json`): `stone_fire_pit`
+(1,500 tris), `wine_barrel_01` (1,400), `wooden_crate_01` (1,200), `painted_wooden_bench`
+(630; barn-red milk paint, period-plausible, saturation 0.8), `wooden_stool_02` (1,000,
+desaturated), `wooden_lantern_01` (1,200), `wooden_axe_02` (700), `picke_dirty_01` (900),
+`wooden_bucket_01` (1,000), `wooden_bucket_02` (1,099), `rusted_spade_01` (800),
+`crowbar_01` (498); 1k maps for the large ones, 512 for the small. Gaps built
+parametrically: sacks (modifier-style noise on lathes), rope (catenary and helix tubes),
+jar/bottle (lathe), fence/rail, keg, strongbox. No anvil was needed.
+
+| Gate | Target | Measured | Result |
+| --- | --- | --- | --- |
+| Blind check, `store`, `camp_10h`, `crew_supper_1936` vs the miner's detail | pass | orchestrator | pending |
+| Store suites: `milestone_10`; `store_capture` probes | pass | `milestone_10` PASS; probes: board contrast 8.68, slate glyph 29 px, weighing subject 0.126 (base 0.126) | pass; see note |
+| Camp suites: `camp_layout`, `camp_movement`, `milestone_9`, `milestone_14`, `fishing_assets` | pass | all PASS; crossing distances identical to base | pass |
+| Full suite | 37/37 | 37/37 (`miner_game` needs `artifacts/miner-game/` in a fresh worktree) | pass |
+| `audit_assets.py` | exit 0 | 79 files: 63 ok, 16 allow-listed, 0 failing | pass |
+| Supper fire look | protected | SSIM 0.983 vs baseline, mean L 0.239 | pass |
+
+Note on store tests outside the suite: `store_capture` fails two probes on the unchanged base
+too (Lambert portrait coverage 0.0597 vs 0.06 — measured on base and after; and the
+spendthrift stock-thinning check, since 2.0 restocks outpace that history); both unchanged
+by this stage. `store_sequences` stops at the trip hand-off on base as well: in a windowed
+run the 2.0 pause book is open, so `Trip.eligible()` is false and no store loads.
+
+**Regression amendments.** None. No assertion changed. `tests/visual_tour.gd` gains two
+appended views in a new `props` section: `camp_close_10h` (camp props from 4 m) and
+`store_shelves` (the shelves over the counter; captured after claim views, as in play).
+
+**Frame budget.** The machine was shared and timings swung 3–20x between identical runs,
+so the load-independent render counts are the comparison (1080p, same views as the
+budget tests, base = unchanged checkout):
+
+| View | Draw calls base → after | Primitives base → after |
+| --- | --- | --- |
+| downstream (miner_performance) | 646 → 761 | 3.11 M → 3.16 M |
+| overview (binding view) | 380 → 394 | 2.53 M → 2.54 M |
+| camp_10h | 897 → 1,081 | 3.56 M → 3.66 M |
+| supper with camp fire lit | 714 → 812 | 3.61 M → 3.67 M |
+| store_performance view | 707 → 698 | 1.08 M → 2.20 M |
+| store arrival | 1,028 → 968 | 1.20 M → 2.32 M |
+
+Timings (p95 ms, base and after run back to back, three rounds; seven agents shared the
+GPU): base downstream 9.7–63.9, wade 9.2–37.3, overview 13.5–16.0, store 10.6–22.4, crew
+supper 8.9–46.9; after downstream 3.6–38.5, wade 4.1–78.7, overview 7.4–31.7, store
+4.5–17.3, crew supper 13.2–23.8. The quietest after-run (downstream 3.57, wade 4.06) is
+within 0.3 ms of Stage 0's quiet figures (3.45/3.77). `store_performance` measured 4.505 ms
+against its 4.5 ms gate in that run, before the store's near conifers were cut from 54 to 32
+and the distant ring made shadowless. All three need a quiet re-measure at merge.
+
+**Assets.** Added 11.1 MB (props 8.3 MB incl. the 2.9 MB kit, camp 1.5 MB, store and goods
+1.3 MB); removed 25.0 MB (`store.glb` 6.5, `goods.glb` 6.5, `store_atlas.png` 6.3, the
+atlas inside `camp.glb` 5.5). Net −13.9 MB. Budgets: new `kit_materials`, `building_kit`
+(store stall, 8,844 tris) and `goods_kit` (16,132 tris over 34 goods, each ≤ 768)
+categories; the store and goods allow-list entries are gone; `camp.glb` stays allow-listed
+as never-drawn collision proxies.
+
+**Still weak.** The store yard's sand patches and the trail read near-white until Stage 1's
+darker ground sets land (they use the shared textures through the public uniforms). Sacks are
+convincing at shelf distance but smooth up close (no true cloth folds). Tools on the top
+shelf stand fanned; long tools and spears read as bundles of sticks. The bought tent and the
+crew's bunk tents (`assets/expedition/tent.glb`, outside this stage's files; its collision
+comes from its mesh) were not reworked. The lean-to canvas is a smooth sheet seen from behind.
+Camp dressing adds about 115 draw calls in the downstream view.
 
 ## Integration
 

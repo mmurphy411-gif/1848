@@ -1,46 +1,50 @@
 extends Node3D
 const Layout=preload("res://scripts/store_layout.gd")
 const Stock=preload("res://scripts/store_stock.gd")
+const Kit=preload("res://scripts/prop_kit.gd")
+## Goods that exist as full props; everything else is a named mesh in goods.glb.
+const PROPS := {"pick":"res://assets/props/pick.glb","shovel":"res://assets/props/spade.glb",
+	"crowbar":"res://assets/props/crowbar.glb","pan":"res://assets/miner/pan.glb"}
+const BULK := ["flour","beans","pork","coffee","salt"]
+## Where a good sits relative to its Layout.item_position (display only: aim targets and
+## reach stay on the layout) and its scale. Bulk goods stand on the deep bottom shelf,
+## hooks lie on the middle shelf, coils hang from the peg rail, tools stand on the top shelf.
+const SHOW := {
+	"flour":[Vector3(0,-.02,-.25),1.0],"beans":[Vector3(0,-.02,-.25),1.0],"pork":[Vector3(0,-.02,-.25),1.0],
+	"coffee":[Vector3(0,-.02,-.25),1.0],"salt":[Vector3(0,-.02,-.25),1.0],
+	"hook":[Vector3(0,-.214,0),.45],"line":[Vector3(0,0,.01),1.0],"rod":[Vector3(0,-.23,.03),1.0],
+	"crowbar":[Vector3(0,-.2,-.05),.95],"pick":[Vector3(0,-.2,-.12),.72],"shovel":[Vector3(0,-.2,-.14),.72],
+	"boots":[Vector3(0,-.2,-.12),1.0],"rocker":[Vector3(0,-.2,-.12),.8],"spear":[Vector3(0,-.2,0),.65],
+	"rifle":[Vector3(0,-.2,0),.65],"powder":[Vector3(0,-.2,-.1),1.0],"tent":[Vector3(0,-.2,-.12),.8],
+}
 var counter: Node
 var sources: Dictionary={}
 var display := Node3D.new()
 func _ready() -> void:
 	add_child(display)
-	var asset: Node3D=load("res://assets/store/goods.glb").instantiate()
-	for node in asset.find_children("*","MeshInstance3D",true,false): sources[str(node.name)]=node.mesh
-	asset.free()
+	sources=Kit.named("res://assets/store/goods.glb").duplicate()
+	for item in PROPS: sources[item]=Kit.mesh(PROPS[item])
+	sources["tub"]=Kit.mesh("res://assets/props/tub.glb")
 func object(item: String,fill := 3) -> Node3D:
 	if item in ["rifle","spear"]:
 		var prop: Node3D=load("res://assets/expedition/"+item+".glb").instantiate();prop.rotation.x=PI/2;return prop
-	if item in Stock.OUTFIT: return outfit_prop(item)
 	var mesh:=MeshInstance3D.new()
 	mesh.mesh=sources.get(item+"_"+str(fill),sources.get(item))
+	if item=="pork":
+		var tub:=MeshInstance3D.new();tub.mesh=sources.tub;mesh.add_child(tub)
+	if item=="rocker": mesh.rotation.y=PI/2
 	return mesh
-## Simple turned and boxed shapes for the outfitting corner.
+## What lands on the counter: bulk goods are weighed out into a tied paper parcel.
+func pile_object(item: String) -> Node3D:
+	if item in BULK:
+		var parcel:=MeshInstance3D.new();parcel.mesh=sources.parcel;parcel.rotation.y=.25*sin(item.length());return parcel
+	return object(item)
+## Outfitting goods are props in their own right (crate-side pans, bottles, rolls).
 static func outfit_prop(item: String) -> Node3D:
+	var holder:=Node3D.new()
 	var node:=MeshInstance3D.new()
-	var mat:=StandardMaterial3D.new();mat.roughness=.55
-	match item:
-		"pan":
-			var pan:=CylinderMesh.new();pan.top_radius=.2;pan.bottom_radius=.15;pan.height=.06;pan.radial_segments=20;pan.rings=1
-			node.mesh=pan;mat.albedo_color=Color(.62,.62,.6);mat.metallic=.85;mat.roughness=.4
-		"whiskey":
-			var bottle:=CylinderMesh.new();bottle.top_radius=.025;bottle.bottom_radius=.045;bottle.height=.3;bottle.radial_segments=10
-			node.mesh=bottle;mat.albedo_color=Color(.32,.17,.05,.85);mat.transparency=BaseMaterial3D.TRANSPARENCY_ALPHA;mat.roughness=.12
-			node.position.y=.15
-		"strongbox":
-			var box:=BoxMesh.new();box.size=Vector3(.62,.36,.4);node.mesh=box
-			mat.albedo_color=Color(.13,.13,.14);mat.metallic=.7;mat.roughness=.6;node.position.y=.18
-			var band:=MeshInstance3D.new();var strap:=BoxMesh.new();strap.size=Vector3(.64,.05,.42);band.mesh=strap;band.position.y=.08
-			var brass:=StandardMaterial3D.new();brass.albedo_color=Color(.55,.42,.16);brass.metallic=.9;brass.roughness=.35;band.material_override=brass;node.add_child(band)
-		"timber":
-			var planks:=BoxMesh.new();planks.size=Vector3(1.6,.32,.62);node.mesh=planks;node.position.y=.16
-			mat.albedo_color=Color(.62,.47,.3);mat.roughness=.9
-		"bunk":
-			var roll:=CylinderMesh.new();roll.top_radius=.14;roll.bottom_radius=.14;roll.height=1.0;roll.radial_segments=12
-			node.mesh=roll;node.rotation.z=PI/2;node.position.y=.14;mat.albedo_color=Color(.78,.72,.58);mat.roughness=.95
-	node.material_override=mat
-	var holder:=Node3D.new();holder.add_child(node)
+	node.mesh=Kit.mesh(PROPS.pan) if item=="pan" else Kit.named("res://assets/store/goods.glb")[item]
+	holder.add_child(node)
 	return holder
 func refresh() -> void:
 	for child in display.get_children(): display.remove_child(child);child.queue_free()
@@ -49,8 +53,9 @@ func refresh() -> void:
 		var bulk: bool=good.unit=="lb"
 		var fill:=clampi(ceili(4.0*count/maxi(good.opening,count))-1,0,3)
 		var shown: int={"pan":8,"bunk":4,"strongbox":1,"whiskey":12,"timber":2}.get(good.item,count)
+		var show: Array=SHOW.get(good.item,[Vector3.ZERO,1.0])
 		for i in (1 if bulk and count>0 else mini(count,shown)):
-			var node:=object(good.item,fill)
+			var node:=object(good.item,fill) if not good.item in Stock.OUTFIT else outfit_prop(good.item)
 			display.add_child(node);node.position=Layout.item_position(good.item)
 			if good.item in Stock.OUTFIT:
 				match good.item:
@@ -59,16 +64,25 @@ func refresh() -> void:
 					"bunk": node.position.z+=i*.34
 					"timber": node.position.y+=i*.33
 				continue
+			node.position+=show[0];node.scale=Vector3.ONE*show[1]
 			if not bulk:
 				if good.item=="hook":
-					node.scale=Vector3.ONE*.45
 					node.position+=Vector3((i%8)*.028,floori(i/64.0)*.007,(floori(i/8.0)%8)*.028-.20)
 				elif good.item=="line": node.position+=Vector3((i%12)*.014,floori(i/12.0)*.02,0)
+				elif good.item in ["crowbar","pick","shovel","spear","rifle"]:
+					# Long tools stand fanned against the back of the top shelf.
+					node.position+=Vector3((i%3)*.09-.09,0,-floori(i/3.0)*.06)
+					node.rotation.z=((i%3)-1)*.07
 				else:
-					node.scale=Vector3.ONE*(1.0 if good.item=="rod" else .65)
 					node.position+=Vector3((i%6)*.028,0,floori(i/6.0)*.028)
-				node.rotation.y=.08*sin(i*1.7)
-				if good.item=="line": node.rotation.x=PI/2
+				node.rotation.y+=.08*sin(i*1.7)
 		if good.item in Stock.OUTFIT: continue
-		var peg:=MeshInstance3D.new();var shape:=BoxMesh.new();shape.size=Vector3(.025,.025,.18);peg.mesh=shape
-		display.add_child(peg);peg.position=Layout.item_position(good.item)+Vector3(0,.10,-.1)
+		# The peg (middle rail) or price tag (shelf front) stays when a good sells out.
+		var peg:=MeshInstance3D.new()
+		var at: Vector3=Layout.item_position(good.item)
+		if good.item in ["hook","line","rod"]:
+			peg.mesh=sources.peg;peg.position=at+Vector3(0,.10,-.19)
+		else:
+			peg.mesh=sources.tag
+			peg.position=Vector3(at.x,.37,-1.202) if bulk else Vector3(at.x,1.83,-1.422)
+		display.add_child(peg)

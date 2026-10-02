@@ -1,6 +1,42 @@
 extends Node3D
 const Layout=preload("res://scripts/claim_layout.gd")
 const Cooking=preload("res://scripts/cooking.gd")
+const Kit=preload("res://scripts/prop_kit.gd")
+## Stage 6 visuals for the nine camp props: [glb, transform, extra child meshes].
+var looks := {
+	"FireRing":["res://assets/camp/fire_ring.glb",Transform3D(Basis.from_scale(Vector3(1,.72,1)),Vector3(0,-.02,0)),
+		[["res://assets/camp/embers.glb",Transform3D(Basis.IDENTITY,Vector3(0,.07,0))]]],
+	"LeanTo":["res://assets/camp/lean_to.glb"],
+	"Bedroll":["res://assets/camp/bedroll.glb"],
+	"Pot":["res://assets/camp/pot.glb"],
+	"Skillet":["res://assets/camp/skillet.glb"],
+	"Rack":["res://assets/camp/rack.glb"],
+	"Crate":["res://assets/props/crate.glb",Transform3D(Basis.from_scale(Vector3(.8,1.25,1.1)),Vector3.ZERO),
+		[["res://assets/camp/ledger.glb",Transform3D(Basis(Vector3.UP,.12),Vector3(.02,.433,-.01))]]],
+	"Cache":["res://assets/camp/cache.glb"],
+	"Driftwood":["res://assets/camp/firewood.glb"],
+}
+## Set dressing around the camp: [glb or goods.glb mesh name, position (camp frame, y above
+## the ground), yaw, scale, tilt about x]. No collision: every piece sits beside a prop
+## the walker and the crew already steer around, or under the lean-to (parented to it, so
+## they go when a bought tent replaces it).
+var dressing_items := [
+	["res://assets/props/barrel.glb",Vector3(-4.05,0,2.55),.4,1.0,0.0],
+	["res://assets/props/lantern.glb",Vector3(-4.0,.877,2.5),2.2,1.0,0.0],
+	["res://assets/camp/chopping_block.glb",Vector3(-2.75,0,-.45),.3,1.0,0.0],
+	["res://assets/props/axe.glb",Vector3(-2.75,.95,-.76),0.0,1.0,PI-.45],
+	["res://assets/camp/woodpile.glb",Vector3(-4.5,0,1.6),PI/2+.05,1.0,0.0],
+	["res://assets/props/stool.glb",Vector3(.78,0,.95),2.6,1.0,0.0],
+	["res://assets/props/bucket.glb",Vector3(2.15,0,-.55),.7,1.0,0.0],
+	["res://assets/props/pick.glb",Vector3(-4.35,0,3.5),1.7,1.0,.2],
+	["res://assets/props/spade.glb",Vector3(-4.3,0,3.95),1.5,1.0,.24],
+	["res://assets/miner/pan.glb",Vector3(-3.0,0,3.2),.2,1.0,1.25],
+	["flour_3",Vector3(-2.6,0,4.25),.5,.95,0.0,"LeanTo"],
+	["beans_1",Vector3(-.95,0,4.2),2.1,.9,0.0,"LeanTo"],
+	["coffee_2",Vector3(-3.55,0,3.05),1.3,1.0,0.0],
+	["res://assets/camp/coffee.glb",Vector3(-.8,0,.42),2.4,1.0,0.0],
+]
+var strips: MeshInstance3D
 var props: Dictionary={}
 var tent: Node3D
 var oak := Vector3.ZERO
@@ -33,6 +69,8 @@ func _ready() -> void:
 		if p.z-Layout.shore_z(p.x)>=10 and absf(p.x)<best:
 			best=absf(p.x);oak=p
 	position=Vector3(oak.x,Layout.height_at(oak.x,oak.z-3),oak.z-3)
+	# camp.glb holds the original prop meshes; they stay the collision source so shapes,
+	# the open doorway and walk paths are unchanged. What you see is the Stage 6 kit.
 	var asset := preload("res://assets/camp/camp.glb").instantiate()
 	# A clear work area around the fire; the shelter opens riverward from inland.
 	var offsets := {"FireRing":Vector3.ZERO,"LeanTo":Vector3(-1.8,0,3.4),"Bedroll":Vector3(-1.8,0,4.2),"Pot":Vector3(1.5,0,-.1),"Skillet":Vector3(.95,0,-1.05),"Rack":Vector3(2.6,0,1.2),"Crate":Vector3(-3.4,0,3.5),"Cache":Vector3(0,2.5,3),"Driftwood":Vector3(-2.2,0,.5)}
@@ -45,15 +83,16 @@ func _ready() -> void:
 		body.position.y+=Layout.height_at(world.x,world.z)-global_position.y
 		if key=="LeanTo": body.rotation.y=PI
 		if key=="Skillet": body.rotation.y=PI/2
-		var model := MeshInstance3D.new();model.mesh=source.mesh;model.transform=source.transform
+		var model := look(key)
 		body.add_child(model)
-		if key=="FireRing": model.material_override=preload("res://scripts/asset_library.gd").rock("granite",.6)
 		var collider := CollisionShape3D.new()
 		# Preserve the shelter's open doorway instead of filling it with a hull.
-		collider.shape=model.mesh.create_trimesh_shape() if key=="LeanTo" else model.mesh.create_convex_shape()
-		collider.transform=model.transform
+		collider.shape=source.mesh.create_trimesh_shape() if key=="LeanTo" else source.mesh.create_convex_shape()
+		collider.transform=source.transform
 		body.add_child(collider);props[key]=body
 	asset.free()
+	strips=Kit.instance("res://assets/camp/fish_strips.glb");strips.visible=false;props.Rack.add_child(strips)
+	dress()
 	skillet_rest=props.Skillet.transform
 	pot_rest=props.Pot.transform
 	cooking_food=MeshInstance3D.new();cooking_food.visible=false
@@ -83,6 +122,30 @@ func _ready() -> void:
 	game.new_day.connect(day_end)
 	last_hour=clock.hour_at(clock.elapsed)
 	game.changed.connect(refresh_tent);refresh_tent()
+## The visible mesh of a camp prop (child 0 of its body; the crew's fire copies FireRing's).
+func look(key: String) -> MeshInstance3D:
+	var spec: Array=looks[key]
+	var model := Kit.instance(spec[0],spec[1] if spec.size()>1 else Transform3D.IDENTITY)
+	model.name="Look"
+	if spec.size()>2:
+		for extra in spec[2]:
+			var part := Kit.instance(extra[0],model.transform.affine_inverse()*extra[1])
+			part.visibility_range_end=60;part.visibility_range_end_margin=6;part.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF;model.add_child(part)
+	return model
+func dress() -> void:
+	var dressing := Node3D.new();dressing.name="Dressing";add_child(dressing)
+	var goods: Dictionary=Kit.named("res://assets/store/goods.glb")
+	for item in dressing_items:
+		var node := MeshInstance3D.new()
+		node.mesh=Kit.mesh(item[0]) if item[0].begins_with("res://") else goods[item[0]]
+		# Goods under the lean-to are parented to it, so they hide when a bought tent replaces it.
+		(props[item[5]] if item.size()>5 else dressing).add_child(node)
+		var p: Vector3=global_position+item[1]
+		node.global_transform=Transform3D(Basis.from_euler(Vector3(item[4],item[2],0)).scaled(Vector3.ONE*item[3]),Vector3(p.x,Layout.height_at(p.x,p.z)+item[1].y,p.z))
+		# Small dressing drops out beyond 60 m (the overview is the tight frame-time view).
+		node.visibility_range_end=60;node.visibility_range_end_margin=6;node.visibility_range_fade_mode=GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
+		# Hand tools and cookware are too small to need their own shadow (three cascades each).
+		if item[0].get_file() in ["coffee.glb","axe.glb","pan.glb","pick.glb","spade.glb","lantern.glb"]: node.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 func refresh_tent() -> void:
 	var owned: bool=game.inventory.get("tent",false)
 	props.LeanTo.visible=not owned;props.LeanTo.collision_layer=0 if owned else 1
@@ -270,3 +333,4 @@ func _process(delta: float) -> void:
 		if not fire_sound.playing: fire_sound.play()
 	elif fire_sound.playing: fire_sound.stop()
 	if props.has("Driftwood"): props.Driftwood.scale=Vector3.ONE*(.35+.30*mini(2,game.inventory.firewood/3))
+	if strips: strips.visible=not smoking.is_empty()
