@@ -12,6 +12,7 @@
       "page": "https://ambientcg.com/a/Rock022",
       "authors": ["ambientCG"],
       "outputs": [
+        "assets/cliffs/cliff_detail.png",
         "assets/textures/bedrock_albedo.png",
         "assets/textures/bedrock_normal.png",
         "assets/textures/bedrock_orm.png"
@@ -32,6 +33,34 @@
       ],
       "main": ".",
       "options": {}
+    },
+    {
+      "source": "ambientcg",
+      "id": "Rock056",
+      "resolution": "1K-JPG",
+      "kind": "material",
+      "name": "Rock 056",
+      "licence": "CC0-1.0",
+      "fetched": "2026-10-02",
+      "page": "https://ambientcg.com/a/Rock056",
+      "authors": ["ambientCG"],
+      "outputs": [
+        "assets/cliffs/cliff_detail.png"
+      ],
+      "files": [
+        {"path": "Rock056.png", "from": "Rock056_1K-JPG.zip", "size": 449860, "sha256": "d97357968317948acec0a73f3de2c1fb953328421a84960e64bdc4a0a34ba6db"},
+        {"path": "Rock056_1K-JPG.blend", "from": "Rock056_1K-JPG.zip", "size": 1109844, "sha256": "8cf74e129f217de144a1290f58867636ba6bd04ba85416800710ac1e6555efb0"},
+        {"path": "Rock056_1K-JPG.mtlx", "from": "Rock056_1K-JPG.zip", "size": 2242, "sha256": "5693a70334e2098ddac26b2151918a7105aa3fe5ba684a7637f5931706bca332"},
+        {"path": "Rock056_1K-JPG.tres", "from": "Rock056_1K-JPG.zip", "size": 1010, "sha256": "965a08947c5349a641c0507d6f6416e822e6ca35c5d4a4f9bcdab42e83726fd4"},
+        {"path": "Rock056_1K-JPG.usdc", "from": "Rock056_1K-JPG.zip", "size": 3025, "sha256": "028f45918a243b5f64a9bea5335ed9aa915185d03d8c9371ce40403e00df5a23"},
+        {"path": "Rock056_1K-JPG.zip", "url": "https://ambientcg.com/get?file=Rock056_1K-JPG.zip", "size": 5115664, "sha256": "0f3d72d4a882d4d8ff5126c9159d86eea6929d5f96f6f4cce496b45fd89db40d"},
+        {"path": "Rock056_1K-JPG_AmbientOcclusion.jpg", "from": "Rock056_1K-JPG.zip", "size": 346738, "sha256": "dc57b3529baf309f7fb3efd3b9785cc3f8b9b8a99b1f681986e8edb4211588eb"},
+        {"path": "Rock056_1K-JPG_Color.jpg", "from": "Rock056_1K-JPG.zip", "size": 824157, "sha256": "b5cf1551c8fe51be895326f54d2cac3285c1c46f82b6b24dd88bb04337caaa21"},
+        {"path": "Rock056_1K-JPG_Displacement.jpg", "from": "Rock056_1K-JPG.zip", "size": 136615, "sha256": "d48e36c8c80105a0694828b5e4f910be37fb0753a0a7481b2316130eb3b4b576"},
+        {"path": "Rock056_1K-JPG_NormalDX.jpg", "from": "Rock056_1K-JPG.zip", "size": 961965, "sha256": "b3f3dfb8ea0e46c9ac7cc97f8b7d414d8d03f4910d08e6c3512bf7b3a3b1ca49"},
+        {"path": "Rock056_1K-JPG_NormalGL.jpg", "from": "Rock056_1K-JPG.zip", "size": 962061, "sha256": "30c776d1148e9f7ebb67a0b66212877d24a259b1143518883a85a88b3eba723a"},
+        {"path": "Rock056_1K-JPG_Roughness.jpg", "from": "Rock056_1K-JPG.zip", "size": 316017, "sha256": "13041b7c0be4d7378df4189bcbe7392a43b379502c5398e0afd5c6a1819710c6"}
+      ]
     },
     {
       "source": "opengameart",
@@ -319,6 +348,47 @@
     },
     {
       "source": "polyhaven",
+      "id": "lichen_rock",
+      "resolution": "1k",
+      "kind": "texture",
+      "name": "Lichen Rock",
+      "licence": "CC0-1.0",
+      "fetched": "2026-10-02",
+      "page": "https://polyhaven.com/a/lichen_rock",
+      "authors": ["Rico Cilliers"],
+      "outputs": [
+        "assets/cliffs/cliff_detail.png"
+      ],
+      "files": [
+        {"path": "lichen_rock_arm_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/lichen_rock/lichen_rock_arm_1k.jpg", "size": 802718, "md5": "b3c9c957b09540f1fcc10e2bd226f981", "sha256": "10b16d185c2ff5f4ac3894f2d3aec2a959c0d34766f8e5445ff1d10d7170aae9"},
+        {"path": "lichen_rock_diff_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/lichen_rock/lichen_rock_diff_1k.jpg", "size": 1070311, "md5": "453cc496091c1be83d0151249c97cecd", "sha256": "780128a5757920a7e30c50042e8975e8333ef4ae5809b30bb5be6a2f9fec3ec5"},
+        {"path": "lichen_rock_disp_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/lichen_rock/lichen_rock_disp_1k.jpg", "size": 322057, "md5": "a3d94ed1381ae64a45005601c1d3048c", "sha256": "4f92597a03fc305931e58bcb362744efc0e54cda0a45fad6f4eeab3483b4d814"},
+        {"path": "lichen_rock_nor_gl_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/lichen_rock/lichen_rock_nor_gl_1k.jpg", "size": 1259569, "md5": "93783a7b605a162b4be4600f561ea408", "sha256": "a3510a296030a1e312ef589a872ae416f2d23203a7b7c0c9e3646e8109c6a61c"}
+      ]
+    },
+    {
+      "source": "polyhaven",
+      "id": "mountainside",
+      "resolution": "1k",
+      "kind": "model",
+      "name": "Mountainside",
+      "licence": "CC0-1.0",
+      "fetched": "2026-10-02",
+      "page": "https://polyhaven.com/a/mountainside",
+      "authors": ["Dario Barresi", "Rico Cilliers"],
+      "outputs": [
+        "assets/cliffs/cliff_slate.glb"
+      ],
+      "files": [
+        {"path": "mountainside.bin", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/mountainside/mountainside.bin", "size": 4409280, "md5": "a4ac37444e3313bd9f9ff459eb71418d", "sha256": "08e4ca60e050045de8224d12d23af84f9406bc558943038114d81e184158d953"},
+        {"path": "mountainside_1k.gltf", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/mountainside/mountainside_1k.gltf", "size": 2776, "md5": "3f809d8a668166c764f665dabe25af12", "sha256": "73241a50748582e6a13b2462afbd57d18a1bae5ffef777b3119d064709604fcd"},
+        {"path": "textures/mountainside_arm_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/mountainside/mountainside_arm_1k.jpg", "size": 791031, "md5": "543f19bc3f3cd4f7b08dddedd1824cec", "sha256": "8e81fdefb8c3a64e763d266c3c4025cc4c04287b81f250dc777025a64caf5f75"},
+        {"path": "textures/mountainside_diff_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/mountainside/mountainside_diff_1k.jpg", "size": 942046, "md5": "ab12251ec12488e2a0cf2a213d52bd7d", "sha256": "e4613465418060de6b5f536820d04e0e945a88d87168f3fa4ce9da662ebc1696"},
+        {"path": "textures/mountainside_nor_gl_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/mountainside/mountainside_nor_gl_1k.jpg", "size": 1240239, "md5": "95e78f9ae70da41e11ebe1489468e11d", "sha256": "1eec8a8f32a2e61fb3ca431ddb1f364ea49cfead59369da3e7466cf7ddcb49e9"}
+      ]
+    },
+    {
+      "source": "polyhaven",
       "id": "namaqualand_boulder_04",
       "resolution": "1k",
       "kind": "model",
@@ -401,6 +471,27 @@
         {"path": "textures/namaqualand_boulders_01_arm_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/namaqualand_boulders_01/namaqualand_boulders_01_arm_1k.jpg", "size": 719208, "md5": "9827ad42f724de4fc327b063878939d6", "sha256": "fc030df70560322257f8234c9ee47cf470020de004104da3a43ecafe65dd6568"},
         {"path": "textures/namaqualand_boulders_01_diff_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/namaqualand_boulders_01/namaqualand_boulders_01_diff_1k.jpg", "size": 830079, "md5": "1ed791727bbb6f26f77246e5de17d901", "sha256": "f3ef4909f97b7087e9b01a655c8c8fe2bd2e820d9fcdcce90958c339f834067d"},
         {"path": "textures/namaqualand_boulders_01_nor_gl_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/namaqualand_boulders_01/namaqualand_boulders_01_nor_gl_1k.jpg", "size": 1159170, "md5": "0f3ad6c29c72b9fe28fc91dc3cf15c00", "sha256": "bb823e2439fd6e4679c63defa7edfb40a942bba4d7db1fa1bdbbc5a5e8792179"}
+      ]
+    },
+    {
+      "source": "polyhaven",
+      "id": "namaqualand_cliff_02",
+      "resolution": "1k",
+      "kind": "model",
+      "name": "Namaqualand Cliff 02",
+      "licence": "CC0-1.0",
+      "fetched": "2026-10-02",
+      "page": "https://polyhaven.com/a/namaqualand_cliff_02",
+      "authors": ["Dario Barresi", "Rico Cilliers"],
+      "outputs": [
+        "assets/cliffs/cliff_jointed.glb"
+      ],
+      "files": [
+        {"path": "namaqualand_cliff_02.bin", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/namaqualand_cliff_02/namaqualand_cliff_02.bin", "size": 5697152, "md5": "2920477744cce1a827a61c0d36a1061a", "sha256": "da05a038b3a1f3b46cd8cf074d20b8d3e2b2148d30806e1feb0309e941200595"},
+        {"path": "namaqualand_cliff_02_1k.gltf", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/namaqualand_cliff_02/namaqualand_cliff_02_1k.gltf", "size": 2857, "md5": "3a4f323a98171ce6670f906db122c538", "sha256": "025d245c7bbd0dfeb061c95a03a79699b5e39c9b3b04e7f0c8f729d2b99830cf"},
+        {"path": "textures/namaqualand_cliff_02_arm_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/namaqualand_cliff_02/namaqualand_cliff_02_arm_1k.jpg", "size": 813799, "md5": "67a9604a9d78af65ce82316d19275f0e", "sha256": "c48be80f40db3c64500b9289c92fd2492e51069270f9e041e540aaa0af207667"},
+        {"path": "textures/namaqualand_cliff_02_diff_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/namaqualand_cliff_02/namaqualand_cliff_02_diff_1k.jpg", "size": 793208, "md5": "1bdbd81c80c6693ea589a3005164fd2b", "sha256": "872afb18d20b90da0fb24946f2fe6b55a09fffae3fe803ae86bb153fcd3aacd7"},
+        {"path": "textures/namaqualand_cliff_02_nor_gl_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/namaqualand_cliff_02/namaqualand_cliff_02_nor_gl_1k.jpg", "size": 1071907, "md5": "db4096e8ccf0ace17c228de9f5e69180", "sha256": "bb4ead8fcfea7063d64df2cb08d655498d6730d46ea7381f5a55bf510cb10f74"}
       ]
     },
     {
@@ -554,6 +645,72 @@
       ],
       "main": "rock_boulder_dry_diff_2k.jpg",
       "options": {}
+    },
+    {
+      "source": "polyhaven",
+      "id": "rock_face_01",
+      "resolution": "1k",
+      "kind": "model",
+      "name": "Rock Face 01",
+      "licence": "CC0-1.0",
+      "fetched": "2026-10-02",
+      "page": "https://polyhaven.com/a/rock_face_01",
+      "authors": ["Dario Barresi"],
+      "outputs": [
+        "assets/cliffs/cliff_face_01.glb"
+      ],
+      "files": [
+        {"path": "rock_face_01.bin", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/rock_face_01/rock_face_01.bin", "size": 476436, "md5": "06caed23e725af568b64f8cbee210c1c", "sha256": "873eac0319333e92bc96ddeedf8ebf69dc3c68ff1dfe32d8c14ddc165cdb20ac"},
+        {"path": "rock_face_01_1k.gltf", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/rock_face_01/rock_face_01_1k.gltf", "size": 2793, "md5": "b4855bc7e841a17a94332561a9b301c0", "sha256": "96c332c01d173a2431115f3bac29be101fba341e5500e2a08e384f4edd17299e"},
+        {"path": "textures/rock_face_01_arm_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/rock_face_01/rock_face_01_arm_1k.jpg", "size": 693610, "md5": "5799e7f5546350576b87bf67c34fb49f", "sha256": "59128c79d207a50a69a38002986135ade3b19642d26158cec141eca41578c9ca"},
+        {"path": "textures/rock_face_01_diff_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/rock_face_01/rock_face_01_diff_1k.jpg", "size": 853749, "md5": "98ee9f024a6383d7e6cab44ed41e1f15", "sha256": "41bd26ed2db1332b1ebb4b1326fd8af4d21f0f0eb57b8ea385033115c722cfdb"},
+        {"path": "textures/rock_face_01_nor_gl_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/rock_face_01/rock_face_01_nor_gl_1k.jpg", "size": 1023400, "md5": "46e01f5c3b8ac4463aeef2b4c61d1cd4", "sha256": "9a9d85b9a01f4e24fc9ceec8baf96c019f552bca69591ff544c7a725e28b1d97"}
+      ]
+    },
+    {
+      "source": "polyhaven",
+      "id": "rock_face_02",
+      "resolution": "1k",
+      "kind": "model",
+      "name": "Rock Face 02",
+      "licence": "CC0-1.0",
+      "fetched": "2026-10-02",
+      "page": "https://polyhaven.com/a/rock_face_02",
+      "authors": ["Dario Barresi", "Rico Cilliers"],
+      "outputs": [
+        "assets/cliffs/cliff_face_02.glb"
+      ],
+      "files": [
+        {"path": "rock_face_02.bin", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/rock_face_02/rock_face_02.bin", "size": 702068, "md5": "add01c9b573fdddd688acb6378c78c3b", "sha256": "cfa3dea8f0f91525b5dfe93d889acacf961d20f7174aae100eae2c6e101edf31"},
+        {"path": "rock_face_02_1k.gltf", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/rock_face_02/rock_face_02_1k.gltf", "size": 2794, "md5": "f4c7eefa474143b14312409cad4fb4b8", "sha256": "ebeab82d463c89eb5f894b85807da111280a73b552d694257118f3f2d47bf760"},
+        {"path": "textures/rock_face_02_arm_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/rock_face_02/rock_face_02_arm_1k.jpg", "size": 820389, "md5": "9e59b31d77e404500effa446e790f8fb", "sha256": "0f3f64b9f56e3c5cecbb99e45d8fa0d4cbf025d4455439d1c5f6672a408365ee"},
+        {"path": "textures/rock_face_02_diff_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/rock_face_02/rock_face_02_diff_1k.jpg", "size": 920193, "md5": "8f3731e5c8e4e5c7f5de983353cf3ee3", "sha256": "d777f2c9b598773c2143751c34913cf5eef0ae392af31fb73c28b98afab6fb7b"},
+        {"path": "textures/rock_face_02_nor_gl_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/rock_face_02/rock_face_02_nor_gl_1k.jpg", "size": 1082942, "md5": "af2e17bb469b499dc14765dc13ad30ae", "sha256": "a9dc200810f5488395fdc928b5a9441c007c33047d0375d946f33dcd2ff1c853"}
+      ]
+    },
+    {
+      "source": "polyhaven",
+      "id": "rock_moss_set_01",
+      "resolution": "1k",
+      "kind": "model",
+      "name": "Rock Moss Set 01",
+      "licence": "CC0-1.0",
+      "fetched": "2026-10-02",
+      "page": "https://polyhaven.com/a/rock_moss_set_01",
+      "authors": ["Kless Gyzen"],
+      "outputs": [
+        "assets/cliffs/talus_01.glb",
+        "assets/cliffs/talus_02.glb",
+        "assets/cliffs/talus_03.glb",
+        "assets/cliffs/talus_04.glb"
+      ],
+      "files": [
+        {"path": "rock_moss_set_01.bin", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/rock_moss_set_01/rock_moss_set_01.bin", "size": 1466380, "md5": "207a51c9f56d34732e9814bbf9cc07b1", "sha256": "de8360e6175879aaf02c171911069cf5f1852547f9ca7f10e440085dbcc3315e"},
+        {"path": "rock_moss_set_01_1k.gltf", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/rock_moss_set_01/rock_moss_set_01_1k.gltf", "size": 9987, "md5": "75113cc1c21806cca5d8badad4737af7", "sha256": "c36675aca9c6b2be7785c2534cf413b03ec82a5a2a5407a2b1c0cdb0346c9727"},
+        {"path": "textures/rock_moss_set_01_diff_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/rock_moss_set_01/rock_moss_set_01_diff_1k.jpg", "size": 168099, "md5": "b8742301e6b4bc5683d2de712e83f772", "sha256": "40cea65d8aa4ee73a93b04af19963834d061eee9779c3fc2c1cba76eef812ccc"},
+        {"path": "textures/rock_moss_set_01_nor_gl_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/rock_moss_set_01/rock_moss_set_01_nor_gl_1k.jpg", "size": 209975, "md5": "eb7ebd31ad08e78d0497900652ff1568", "sha256": "eb4aad3f207f1dc5b624d74ae240372171626a66912bd71adf7bd3e518181d6e"},
+        {"path": "textures/rock_moss_set_01_rough_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/rock_moss_set_01/rock_moss_set_01_rough_1k.jpg", "size": 82624, "md5": "ed9d8a2c863262f76f881346e8047c6a", "sha256": "4d6ec46623abd8e2cdb855f59c7ce31873ad61b36b60e4de579e9e776a497c6b"}
+      ]
     },
     {
       "source": "polyhaven",

@@ -264,7 +264,106 @@ or S4). Golden-hour clouds are faint by design (thinned toward the sun).
 
 ## Stage 2 — World edge and canyon walls
 
-(pending: S2-canyon)
+Done October 2, 2026 (S2-canyon; plan items 1, 2 and 4 — wall vegetation, item 3, is S4's).
+
+**What drew the flat band.** Not the sky. The analytical canyon keeps widening past the bend
+(`canyon_far_offset` 0.45 m/m, `canyon_width_at` 0.2 m/m), so by |x| = 700 m the river is
+320 m wide and the walls have parted into a plain; that floor and the water mesh ran
+straight out to the gameplay camera's 600 m far plane and met the sky as a flat band.
+
+**Closing the valley** (`scripts/canyon.gd`, render-only). Beyond |x| = 160 m the visual
+floor narrows (near flat to 10 m, river to 42 m), the canyon axis bends inland (+Z) both ways
+around the bar's spur (a z-shear reaching dz/dx 1.5 over 180 m: monotonic in z per column,
+so the strip cannot fold), and the outer (far) wall rises above its rim into three crests,
+about 42, 100 and 160 m above the rim, 55, 170 and 295 m back, with saddles, spurs, gullies
+and wandering bands from seeded noise. From the bar the outer wall crosses the line of sight
+at ~300 m and the crests stack at ~350, 420 and 500 m, inside the 600 m far plane, each a
+little more fogged. The same remap moves the WaterSurface vertices through
+`greybox.gd::visual_bend()`. The bent reach is its own mesh, `Greybox/CanyonReach`, that
+casts no shadow and stays out of GI: as one mesh with the claim its ridges stood across
+the low sun and moon, put the bar in shadow at golden hour and took 46 % of
+`downstream_1925`'s luminance; split, that view is back to 0.98 × baseline. Its walls
+past |x| ≈ 185 m use `shaders/ridge_forest.gdshader` (clumped canopy with crown relief,
+soil gaps, slate strata where too steep for trees). `_visual_section` gains 20 rows above the
+rim (`FINE`); inside |x| ≤ 160 m they are interpolated on the original rows, so the claim
+reach's render surface is unchanged and S4's conifers (on the collision sections) sit as
+before. Ridge forest: 80 distant conifers per end (the existing `*_distant` meshes through
+`Assets.plant`) continue the wall forest from 160 to 240 m, then 2,000 tiered spires per end
+(15 triangles each, one mesh per end, no shadow) cover the slopes and fringe the crests so
+the skylines carry tree tips.
+
+**Rock structure.** Kit of 8 pieces in `assets/cliffs/`, normalised with tint
+0.42/0.43/0.45 at 0.85 and saturation 0.35, 1k maps embedded as Basis Universal:
+`cliff_slate` (Poly Haven mountainside, 4,500 tris), `cliff_face_01` (rock_face_01, 4,000),
+`cliff_face_02` (rock_face_02, 3,500), `cliff_jointed` (namaqualand_cliff_02, 4,500),
+`talus_01`–`04` (rock_moss_set_01 rocks 02/04/05/06, 800 each). Tried and dropped:
+namaqualand_cliff_01 (rounded blocks read as granite boulder piles); not fetched:
+coastal_cliff_04 (1.5 M tris, 46 MB). `shaders/cliff_kit.gdshader` re-skins the scans: their
+own light and dark times a world-space slate-strata detail, slate/greenstone patches, iron
+staining streaked down steep faces, pale lichen on up-facing rock; the detail map
+`assets/cliffs/cliff_detail.png` (512 px; R ambientCG Rock022, G Rock056, B Poly Haven
+lichen_rock) is rebuilt by `tools/art/build_cliff_detail.py`. 167 cliff pieces are faced
+onto the bands (the shell's face direction aligned to the 66-degree band normal, rolled up
+to 17 degrees so strata dip, 0.2–0.9 m proud) and 222 talus rocks sit on the aprons, kept
+off the playable bar; all seeded (184821–184824) and seated on the render walls through
+`greybox.gd::visual_surface()`. MultiMesh chunks of 50 m per wall; only near-wall rock
+within |x| ≤ 100 m (talus ≤ 50 m) casts shadows — the far wall faces away from the sun all
+day — talus drops out beyond 170 m, LOD bias 0.45.
+
+**Cliff blobs.** The 40 boulder blobs are no longer drawn. `_build_cliff_boulders` replays
+their draw sequence for the transforms, and the 10 back-wall blobs keep their colliders:
+the convex hulls their Stage 0 `boulder_0N.glb` meshes produced (`create_convex_shape(true,
+true)`, 32 points each) are stored in `assets/cliffs/blob_colliders.tres` (12 KB, exact
+float round trip), so the frozen collision no longer depends on `assets/boulders/`, which
+Stage 3 replaces. Every hull's world-space points, layer and mask match the baseline's
+(checked by hash). Each gets a talus rock scaled to its footprint.
+
+**Tooling.** `blender/normalize_asset.py --object NAME` (keep one object of a set);
+`tools/art/build_cliff_detail.py`; `tools/art/budgets.json` category `cliff_talus`
+(≤ 1,000 tris, 1k). Tour: no views added; `artifacts/visual-tour/s2canyon/`.
+
+| Gate | Target | Measured | Result |
+| --- | --- | --- | --- |
+| No flat horizon, `downstream_10h` / `upstream_10h` | none visible | both end on fogged forested ridges; so do `valley_low_10h`, `crew_work_10h` | pass (own check) |
+| Overview and wall views read as a rock canyon | blind check | — | orchestrator |
+| Golden hour and night not darker (Stage 1 rule) | ≥ 0.9 × baseline | `downstream_1925` 0.98, `downstream_00h` 1.29, `downstream_06h` 0.93 | pass |
+| Frame budget | p95 ≤ 5.5 ms | see Performance | see below |
+| Suite | all pass | 37/37 | pass |
+| Collision unchanged | identical | ground trimesh from unchanged sections; river volumes untouched; 10 back-wall hulls identical (point hashes) | pass |
+| Asset audit | exit 0 | 61 files, 0 failing | pass |
+
+No regression amendments: no assertion changed.
+
+**Performance.** The machine was shared with other stage agents throughout, and wall-clock
+`miner_performance` swung by several milliseconds between identical runs (seven interleaved
+before/after pairs: before p95 7.1–27 ms downstream, 7.8–46 ms overview; after alike), so
+those numbers are not usable. Deterministic counters, baseline → after: downstream 3.28 M →
+3.60 M primitives, 718 → 793 draw calls; overview 2.55 M → 2.82 M primitives, 387 → 438
+draw calls. GPU render time with the dressing shown versus hidden, alternated in one
+process (`viewport_get_measured_render_time_gpu`, medians of six rounds; the two final runs
+on a quieter machine): downstream +0.18 and +0.25 ms, overview +0.29 and +0.24 ms (earlier
+noisier runs +0.16 to +0.49). The terrain and bend themselves add ~20 k primitives and
+remove shadow casting beyond |x| = 160 m. Claim load (headless instantiate) 4.06 → about
+4.6 s, mostly the kit GLB loads. Please re-run `miner_performance` on a quiet machine at
+merge; budget about 0.3 ms of the overview's 1.1–1.3 ms headroom for this stage.
+
+**Assets added.** 7.2 MB of GLBs + 0.6 MB detail map + 12 KB hulls = 7.8 MB.
+
+**Still weak.**
+- The kit is dark slate on today's pale granite terrain, so outcrops read as dark rock set
+  onto pale walls; it should settle once S1-ground's slate cliff colours land. Retune the kit
+  tints (`cliff_kit.gdshader` uniforms) against the merged terrain.
+- A haze band at about 5 degrees elevation crosses the distant ridges in the bar views: the
+  volumetric fog (96 m froxel range, `ClearRimAir` cut above 10 m) — S1-sky's fog. The
+  straight `RiverMist` box (x ±500 m) now passes through the bend walls; shortening it to
+  ±170 m is S1-sky's call.
+- The terrain-to-forest material seam at |x| ≈ 185 m shows from high free cameras.
+- The 160–240 m seam conifers use the distant tree LOD, which reads as poles at 200 m (S4).
+- Spires are low-poly cones: right at 300–600 m, toy-like if a free camera flies close.
+- In the bent reach the terrain shader's sand bands follow the analytic shore and the water's
+  baked flow direction is not rotated; both are 200 m+ away.
+- Cover rocks approximate the old blob hulls; up to ~0.5 m of hull may be uncovered at
+  their edges. No wall-ledge vegetation (S4).
 
 ## Stage 3 — Rocks and ground clutter
 

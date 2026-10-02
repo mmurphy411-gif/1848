@@ -5,6 +5,7 @@ extends Node3D
 const Layout = preload("res://scripts/claim_layout.gd")
 const Assets = preload("res://scripts/asset_library.gd")
 const ScanRocks = preload("res://scripts/scan_rocks.gd")
+const Canyon = preload("res://scripts/canyon.gd")
 const MATERIAL_COUNT := 5
 var river_level := INF
 
@@ -61,32 +62,151 @@ func _build_ground() -> void:
 	ground.create_trimesh_collision()
 	# Preserve the original collision triangles; only the wall's render mesh
 	# gains outcrops. The playable apron and analytical height function stay put.
-	var visual_surfaces: Array[SurfaceTool] = []
-	for i in MATERIAL_COUNT:
-		var surface := SurfaceTool.new()
-		surface.begin(Mesh.PRIMITIVE_TRIANGLES)
-		surface.set_material(Assets.terrain())
-		visual_surfaces.append(surface)
+	# Beyond |x| = Canyon.BEND_START the render mesh also bends and gains ridge
+	# crests (scripts/canyon.gd); triangles are classified on unbent positions.
+	# That bent reach is a separate mesh that casts no shadow and stays out of GI:
+	# its ridges stand across the low morning, evening and moon light, which must
+	# keep reaching the bar as it did when the valley ran out straight.
+	var visual_sets: Array = []
+	for set_index in 2:
+		var visual_surfaces: Array[SurfaceTool] = []
+		for i in MATERIAL_COUNT + 1:
+			var surface := SurfaceTool.new()
+			surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+			surface.set_material(Assets.terrain() if i < MATERIAL_COUNT else ridge_forest())
+			visual_surfaces.append(surface)
+		visual_sets.append(visual_surfaces)
+	visual_columns.clear()
+	visual_x = PackedFloat32Array()
+	visual_z.clear()
+	var analytic_columns: Array[PackedVector3Array] = []
+	for x in columns:
+		var points := _visual_column(x)
+		analytic_columns.append(points[0])
+		visual_columns.append(points[1])
 	for column in columns.size()-1:
-		var x: float=columns[column]
-		var nx: float=columns[column+1]
-		var left := _visual_section(x)
-		var right := _visual_section(nx)
+		var left: PackedVector3Array = analytic_columns[column]
+		var right: PackedVector3Array = analytic_columns[column+1]
+		var left_visual := visual_columns[column]
+		var right_visual := visual_columns[column+1]
+		var visual_surfaces: Array[SurfaceTool] = visual_sets[1 if absf(columns[column] + columns[column+1]) * 0.5 > Canyon.BEND_START else 0]
 		for row in left.size()-1:
-			var a := wall_point(Vector3(x,Layout.height_at(x,left[row]),left[row]))
-			var b := wall_point(Vector3(nx,Layout.height_at(nx,right[row]),right[row]))
-			var c := wall_point(Vector3(x,Layout.height_at(x,left[row+1]),left[row+1]))
-			var d := wall_point(Vector3(nx,Layout.height_at(nx,right[row+1]),right[row+1]))
-			_triangle(visual_surfaces,a,b,c)
-			_triangle(visual_surfaces,b,d,c)
-	var visual_mesh := ArrayMesh.new()
-	for surface in visual_surfaces:
-		surface.index()
-		surface.generate_normals()
-		surface.commit(visual_mesh)
-	ground.mesh = visual_mesh
+			_visual_triangle(visual_surfaces,[left[row],right[row],left[row+1]],[left_visual[row],right_visual[row],left_visual[row+1]])
+			_visual_triangle(visual_surfaces,[right[row],right[row+1],left[row+1]],[right_visual[row],right_visual[row+1],left_visual[row+1]])
+	ground.mesh = _commit_surfaces(visual_sets[0])
+	var reach := MeshInstance3D.new()
+	reach.name = "CanyonReach"
+	reach.mesh = _commit_surfaces(visual_sets[1])
+	reach.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	reach.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
+	add_child(reach)
 
-func _visual_section(x: float) -> PackedFloat32Array:
+## Surfaces in material order; trailing empty ones are left out.
+func _commit_surfaces(surfaces: Array[SurfaceTool]) -> ArrayMesh:
+	var mesh := ArrayMesh.new()
+	var last := surfaces.size() - 1
+	while last > 0 and not surfaces[last].has_meta("used"): last -= 1
+	for i in last + 1:
+		surfaces[i].index()
+		surfaces[i].generate_normals()
+		surfaces[i].commit(mesh)
+	return mesh
+
+## Rows beyond the top cliff band. The claim reach keeps the original COARSE rows (the
+## extra rows are interpolated on it); the bent reach samples its crests on all of them.
+const COARSE := [4.0,8.0,16.0,32.0,64.0,100.0,150.0,250.0,400.0,720.0]
+const FINE := [4.0,8.0,16.0,24.0,32.0,44.0,56.0,64.0,80.0,90.0,100.0,115.0,130.0,150.0,170.0,190.0,210.0,230.0,250.0,270.0,290.0,310.0,330.0,350.0,370.0,400.0,450.0,520.0,600.0,720.0]
+## Render points per column, the same rows for every column (strip triangulation).
+var visual_columns: Array[PackedVector3Array] = []
+var visual_x := PackedFloat32Array()
+var visual_z: Array[PackedFloat32Array] = []
+
+## [analytical points after wall_point(), render points] for one column.
+func _visual_column(x: float) -> Array[PackedVector3Array]:
+	var rows := _visual_section(x)
+	var analytic := PackedVector3Array()
+	var rendered := PackedVector3Array()
+	analytic.resize(rows.size())
+	rendered.resize(rows.size())
+	# Both row lists ascend in z and share every coarse row exactly.
+	var bent := Canyon.reach(x) > 0.0
+	var coarse_rows := PackedFloat32Array() if bent else _visual_section(x, false)
+	var coarse_points := PackedVector3Array()
+	for z in coarse_rows: coarse_points.append(wall_point(Vector3(x, Layout.height_at(x, z), z)))
+	var j := 0
+	for i in rows.size():
+		var z: float = rows[i]
+		var p: Vector3
+		if bent:
+			p = wall_point(Vector3(x, Layout.height_at(x, z), z))
+		else:
+			while j < coarse_rows.size() - 2 and coarse_rows[j + 1] <= z: j += 1
+			var a: float = coarse_rows[j]
+			var b: float = coarse_rows[j + 1]
+			p = coarse_points[j] if z <= a else (coarse_points[j + 1] if z >= b else coarse_points[j].lerp(coarse_points[j + 1], (z - a) / (b - a)))
+		analytic[i] = p
+		rendered[i] = Canyon.visual_point(x, z, p)
+	return [analytic, rendered]
+
+func _visual_triangle(surfaces: Array[SurfaceTool], analytic: Array, rendered: Array) -> void:
+	var a: Vector3 = rendered[0]
+	var b: Vector3 = rendered[1]
+	var c: Vector3 = rendered[2]
+	if (b - a).cross(c - a).length_squared() < 0.000001:
+		return
+	var center: Vector3 = (analytic[0] + analytic[1] + analytic[2]) / 3.0
+	var kind := _kind(center)
+	if kind == 3 and Canyon.reach(center.x) > 25.0:
+		kind = MATERIAL_COUNT
+	var surface := surfaces[kind]
+	surface.set_meta("used", true)
+	surface.set_color(Color(float(mini(kind, 3)) / 4.0, 0, 0, 1))
+	for point in [a, b, c]:
+		surface.add_vertex(point)
+
+## Forested ridges of the bent reach, shaded as canopy rather than rock.
+static func ridge_forest() -> ShaderMaterial:
+	if Assets.materials.has("ridge_forest"): return Assets.materials.ridge_forest
+	var result := ShaderMaterial.new()
+	result.shader = preload("res://shaders/ridge_forest.gdshader")
+	Assets.materials.ridge_forest = result
+	return result
+
+## Render-surface height and normal at a render-space (x, z): Vector4(normal, y).
+## Seats cliff pieces, talus and ridge trees on the visual walls (wall_point noise,
+## bend and crests included). Falls back to the analytical height off the mesh.
+func visual_surface(x: float, z: float) -> Vector4:
+	if visual_x.is_empty():
+		visual_x = _columns()
+		for points in visual_columns:
+			var zs := PackedFloat32Array()
+			for p in points: zs.append(p.z)
+			visual_z.append(zs)
+	var column := clampi(visual_x.bsearch(x) - 1, 0, visual_x.size() - 2)
+	var left := visual_columns[column]
+	var right := visual_columns[column + 1]
+	# Rows ascend in z (wall_point noise can fold a few), so search a window first.
+	var a := visual_z[column].bsearch(z)
+	var b := visual_z[column + 1].bsearch(z)
+	var rows := left.size() - 1
+	for window in [Vector2i(maxi(mini(a, b) - 5, 0), mini(maxi(a, b) + 5, rows)), Vector2i(0, rows)]:
+		for row in range(window.x, window.y):
+			if z < minf(minf(left[row].z, right[row].z), minf(left[row + 1].z, right[row + 1].z)) - 3.0: continue
+			if z > maxf(maxf(left[row].z, right[row].z), maxf(left[row + 1].z, right[row + 1].z)) + 3.0: continue
+			for triangle in [[left[row], right[row], left[row + 1]], [right[row], right[row + 1], left[row + 1]]]:
+				var hit = Geometry3D.ray_intersects_triangle(Vector3(x, 2000, z), Vector3.DOWN, triangle[0], triangle[1], triangle[2])
+				if hit != null:
+					var normal: Vector3 = (triangle[2] - triangle[0]).cross(triangle[1] - triangle[0]).normalized()
+					if normal.y < 0.0: normal = -normal
+					return Vector4(normal.x, normal.y, normal.z, hit.y)
+	return Vector4(0, 1, 0, Layout.height_at(x, z))
+
+## Hook for the river's WaterSurface vertices only (never its collision volumes):
+## the same narrowing and bend as the canyon floor beyond |x| = Canyon.BEND_START.
+static func visual_bend(p: Vector3) -> Vector3:
+	return Canyon.visual_point(p.x, p.z, p)
+
+func _visual_section(x: float, fine := true) -> PackedFloat32Array:
 	var result := PackedFloat32Array()
 	var shore := Layout.canyon_shore_z(x)
 	var back := shore+Layout.canyon_width_at(x)
@@ -104,7 +224,7 @@ func _visual_section(x: float) -> PackedFloat32Array:
 			if i<(2 if far else 1):
 				for f in [.08,1.0,2.8,3.0]: distances.append(edge+f)
 				edge+=3.0
-		for d in [4.0,8.0,16.0,32.0,64.0,100.0,150.0,250.0,400.0,720.0]: distances.append(edge+d)
+		for d in (FINE if fine else COARSE): distances.append(edge+d)
 		if far:
 			distances.reverse()
 			for d in distances: result.append(far_shore-d)
@@ -114,15 +234,19 @@ func _visual_section(x: float) -> PackedFloat32Array:
 			for d in distances: result.append(back+d)
 	return result
 
+static var _wall_noise: FastNoiseLite
+
 static func wall_point(p: Vector3) -> Vector3:
 	var shore := Layout.canyon_shore_z(p.x)
 	var far := p.z < shore - 27.27619 - Layout.canyon_far_offset(p.x)
 	var distance_from_foot := shore - 27.27619 - Layout.canyon_far_offset(p.x) - p.z if far else p.z - shore - Layout.canyon_width_at(p.x)
 	if distance_from_foot <= 3: return p
-	var n := FastNoiseLite.new()
-	n.seed = 184806
-	n.frequency = .16
-	n.fractal_octaves = 3
+	if _wall_noise == null:
+		_wall_noise = FastNoiseLite.new()
+		_wall_noise.seed = 184806
+		_wall_noise.frequency = .16
+		_wall_noise.fractal_octaves = 3
+	var n := _wall_noise
 	var normal := Vector3(Layout.height_at(p.x-.25,p.z)-Layout.height_at(p.x+.25,p.z),.5,Layout.height_at(p.x,p.z-.25)-Layout.height_at(p.x,p.z+.25)).normalized()
 	var apron := 8.0 + 2.0*sin(p.x*.055)
 	var band := (7.0 if far else 5.0)+2.0*sin(p.x*.04)
@@ -139,23 +263,41 @@ func _build_cliff_boulders() -> void:
 	add_child(group)
 	var random := RandomNumberGenerator.new()
 	random.seed = 184806
+	# Stage 2: the 40 boulder-mesh blobs are no longer drawn; scanned talus from
+	# assets/cliffs/ (canyon_dressing.gd) replaces them. Collision is frozen, so the
+	# draw sequence is replayed and the 10 back-wall blobs keep their colliders: the
+	# same transforms, and the convex hulls their Stage 0 boulder meshes produced
+	# (create_convex_shape(true, true)), stored in blob_colliders.tres so they no
+	# longer depend on assets/boulders/, which Stage 3 replaced.
+	var hulls: Dictionary = load("res://assets/cliffs/blob_colliders.tres").get_meta("hulls")
+	var colliders: Array = []
 	for i in 40:
 		var x := random.randf_range(-100,100)
 		var far := i % 2 == 0
 		var z := Layout.canyon_shore_z(x)-27.27619-Layout.canyon_far_offset(x)-random.randf_range(3,8) if far else Layout.canyon_shore_z(x)+Layout.canyon_width_at(x)+random.randf_range(3,8)
 		if absf(z-Layout.canyon_shore_z(x))<12: continue
-		var rock := MeshInstance3D.new()
-		rock.name = "CliffRock%02d" % i
-		rock.mesh = Assets.mesh("res://assets/boulders/boulder_%02d.glb" % (i%8+1))
-		rock.material_override = Assets.rock()
 		var size := random.randf_range(2,5)
-		rock.scale = Vector3(size,size*random.randf_range(.8,1.3),size)
-		rock.rotation.y = random.randf()*TAU
-		# Embed talus blocks at the lower apron. Normal displacement here pushed
-		# their centers out of steep faces and made them look suspended.
+		var stretch := random.randf_range(.8,1.3)
+		var yaw := random.randf()*TAU
+		if absf(z-Layout.back_z(x))>=20: continue
+		var rock := Node3D.new()
+		rock.name = "CliffRock%02d" % i
+		rock.scale = Vector3(size,size*stretch,size)
+		rock.rotation.y = yaw
 		rock.position = Vector3(x,Layout.height_at(x,z)-size*.35,z)
 		group.add_child(rock)
-		if absf(z-Layout.back_z(x))<20: rock.create_convex_collision(true,true)
+		var body := StaticBody3D.new()
+		var shape := CollisionShape3D.new()
+		shape.shape = ConvexPolygonShape3D.new()
+		shape.shape.points = hulls[i]
+		body.add_child(shape, true)
+		rock.add_child(body, true)
+		colliders.append({"position": rock.position, "size": size, "stretch": stretch})
+	var dressing := Node3D.new()
+	dressing.name = "CanyonDressing"
+	dressing.set_script(preload("res://scripts/canyon_dressing.gd"))
+	add_child(dressing)
+	dressing.build(self, colliders)
 
 func _cross_section(x: float) -> PackedFloat32Array:
 	var section := PackedFloat32Array()
@@ -185,22 +327,24 @@ func _columns() -> PackedFloat32Array:
 func _triangle(surfaces: Array[SurfaceTool], a: Vector3, b: Vector3, c: Vector3) -> void:
 	if (b - a).cross(c - a).length_squared() < 0.000001:
 		return
-	var center := (a + b + c) / 3.0
-	var inland := center.z - Layout.canyon_shore_z(center.x)
-	var kind := 0
-	if inland > Layout.canyon_width_at(center.x) + 0.1 or inland < -27.0 - Layout.canyon_far_offset(center.x):
-		kind = 3
-	elif center.y < -0.3:
-		kind = 4
-	elif inland < 1.5:
-		kind = 2
-	elif inland < 3.0:
-		kind = 1
+	var kind := _kind((a + b + c) / 3.0)
 	var surface := surfaces[kind]
 	var color := Color(float(kind) / 4.0, 0, 0, 1)
 	surface.set_color(color)
 	for point in [a, b, c]:
 		surface.add_vertex(point)
+
+func _kind(center: Vector3) -> int:
+	var inland := center.z - Layout.canyon_shore_z(center.x)
+	if inland > Layout.canyon_width_at(center.x) + 0.1 or inland < -27.0 - Layout.canyon_far_offset(center.x):
+		return 3
+	if center.y < -0.3:
+		return 4
+	if inland < 1.5:
+		return 2
+	if inland < 3.0:
+		return 1
+	return 0
 
 func _build_river(level := 0.0) -> void:
 	var river: Area3D = $River
@@ -229,7 +373,7 @@ func _build_river(level := 0.0) -> void:
 				var speed := 0.2 + 0.8 * sin(PI * clampf(across, 0, 1))
 				surface.set_color(Color(flow.x * 0.5 + 0.5, flow.y * 0.5 + 0.5, speed, clampf((level-Layout.height_at(point.x, point.z)) / 5.0, 0, 1)))
 				surface.set_uv(broken.call(point, across))
-				surface.add_vertex(point)
+				surface.add_vertex(visual_bend(point)) # S2-canyon hook: render-only bend beyond |x| = 160
 		var volume := CollisionShape3D.new()
 		var shape := ConvexPolygonShape3D.new()
 		var points := PackedVector3Array([a, b, c, d])

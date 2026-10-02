@@ -5,6 +5,7 @@
       [--height 1.6 | --scale 0.01] [--origin base|center]
       [--tint r,g,b[,strength]] [--saturation 1.0] [--value 1.0] [--tex 1024]
       [--manifest-id source:id[:resolution]] [--no-bake] [--smooth-angle 180]
+      [--object NAME]
 
 Steps, in order:
   1. Import; drop LOD siblings (`*_LOD1`, `LOD2` ...; keeps the lowest index) and
@@ -91,6 +92,7 @@ def parse():
     ap.add_argument("--keep-lods", action="store_true", help="do not drop *_LODn siblings")
     ap.add_argument("--image-format", choices=["jpg", "png"], default="jpg", help="embedded texture format")
     ap.add_argument("--double-sided", action="store_true")
+    ap.add_argument("--object", help="keep only mesh objects with this name (one piece of a multi-object set)")
     a = ap.parse_args(argv)
     if a.tint:
         t = [float(v) for v in a.tint.split(",")]
@@ -134,6 +136,10 @@ def lod_index(o):
 def gather(args):
     scene = bpy.context.scene
     meshes = [o for o in scene.objects if o.type == "MESH"]
+    if args.object:
+        for o in [o for o in meshes if o.name != args.object]:
+            bpy.data.objects.remove(o)
+        meshes = [o for o in scene.objects if o.type == "MESH"]
     if not meshes:
         raise SystemExit("no meshes in %s" % args.input)
     lods = {o: lod_index(o) for o in meshes}
