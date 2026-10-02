@@ -1,0 +1,11 @@
+{
+  "name": "1848-art-tools",
+  "private": true,
+  "description": "Local art pipeline tooling: GLB audit/optimisation and procedural trees. Not shipped with the game.",
+  "type": "module",
+  "dependencies": {
+    "@dgreenheck/ez-tree": "1.1.0",
+    "@gltf-transform/cli": "4.5.1",
+    "three": "^0.170.0"
+  }
+}

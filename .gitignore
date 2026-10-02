@@ -34,3 +34,6 @@ Thumbs.db
 # Local engine and verification output
 .tools/
 artifacts/
+
+# Local art tooling (npm install in tools/art)
+node_modules/
