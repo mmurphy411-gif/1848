@@ -1,5 +1,11 @@
 # 1848
 
+**2.0 · The Outfit.** Hire the men coming up the Yuba, name a foreman, and let
+the claim grow into a company that runs itself, or keep panning alone. Also new:
+a title screen, saves, a pause menu and settings, holding T to let time pass,
+a wing dam that turns the river, harmonica at the crew fire, and a daguerreotype
+photo mode. See [VERSION_2.md](VERSION_2.md).
+
 Phase 2 playable closeout candidate: salmon spearing, camp-raiding bears, rifle
 hunting, hide sales, a tent upgrade, and the first-snow final ledger now join
 the store, fishing, camp and mining loops. See [PHASE2_CLOSEOUT.md](PHASE2_CLOSEOUT.md)
@@ -34,7 +40,10 @@ the executable's full path, or `godot.exe` on PATH. The engine is not committed.
 | Mouse / right stick | Slowly orbit the third-person camera |
 | E / captured left click / gamepad A or cross | Pan at the water's edge or in the shallows |
 | Escape during a result | Finish showing and collect the gold |
-| Escape otherwise | Release the mouse; press again to quit |
+| Escape otherwise / gamepad Start | Pause menu: roll book, ledger, settings, save, save and quit |
+| C / gamepad LB | The outfit's roll book (2.0) |
+| Hold T / gamepad RB | Let time pass while idle (2.0) |
+| P / gamepad Back | Daguerreotype photo mode (2.0) |
 | Uncaptured left click | Capture the mouse again (does not start a pan) |
 | F3 (debug builds only) | Toggle the developer density overlay; off by default |
 

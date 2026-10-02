@@ -1,0 +1,9 @@
+00:01.344  blend            | Read blend: "C:\Users\mmurp\1848\experiments\miner_anatomy_study\miner_anatomy_candidate.blend"
+00:04.844  blend            | Read blend: "C:\Users\mmurp\1848\experiments\miner_anatomy_study\refinement\miner_refined.blend"
+VERIFIED 21 clips 63 pose samples HAIR VERTICES 90720 -> 10780
+00:18.828  render           | Saved: 'C:\Users\mmurp\1848\experiments\miner_anatomy_study\refinement\pose_walk_full.png'
+00:27.860  render           | Saved: 'C:\Users\mmurp\1848\experiments\miner_anatomy_study\refinement\pose_pan_swirl_torso.png'
+00:36.610  render           | Saved: 'C:\Users\mmurp\1848\experiments\miner_anatomy_study\refinement\pose_lie_down_torso.png'
+Blender 5.2.1 LTS (hash 9e2066aef7ef built 2026-08-25 02:38:20)
+
+Blender quit

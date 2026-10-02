@@ -1,0 +1,30 @@
+00:01.422  blend            | Read blend: "C:\Users\mmurp\1848\blender\miner_convergence_working.blend"
+00:01.594  cycles           | WARNING HIPEW initialization failed: Error opening HIP dynamic library
+00:02.828  cycles           | WARNING Failed to execute query: unable to open database file (code: 14)
+                            | Statement: PRAGMA synchronous = OFF;
+                            | 
+00:02.828  cycles           | WARNING Error when configuring the database.
+                            | Unable to initialize the OptiX cache database at path C:\Users\mmurp\AppData\Local/NVIDIA/OptixCache/optix7cache.db. Delete or rename the file if this problem persists.
+00:04.891  render           | Saved: 'C:\Users\mmurp\1848\experiments\miner_anatomy_study\textured_face_front.png'
+00:05.125  cycles           | WARNING Failed to execute query: unable to open database file (code: 14)
+                            | Statement: PRAGMA synchronous = OFF;
+                            | 
+00:05.125  cycles           | WARNING Error when configuring the database.
+                            | Unable to initialize the OptiX cache database at path C:\Users\mmurp\AppData\Local/NVIDIA/OptixCache/optix7cache.db. Delete or rename the file if this problem persists.
+00:07.094  render           | Saved: 'C:\Users\mmurp\1848\experiments\miner_anatomy_study\textured_face_quarter.png'
+00:07.297  cycles           | WARNING Failed to execute query: unable to open database file (code: 14)
+                            | Statement: PRAGMA synchronous = OFF;
+                            | 
+00:07.297  cycles           | WARNING Error when configuring the database.
+                            | Unable to initialize the OptiX cache database at path C:\Users\mmurp\AppData\Local/NVIDIA/OptixCache/optix7cache.db. Delete or rename the file if this problem persists.
+00:09.266  render           | Saved: 'C:\Users\mmurp\1848\experiments\miner_anatomy_study\textured_face_side.png'
+00:09.485  cycles           | WARNING Failed to execute query: unable to open database file (code: 14)
+                            | Statement: PRAGMA synchronous = OFF;
+                            | 
+00:09.485  cycles           | WARNING Error when configuring the database.
+                            | Unable to initialize the OptiX cache database at path C:\Users\mmurp\AppData\Local/NVIDIA/OptixCache/optix7cache.db. Delete or rename the file if this problem persists.
+00:11.453  render           | Saved: 'C:\Users\mmurp\1848\experiments\miner_anatomy_study\textured_full.png'
+Info: Saved as "miner_anatomy_candidate.blend"
+Blender 5.2.1 LTS (hash 9e2066aef7ef built 2026-08-25 02:38:20)
+
+Blender quit

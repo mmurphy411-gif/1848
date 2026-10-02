@@ -12,7 +12,7 @@ func refresh() -> void:
 	for item in counts: text+="%s ×%d  $%.2f\n" % [item.capitalize(),counts[item],counter.Prices.price(item,game.day,game.seed)*counts[item]]
 	if not counter.fish_offer.is_empty(): text+="Fish -$%.2f\n" % counter.fish_credit()
 	if not counter.hide_offer.is_empty(): text+="Hides -$%.2f\n" % counter.hide_credit()
-	if not text.is_empty(): text+="TOTAL $%.2f\nPACK %.0f lb" % [counter.total()-counter.trade_credit(),counter.Pack.weight(counter.projected_inventory())]
+	if not text.is_empty(): text+="TOTAL $%.2f\nPACK %.0f lb" % [counter.total()-counter.trade_credit(),counter.carried()]
 	if counter.shortfall>0: text+="\nSHORT $%.2f" % counter.shortfall
 	# Fit the font's real ascender/descender metrics inside the physical slate.
 	var lines:=maxi(1,text.count("\n")+1)

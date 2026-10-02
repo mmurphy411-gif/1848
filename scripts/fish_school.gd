@@ -18,7 +18,8 @@ func refresh() -> void:
 	var hour: float=clock.hour_at(clock.elapsed) if clock.running else get_parent().get_node("Daylight").current_hour
 	hour_key=int(hour)
 	var skipped := 0
-	for data in Fishery.expected_population(state.day,hour,state.seed,state.weather()):
+	for data in Fishery.expected_population(state.day,hour,state.seed,state.weather(),state.inventory.get("catch_log",[])):
+		if preload("res://scripts/crew_model.gd").in_channel(state.crew,data.spot.position.x,data.spot.position.y): continue
 		if data.species=="salmon" and skipped<int(state.expedition.salmon_taken.get(state.day,0)):
 			skipped+=1;continue
 		var fish := Fish.new()

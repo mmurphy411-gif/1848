@@ -15,6 +15,11 @@ uniform float wave_amplitude : hint_range(0.0, 0.1) = 0.03;
 uniform float flow_speed_multiplier = 1.0;
 uniform float refraction_strength : hint_range(0.0, 0.04) = 0.015;
 uniform vec4 shin_contacts[2];
+// 2.0 wing dam: the river surface inside the crib is cut away.
+uniform float dam_on = 0.0;
+uniform vec2 dam_x = vec2(-14.0, 6.0);
+uniform float dam_reach = 9.0;
+uniform float dam_margin = 0.25;
 varying vec3 world_position;
 varying vec4 flow_data;
 
@@ -35,6 +40,7 @@ void vertex() {
 }
 
 void fragment() {
+	if (dam_on > 0.5 && world_position.x > dam_x.x + dam_margin && world_position.x < dam_x.y - dam_margin && world_position.z > -6.0 + 0.0075 * world_position.x * world_position.x - dam_reach + dam_margin) { discard; }
 	vec2 flow = normalize(flow_data.rg * 2.0 - 1.0);
 	float t = TIME * flow_speed_multiplier * flow_data.b;
 	vec2 n1 = texture(normal_large, (world_position.xz - flow * t * 0.35) / 6.0).xy * 2.0 - 1.0;

@@ -18,6 +18,7 @@ window/stretch/mode="canvas_items"
 Sack="*res://scripts/sack.gd"
 GameState="*res://scripts/game_state.gd"
 Trip="*res://scripts/trip.gd"
+Settings="*res://scripts/settings.gd"
 
 [input]
 
@@ -34,6 +35,10 @@ look_left={"deadzone":0.18,"events":[Object(InputEventJoypadMotion,"axis":2,"axi
 look_right={"deadzone":0.18,"events":[Object(InputEventJoypadMotion,"axis":2,"axis_value":1.0)]}
 look_up={"deadzone":0.18,"events":[Object(InputEventJoypadMotion,"axis":3,"axis_value":-1.0)]}
 look_down={"deadzone":0.18,"events":[Object(InputEventJoypadMotion,"axis":3,"axis_value":1.0)]}
+crew={"deadzone":0.2,"events":[Object(InputEventKey,"physical_keycode":67),Object(InputEventJoypadButton,"button_index":9)]}
+wait={"deadzone":0.2,"events":[Object(InputEventKey,"physical_keycode":84),Object(InputEventJoypadButton,"button_index":10)]}
+pause={"deadzone":0.2,"events":[Object(InputEventJoypadButton,"button_index":6)]}
+photo={"deadzone":0.2,"events":[Object(InputEventKey,"physical_keycode":80),Object(InputEventJoypadButton,"button_index":4)]}
 
 [rendering]
 renderer/rendering_method="forward_plus"

@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "budget": {
+    "max_candidates": 12,
+    "max_minutes": 90,
+    "max_model_calls": 30,
+    "max_review_images": 60
+  },
+  "game_budget": {
+    "max_triangles": 12000,
+    "max_materials": 2,
+    "max_objects": 40,
+    "atlas_size": 2048
+  },
+  "export_tolerance": 0.02,
+  "asset_id": "deer",
+  "adapter": "deer",
+  "source": "blender/deer_convergence_working.blend",
+  "target": "Match the approved deer turnaround: natural anatomy, integrated features, readable species identity. Illustrated projections disagree; do not distort anatomy merely to increase overlap.",
+  "engine_profile": "wildlife_existing",
+  "gameplay_distance": 6.0,
+  "required_objects": [
+    "Deer continuous anatomy",
+    "Buck antler -1",
+    "Buck antler 1"
+  ],
+  "references": {
+    "front": {
+      "path": "characters/deer/ChatGPT Image Sep 10, 2026, 11_22_12 AM (2).png",
+      "crop": [
+        25,
+        170,
+        259,
+        844
+      ],
+      "confidence": "medium",
+      "calibrated": false,
+      "form_floor": null,
+      "notes": "Illustrated projection; automatically extracted mask requires inspection. The trout third view is dorsal.",
+      "background_tolerance": 15
+    },
+    "side": {
+      "path": "characters/deer/ChatGPT Image Sep 10, 2026, 11_22_12 AM (2).png",
+      "crop": [
+        262,
+        170,
+        803,
+        844
+      ],
+      "confidence": "medium",
+      "calibrated": false,
+      "form_floor": null,
+      "notes": "Illustrated projection; automatically extracted mask requires inspection. The trout third view is dorsal.",
+      "background_tolerance": 15
+    },
+    "back": {
+      "path": "characters/deer/ChatGPT Image Sep 10, 2026, 11_22_12 AM (2).png",
+      "crop": [
+        807,
+        170,
+        1019,
+        844
+      ],
+      "confidence": "medium",
+      "calibrated": false,
+      "form_floor": null,
+      "notes": "Illustrated projection; automatically extracted mask requires inspection. The trout third view is dorsal.",
+      "background_tolerance": 15
+    },
+    "three_quarter": {
+      "path": "characters/deer/ChatGPT Image Sep 10, 2026, 11_22_12 AM (2).png",
+      "crop": [
+        1040,
+        170,
+        1434,
+        850
+      ],
+      "confidence": "medium",
+      "calibrated": false,
+      "form_floor": null,
+      "notes": "Illustrated projection; automatically extracted mask requires inspection. The trout third view is dorsal.",
+      "background_tolerance": 15
+    }
+  },
+  "protocol": {
+    "version": "gauntlet-2",
+    "resolution": 512,
+    "samples": 12,
+    "light_scale": 1,
+    "details": [
+      "head_detail"
+    ],
+    "views": {
+      "front": {
+        "eye": [
+          0,
+          7,
+          1.1
+        ],
+        "target": [
+          0,
+          0.15,
+          1.1
+        ],
+        "scale": 2.5
+      },
+      "side": {
+        "eye": [
+          -7,
+          0,
+          1.1
+        ],
+        "target": [
+          0,
+          0.15,
+          1.1
+        ],
+        "scale": 2.5
+      },
+      "back": {
+        "eye": [
+          0,
+          -7,
+          1.1
+        ],
+        "target": [
+          0,
+          0.15,
+          1.1
+        ],
+        "scale": 2.5
+      },
+      "three_quarter": {
+        "eye": [
+          4,
+          7,
+          1.4
+        ],
+        "target": [
+          0,
+          0.15,
+          1.1
+        ],
+        "scale": 2.5
+      },
+      "head_detail": {
+        "eye": [
+          2,
+          4,
+          2.0
+        ],
+        "target": [
+          0,
+          0.7,
+          1.68
+        ],
+        "scale": 0.68
+      }
+    }
+  },
+  "continuous_objects": [
+    "Deer continuous anatomy",
+    "Buck antler -1",
+    "Buck antler 1"
+  ],
+  "visibility_checks": {}
+}

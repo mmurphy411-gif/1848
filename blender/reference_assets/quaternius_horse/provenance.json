@@ -1,0 +1,24 @@
+{
+  "title": "Horse from LowPoly Animated Farm Animal Pack",
+  "author": "Quaternius",
+  "source_url": "https://opengameart.org/content/lowpoly-animated-farm-animal-pack",
+  "download_url": "https://opengameart.org/sites/default/files/Farm%20Animals%20by%20%40Quaternius.zip",
+  "license": "CC0-1.0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "commercial_use": true,
+  "modification": true,
+  "retrieved": "2026-09-10",
+  "archive_sha256": "9ff42b7e2445eaf259e4734c08172637db92e4b59a6145909ac56d946152c39b",
+  "files": {
+    "Horse.blend": "decc922bd8d1c1a57d58b7cb3fcfa5a6138bebaab522b8dbc3ca750f7e9790ed",
+    "License.txt": "551ec32f604f57be7eca26fc6e6331b3c6d765804726ac259bc7891276634353"
+  },
+  "modifications": "None in the acquired source. Loaded and inspected in Blender 5.2.1 with embedded script auto-execution disabled. License confirmed CC0 before regional edits.",
+  "inspection": {
+    "mesh_vertices": 347,
+    "bones": 28,
+    "unweighted_vertices": 0,
+    "shape_keys_present": false,
+    "assessment": "Coherent low-poly equine anatomy with articulated fore/hind limbs, neck, head, ears and tail. Suitable for preservation-gate fixture; not a photoreal anatomical reference. Original rig retained without posing or repair."
+  }
+}

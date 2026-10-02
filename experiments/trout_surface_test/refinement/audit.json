@@ -1,0 +1,17 @@
+{
+  "protected_scene_unchanged": true,
+  "saved_scene_reopened": true,
+  "input_sha256": {
+    "C:\\Users\\mmurp\\1848\\experiments\\trout_surface_test\\trout_surface_candidate.blend": "84883052b9b84df04c4a4484ee67c94d46d85f9d11280c20763f1f02e2eb30a1",
+    "C:\\Users\\mmurp\\1848\\characters\\rainbow trout\\ChatGPT Image Sep 10, 2026, 11_21_01 AM (1).png": "3eb2d2af5aefb76ae628847f133c179cd1ec50e2f25725eea4a07c7db3806265",
+    "C:\\Users\\mmurp\\1848\\characters\\rainbow trout\\ChatGPT Image Sep 10, 2026, 11_21_02 AM (2).png": "04a95f385b5682067854fb8b67677d5652ff7ce30703973a22c8f8c9e15b33e3",
+    "C:\\Users\\mmurp\\1848\\blender\\trout_convergence_working.blend": "a2a78999d4b95128564dc18dfa0865162f994e21682fc3616be2b1eb9fe0b5bf"
+  },
+  "new_candidate_count": 3,
+  "new_render_count": 15,
+  "scope": "Mouth/throat and dorsal projection only; no geometry edits; fins and eyes unchanged.",
+  "limitations": [
+    "Two dorsal image projections rejected. Retained crown uses spatial procedural spots and selected olive colors.",
+    "Geometry and painted lighting remain imperfect; not a live game integration."
+  ]
+}

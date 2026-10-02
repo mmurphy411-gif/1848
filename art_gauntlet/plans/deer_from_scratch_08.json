@@ -1,0 +1,20 @@
+{
+  "hypothesis": "Raise and localize hind hocks with straight distal segments; redistribute torso into a deep forechest, rising abdomen and full croup; blend the withers into the neck.",
+  "operations": [
+    {
+      "recipe": "build_deer",
+      "parameters": {
+        "anatomy_version": 8,
+        "body_triangles": 6800,
+        "head_raise": 0.08,
+        "antler_height": 0.85,
+        "antler_spread": 0.9,
+        "antler_sweep": 0.07,
+        "muzzle_shorten": 0.12,
+        "foreleg_spacing": 0.9,
+        "thigh_fullness": 1,
+        "shaped_torso": false
+      }
+    }
+  ]
+}

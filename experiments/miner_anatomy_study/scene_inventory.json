@@ -1,0 +1,6221 @@
+[
+  {
+    "name": "Swatch low Linen",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "Inspectable high resolution cloth bake"
+    ],
+    "bounds": [
+      [
+        0.0,
+        2.0
+      ],
+      [
+        0.0,
+        2.0
+      ],
+      [
+        0.0,
+        0.0
+      ]
+    ],
+    "vertices": 16,
+    "materials": [
+      "Linen",
+      "Wool",
+      "Leather",
+      "Skin"
+    ],
+    "parent": null,
+    "modifiers": []
+  },
+  {
+    "name": "High resolution folded Linen",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "Inspectable high resolution cloth bake"
+    ],
+    "bounds": [
+      [
+        0.0,
+        1.0
+      ],
+      [
+        0.0,
+        1.0
+      ],
+      [
+        -0.008099142462015152,
+        0.008098781108856201
+      ]
+    ],
+    "vertices": 16641,
+    "materials": [
+      "Linen"
+    ],
+    "parent": null,
+    "modifiers": []
+  },
+  {
+    "name": "High resolution folded Wool",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "Inspectable high resolution cloth bake"
+    ],
+    "bounds": [
+      [
+        1.0,
+        2.0
+      ],
+      [
+        0.0,
+        1.0
+      ],
+      [
+        -0.008099142462015152,
+        0.008098781108856201
+      ]
+    ],
+    "vertices": 16641,
+    "materials": [
+      "Wool"
+    ],
+    "parent": null,
+    "modifiers": []
+  },
+  {
+    "name": "High resolution folded Leather",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "Inspectable high resolution cloth bake"
+    ],
+    "bounds": [
+      [
+        0.0,
+        1.0
+      ],
+      [
+        1.0,
+        2.0
+      ],
+      [
+        -0.0007199237588793039,
+        0.0007198916282504797
+      ]
+    ],
+    "vertices": 16641,
+    "materials": [
+      "Leather"
+    ],
+    "parent": null,
+    "modifiers": []
+  },
+  {
+    "name": "High resolution folded Skin",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "Inspectable high resolution cloth bake"
+    ],
+    "bounds": [
+      [
+        1.0,
+        2.0
+      ],
+      [
+        1.0,
+        2.0
+      ],
+      [
+        -0.0007199237588793039,
+        0.0007198916282504797
+      ]
+    ],
+    "vertices": 16641,
+    "materials": [
+      "Skin"
+    ],
+    "parent": null,
+    "modifiers": []
+  },
+  {
+    "name": "Vest | rear waist adjustment",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | vest and scarf"
+    ],
+    "bounds": [
+      [
+        -0.11999999731779099,
+        0.11999999731779099
+      ],
+      [
+        0.13699999451637268,
+        0.1459999978542328
+      ],
+      [
+        1.0880000591278076,
+        1.1030000448226929
+      ]
+    ],
+    "vertices": 4,
+    "materials": [
+      "FINISH | vest"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Neckerchief | overlapping neck folds",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | vest and scarf"
+    ],
+    "bounds": [
+      [
+        -0.07400000095367432,
+        0.07400000095367432
+      ],
+      [
+        -0.08399999886751175,
+        0.08299999684095383
+      ],
+      [
+        1.388829231262207,
+        1.4677320718765259
+      ]
+    ],
+    "vertices": 384,
+    "materials": [
+      "FINISH | scarf"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Neckerchief | draped tail -1",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | vest and scarf"
+    ],
+    "bounds": [
+      [
+        -0.021375613287091255,
+        0.020011557266116142
+      ],
+      [
+        -0.16571716964244843,
+        -0.09307179600000381
+      ],
+      [
+        1.309000015258789,
+        1.4160000085830688
+      ]
+    ],
+    "vertices": 56,
+    "materials": [
+      "FINISH | scarf"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Neckerchief | draped tail 1",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | vest and scarf"
+    ],
+    "bounds": [
+      [
+        -0.008911557495594025,
+        0.03350381180644035
+      ],
+      [
+        -0.16571716964244843,
+        -0.09307179600000381
+      ],
+      [
+        1.284999966621399,
+        1.4160000085830688
+      ]
+    ],
+    "vertices": 56,
+    "materials": [
+      "FINISH | scarf"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Neckerchief | tied cloth knot",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | vest and scarf"
+    ],
+    "bounds": [
+      [
+        -0.01572500169277191,
+        0.024974999949336052
+      ],
+      [
+        -0.11699999868869781,
+        -0.10199999809265137
+      ],
+      [
+        1.3949999809265137,
+        1.434999942779541
+      ]
+    ],
+    "vertices": 35,
+    "materials": [
+      "FINISH | scarf"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Vest | continuous armhole panel -1",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | vest and scarf"
+    ],
+    "bounds": [
+      [
+        -0.19824574887752533,
+        6.152068294795754e-07
+      ],
+      [
+        -0.13429370522499084,
+        0.13794800639152527
+      ],
+      [
+        1.0397319793701172,
+        1.4450061321258545
+      ]
+    ],
+    "vertices": 1004,
+    "materials": [
+      "FINISH | vest"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Vest | continuous front facing -1",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | vest and scarf"
+    ],
+    "bounds": [
+      [
+        -0.11251820623874664,
+        -0.049739278852939606
+      ],
+      [
+        -0.13428406417369843,
+        -0.03428097069263458
+      ],
+      [
+        1.208187460899353,
+        1.4450000524520874
+      ]
+    ],
+    "vertices": 56,
+    "materials": [
+      "FINISH | vest"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Vest | continuous armhole panel 1",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | vest and scarf"
+    ],
+    "bounds": [
+      [
+        -5.407948719948763e-07,
+        0.19823919236660004
+      ],
+      [
+        -0.14061111211776733,
+        0.13794246315956116
+      ],
+      [
+        1.0397319793701172,
+        1.445005178451538
+      ]
+    ],
+    "vertices": 1005,
+    "materials": [
+      "FINISH | vest"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Vest | continuous front facing 1",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | vest and scarf"
+    ],
+    "bounds": [
+      [
+        0.04999712109565735,
+        0.11248761415481567
+      ],
+      [
+        -0.1337890475988388,
+        -0.03428097069263458
+      ],
+      [
+        1.208187460899353,
+        1.4450000524520874
+      ]
+    ],
+    "vertices": 56,
+    "materials": [
+      "FINISH | vest"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Vest | sewn front edge -1",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | vest and scarf"
+    ],
+    "bounds": [
+      [
+        -0.1088164895772934,
+        -0.04531126469373703
+      ],
+      [
+        -0.13704465329647064,
+        -0.06013035774230957
+      ],
+      [
+        1.0874991416931152,
+        1.4261540174484253
+      ]
+    ],
+    "vertices": 376,
+    "materials": [
+      "FINISH | dark linen thread"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Vest | aged metal button 0",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | vest and scarf"
+    ],
+    "bounds": [
+      [
+        -0.06960466504096985,
+        -0.05980466306209564
+      ],
+      [
+        -0.13116642832756042,
+        -0.1285664290189743
+      ],
+      [
+        1.1051000356674194,
+        1.11489999294281
+      ]
+    ],
+    "vertices": 36,
+    "materials": [
+      "FINISH | hardware"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Vest | aged metal button 1",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | vest and scarf"
+    ],
+    "bounds": [
+      [
+        -0.06424273550510406,
+        -0.05444273352622986
+      ],
+      [
+        -0.13183113932609558,
+        -0.12923114001750946
+      ],
+      [
+        1.1650999784469604,
+        1.174899935722351
+      ]
+    ],
+    "vertices": 36,
+    "materials": [
+      "FINISH | hardware"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Vest | aged metal button 2",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | vest and scarf"
+    ],
+    "bounds": [
+      [
+        -0.0766589567065239,
+        -0.06685895472764969
+      ],
+      [
+        -0.1312173306941986,
+        -0.1286173313856125
+      ],
+      [
+        1.225100040435791,
+        1.2348999977111816
+      ]
+    ],
+    "vertices": 36,
+    "materials": [
+      "FINISH | hardware"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Vest | aged metal button 3",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | vest and scarf"
+    ],
+    "bounds": [
+      [
+        -0.09536416828632355,
+        -0.08556416630744934
+      ],
+      [
+        -0.1259429156780243,
+        -0.12334290891885757
+      ],
+      [
+        1.285099983215332,
+        1.2948999404907227
+      ]
+    ],
+    "vertices": 36,
+    "materials": [
+      "FINISH | hardware"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Vest | aged metal button 4",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | vest and scarf"
+    ],
+    "bounds": [
+      [
+        -0.11745824664831161,
+        -0.10765824466943741
+      ],
+      [
+        -0.10881804674863815,
+        -0.10621804744005203
+      ],
+      [
+        1.3401000499725342,
+        1.3499000072479248
+      ]
+    ],
+    "vertices": 36,
+    "materials": [
+      "FINISH | hardware"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Vest | sewn front edge  1",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | vest and scarf"
+    ],
+    "bounds": [
+      [
+        0.045760028064250946,
+        0.10880457609891891
+      ],
+      [
+        -0.14339639246463776,
+        -0.060156822204589844
+      ],
+      [
+        1.0871714353561401,
+        1.4261542558670044
+      ]
+    ],
+    "vertices": 400,
+    "materials": [
+      "FINISH | dark linen thread"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Vest | bound buttonhole 0",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | vest and scarf"
+    ],
+    "bounds": [
+      [
+        0.06557784974575043,
+        0.07157784700393677
+      ],
+      [
+        -0.1343633532524109,
+        -0.1329633593559265
+      ],
+      [
+        1.1093000173568726,
+        1.110700011253357
+      ]
+    ],
+    "vertices": 8,
+    "materials": [
+      "FINISH | buttonhole shadow"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Vest | bound buttonhole 1",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | vest and scarf"
+    ],
+    "bounds": [
+      [
+        0.05703825503587723,
+        0.06303825229406357
+      ],
+      [
+        -0.13047301769256592,
+        -0.12907302379608154
+      ],
+      [
+        1.1692999601364136,
+        1.170699954032898
+      ]
+    ],
+    "vertices": 8,
+    "materials": [
+      "FINISH | buttonhole shadow"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Vest | bound buttonhole 2",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | vest and scarf"
+    ],
+    "bounds": [
+      [
+        0.06738901883363724,
+        0.07338901609182358
+      ],
+      [
+        -0.1295185685157776,
+        -0.1281185746192932
+      ],
+      [
+        1.2293000221252441,
+        1.2307000160217285
+      ]
+    ],
+    "vertices": 8,
+    "materials": [
+      "FINISH | buttonhole shadow"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Vest | bound buttonhole 3",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | vest and scarf"
+    ],
+    "bounds": [
+      [
+        0.08740434795618057,
+        0.09340434521436691
+      ],
+      [
+        -0.1250322163105011,
+        -0.12363221496343613
+      ],
+      [
+        1.2892999649047852,
+        1.2906999588012695
+      ]
+    ],
+    "vertices": 8,
+    "materials": [
+      "FINISH | buttonhole shadow"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Vest | bound buttonhole 4",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | vest and scarf"
+    ],
+    "bounds": [
+      [
+        0.1095019057393074,
+        0.11550190299749374
+      ],
+      [
+        -0.10788329690694809,
+        -0.10648330301046371
+      ],
+      [
+        1.3443000316619873,
+        1.3457000255584717
+      ]
+    ],
+    "vertices": 8,
+    "materials": [
+      "FINISH | buttonhole shadow"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Backpack | original constructed piece 0",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | backpack"
+    ],
+    "bounds": [
+      [
+        -0.18000000715255737,
+        0.17399999499320984
+      ],
+      [
+        0.1340000033378601,
+        0.31199997663497925
+      ],
+      [
+        0.9920000433921814,
+        1.4199999570846558
+      ]
+    ],
+    "vertices": 336,
+    "materials": [
+      "FINISH | canvas"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Backpack | original constructed piece 1",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | backpack"
+    ],
+    "bounds": [
+      [
+        -0.16699999570846558,
+        0.17499999701976776
+      ],
+      [
+        0.19000959396362305,
+        0.32099997997283936
+      ],
+      [
+        1.2760000228881836,
+        1.4249999523162842
+      ]
+    ],
+    "vertices": 125,
+    "materials": [
+      "FINISH | canvas"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Backpack | broad lower sewn pocket",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | backpack"
+    ],
+    "bounds": [
+      [
+        -0.13099999725818634,
+        0.125
+      ],
+      [
+        0.296999990940094,
+        0.3449999988079071
+      ],
+      [
+        1.024999976158142,
+        1.166994571685791
+      ]
+    ],
+    "vertices": 128,
+    "materials": [
+      "FINISH | canvas"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Backpack | pocket folded mouth",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | backpack"
+    ],
+    "bounds": [
+      [
+        -0.12300000339746475,
+        0.12300000339746475
+      ],
+      [
+        0.32899999618530273,
+        0.3319999873638153
+      ],
+      [
+        1.1460000276565552,
+        1.156999945640564
+      ]
+    ],
+    "vertices": 4,
+    "materials": [
+      "FINISH | canvas"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Backpack | side gusset pocket -1",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | backpack"
+    ],
+    "bounds": [
+      [
+        -0.20000000298023224,
+        -0.15700000524520874
+      ],
+      [
+        0.1679999977350235,
+        0.2639999985694885
+      ],
+      [
+        1.0540000200271606,
+        1.2429020404815674
+      ]
+    ],
+    "vertices": 96,
+    "materials": [
+      "FINISH | canvas"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Backpack | side gusset pocket 1",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | backpack"
+    ],
+    "bounds": [
+      [
+        0.15700000524520874,
+        0.20000000298023224
+      ],
+      [
+        0.1679999977350235,
+        0.2639999985694885
+      ],
+      [
+        1.0540000200271606,
+        1.2429020404815674
+      ]
+    ],
+    "vertices": 96,
+    "materials": [
+      "FINISH | canvas"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Pack | fitted vertical closure -0.11",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | backpack"
+    ],
+    "bounds": [
+      [
+        -0.12200000137090683,
+        -0.09799999743700027
+      ],
+      [
+        0.253346711397171,
+        0.3464067578315735
+      ],
+      [
+        1.0099999904632568,
+        1.4149999618530273
+      ]
+    ],
+    "vertices": 99,
+    "materials": [
+      "FINISH | leather"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Pack | closure adjustment -0.11",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | backpack"
+    ],
+    "bounds": [
+      [
+        -0.12849999964237213,
+        -0.09210909157991409
+      ],
+      [
+        0.3254999816417694,
+        0.3304999768733978
+      ],
+      [
+        1.2753349542617798,
+        1.3161354064941406
+      ]
+    ],
+    "vertices": 30,
+    "materials": [
+      "FINISH | hardware"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Pack | fitted vertical closure 0.11",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | backpack"
+    ],
+    "bounds": [
+      [
+        0.09799999743700027,
+        0.12200000137090683
+      ],
+      [
+        0.257345587015152,
+        0.3459697365760803
+      ],
+      [
+        1.0099999904632568,
+        1.4149999618530273
+      ]
+    ],
+    "vertices": 99,
+    "materials": [
+      "FINISH | leather"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Pack | closure adjustment 0.11",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | backpack"
+    ],
+    "bounds": [
+      [
+        0.09149999916553497,
+        0.1278909146785736
+      ],
+      [
+        0.3254999816417694,
+        0.3304999768733978
+      ],
+      [
+        1.2753349542617798,
+        1.3161354064941406
+      ]
+    ],
+    "vertices": 30,
+    "materials": [
+      "FINISH | hardware"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Pack | sewn continuous shoulder harness -1",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | backpack"
+    ],
+    "bounds": [
+      [
+        -0.13699999451637268,
+        -0.10899999737739563
+      ],
+      [
+        -0.1209920197725296,
+        0.15299999713897705
+      ],
+      [
+        1.0449999570846558,
+        1.444189429283142
+      ]
+    ],
+    "vertices": 192,
+    "materials": [
+      "FINISH | leather"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Pack | front harness adjuster -1",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | backpack"
+    ],
+    "bounds": [
+      [
+        -0.14399999380111694,
+        -0.1027820035815239
+      ],
+      [
+        -0.11859724670648575,
+        -0.11359725147485733
+      ],
+      [
+        1.290334939956665,
+        1.3293161392211914
+      ]
+    ],
+    "vertices": 30,
+    "materials": [
+      "FINISH | hardware"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Pack | sewn continuous shoulder harness 1",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | backpack"
+    ],
+    "bounds": [
+      [
+        0.10899999737739563,
+        0.13699999451637268
+      ],
+      [
+        -0.12097819149494171,
+        0.15299999713897705
+      ],
+      [
+        1.0449999570846558,
+        1.444187045097351
+      ]
+    ],
+    "vertices": 192,
+    "materials": [
+      "FINISH | leather"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Pack | front harness adjuster 1",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | backpack"
+    ],
+    "bounds": [
+      [
+        0.10200000554323196,
+        0.143217995762825
+      ],
+      [
+        -0.11846131831407547,
+        -0.11346132308244705
+      ],
+      [
+        1.290334939956665,
+        1.3293161392211914
+      ]
+    ],
+    "vertices": 30,
+    "materials": [
+      "FINISH | hardware"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Backpack | original constructed piece 1 | bound flap seam",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | backpack"
+    ],
+    "bounds": [
+      [
+        -0.1673896163702011,
+        0.17544712126255035
+      ],
+      [
+        0.19115987420082092,
+        0.32297998666763306
+      ],
+      [
+        1.275652527809143,
+        1.4254800081253052
+      ]
+    ],
+    "vertices": 1088,
+    "materials": [
+      "FINISH | waxed saddle thread"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Pack | harness rivet -1 4",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | backpack"
+    ],
+    "bounds": [
+      [
+        -0.12520000338554382,
+        -0.12080000340938568
+      ],
+      [
+        -0.1112944483757019,
+        -0.10979444533586502
+      ],
+      [
+        1.086391568183899,
+        1.0905762910842896
+      ]
+    ],
+    "vertices": 20,
+    "materials": [
+      "FINISH | hardware"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Pack | harness rivet -1 24",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | backpack"
+    ],
+    "bounds": [
+      [
+        -0.12520000338554382,
+        -0.12080000340938568
+      ],
+      [
+        -0.11554411053657532,
+        -0.11404410749673843
+      ],
+      [
+        1.3038108348846436,
+        1.3079955577850342
+      ]
+    ],
+    "vertices": 20,
+    "materials": [
+      "FINISH | hardware"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Pack | harness rivet  1 4",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | backpack"
+    ],
+    "bounds": [
+      [
+        0.12080000340938568,
+        0.12520000338554382
+      ],
+      [
+        -0.11247581243515015,
+        -0.11097580939531326
+      ],
+      [
+        1.086391568183899,
+        1.0905762910842896
+      ]
+    ],
+    "vertices": 20,
+    "materials": [
+      "FINISH | hardware"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Pack | harness rivet  1 24",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | backpack"
+    ],
+    "bounds": [
+      [
+        0.12080000340938568,
+        0.12520000338554382
+      ],
+      [
+        -0.11543524265289307,
+        -0.11393523961305618
+      ],
+      [
+        1.3038108348846436,
+        1.3079955577850342
+      ]
+    ],
+    "vertices": 20,
+    "materials": [
+      "FINISH | hardware"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Bedroll | compressed wrapped blanket",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | bedroll"
+    ],
+    "bounds": [
+      [
+        -0.2029999941587448,
+        0.2029999941587448
+      ],
+      [
+        0.14688825607299805,
+        0.2790769040584564
+      ],
+      [
+        1.389447808265686,
+        1.5274673700332642
+      ]
+    ],
+    "vertices": 1519,
+    "materials": [
+      "FINISH | blanket"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Bedroll | compressed cloth spiral -1",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | bedroll"
+    ],
+    "bounds": [
+      [
+        -0.20391246676445007,
+        -0.20008988678455353
+      ],
+      [
+        0.15325354039669037,
+        0.26874271035194397
+      ],
+      [
+        1.3864731788635254,
+        1.495417833328247
+      ]
+    ],
+    "vertices": 322,
+    "materials": [
+      "FINISH | blanket"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Bedroll | recessed cloth end -1",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | bedroll"
+    ],
+    "bounds": [
+      [
+        -0.20100000500679016,
+        -0.20100000500679016
+      ],
+      [
+        0.15199999511241913,
+        0.27399998903274536
+      ],
+      [
+        1.3904139995574951,
+        1.4984140396118164
+      ]
+    ],
+    "vertices": 49,
+    "materials": [
+      "FINISH | blanket"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Bedroll | compressed cloth spiral 1",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | bedroll"
+    ],
+    "bounds": [
+      [
+        0.20017607510089874,
+        0.20399999618530273
+      ],
+      [
+        0.15325354039669037,
+        0.26874271035194397
+      ],
+      [
+        1.4116451740264893,
+        1.520589828491211
+      ]
+    ],
+    "vertices": 322,
+    "materials": [
+      "FINISH | blanket"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Bedroll | recessed cloth end 1",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | bedroll"
+    ],
+    "bounds": [
+      [
+        0.20100000500679016,
+        0.20100000500679016
+      ],
+      [
+        0.15199999511241913,
+        0.27399998903274536
+      ],
+      [
+        1.415585994720459,
+        1.5235860347747803
+      ]
+    ],
+    "vertices": 49,
+    "materials": [
+      "FINISH | blanket"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Bedroll | tight leather binding -0.11",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | bedroll"
+    ],
+    "bounds": [
+      [
+        -0.12349999696016312,
+        -0.09650000184774399
+      ],
+      [
+        0.1573999971151352,
+        0.2685999870300293
+      ],
+      [
+        1.4006799459457397,
+        1.4996800422668457
+      ]
+    ],
+    "vertices": 98,
+    "materials": [
+      "FINISH | leather"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Bedroll | tight leather binding 0.11",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | bedroll"
+    ],
+    "bounds": [
+      [
+        0.09650000184774399,
+        0.12349999696016312
+      ],
+      [
+        0.1573999971151352,
+        0.2685999870300293
+      ],
+      [
+        1.4143199920654297,
+        1.513319969177246
+      ]
+    ],
+    "vertices": 98,
+    "materials": [
+      "FINISH | leather"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Satchel | hanging gusseted body",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | satchel"
+    ],
+    "bounds": [
+      [
+        -0.3569999933242798,
+        -0.16899999976158142
+      ],
+      [
+        -0.026000000536441803,
+        0.07599999755620956
+      ],
+      [
+        0.7260000109672546,
+        0.9819999933242798
+      ]
+    ],
+    "vertices": 200,
+    "materials": [
+      "FINISH | satchel"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Satchel | overlapping flap",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | satchel"
+    ],
+    "bounds": [
+      [
+        -0.3479999899864197,
+        -0.16200000047683716
+      ],
+      [
+        -0.04399999976158142,
+        0.024000000208616257
+      ],
+      [
+        0.859000027179718,
+        0.984000027179718
+      ]
+    ],
+    "vertices": 76,
+    "materials": [
+      "FINISH | satchel"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Satchel | belt loop and closure -0.3",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | satchel"
+    ],
+    "bounds": [
+      [
+        -0.3095000088214874,
+        -0.16249999403953552
+      ],
+      [
+        -0.07000000029802322,
+        -0.04100000113248825
+      ],
+      [
+        0.8339999914169312,
+        1.0290000438690186
+      ]
+    ],
+    "vertices": 12,
+    "materials": [
+      "FINISH | satchel"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Satchel | closure frame -0.3",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | satchel"
+    ],
+    "bounds": [
+      [
+        -0.31599998474121094,
+        -0.28461480140686035
+      ],
+      [
+        -0.05650000274181366,
+        -0.051500000059604645
+      ],
+      [
+        0.8753349184989929,
+        0.9101419448852539
+      ]
+    ],
+    "vertices": 30,
+    "materials": [
+      "FINISH | hardware"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Satchel | belt loop and closure -0.22",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | satchel"
+    ],
+    "bounds": [
+      [
+        -0.22949999570846558,
+        -0.14550000429153442
+      ],
+      [
+        -0.07000000029802322,
+        -0.04100000113248825
+      ],
+      [
+        0.8339999914169312,
+        1.0290000438690186
+      ]
+    ],
+    "vertices": 12,
+    "materials": [
+      "FINISH | satchel"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Satchel | closure frame -0.22",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | satchel"
+    ],
+    "bounds": [
+      [
+        -0.23600000143051147,
+        -0.2046147882938385
+      ],
+      [
+        -0.05650000274181366,
+        -0.051500000059604645
+      ],
+      [
+        0.8753349184989929,
+        0.9101419448852539
+      ]
+    ],
+    "vertices": 30,
+    "materials": [
+      "FINISH | hardware"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Satchel | overlapping flap | bound flap seam",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | satchel"
+    ],
+    "bounds": [
+      [
+        -0.3483904004096985,
+        -0.16170264780521393
+      ],
+      [
+        -0.04597357288002968,
+        0.02286844700574875
+      ],
+      [
+        0.8587098717689514,
+        0.9844800233840942
+      ]
+    ],
+    "vertices": 672,
+    "materials": [
+      "FINISH | waxed saddle thread"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Canteen | pressed steel halves",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | canteen"
+    ],
+    "bounds": [
+      [
+        -0.17956024408340454,
+        -0.026440264657139778
+      ],
+      [
+        -0.16882120072841644,
+        -0.12417879700660706
+      ],
+      [
+        0.7911560535430908,
+        0.9442760944366455
+      ]
+    ],
+    "vertices": 384,
+    "materials": [
+      "FINISH | canteen"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Canteen | rolled seam",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | canteen"
+    ],
+    "bounds": [
+      [
+        -0.18220025300979614,
+        -0.02380402572453022
+      ],
+      [
+        -0.1492588073015213,
+        -0.1472523957490921
+      ],
+      [
+        0.7887518405914307,
+        0.9466802477836609
+      ]
+    ],
+    "vertices": 294,
+    "materials": [
+      "FINISH | canteen"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Canteen | capped neck",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | canteen"
+    ],
+    "bounds": [
+      [
+        -0.11708025634288788,
+        -0.08892025798559189
+      ],
+      [
+        -0.1527700126171112,
+        -0.13671880960464478
+      ],
+      [
+        0.9372360706329346,
+        0.9618760347366333
+      ]
+    ],
+    "vertices": 36,
+    "materials": [
+      "FINISH | canteen"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Canteen | leather hanger",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | canteen"
+    ],
+    "bounds": [
+      [
+        -0.10916025936603546,
+        -0.08628025650978088
+      ],
+      [
+        -0.1457476019859314,
+        -0.1442428082227707
+      ],
+      [
+        0.9592360854148865,
+        1.0305160284042358
+      ]
+    ],
+    "vertices": 6,
+    "materials": [
+      "FINISH | leather"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Gold pan | original spun mesh reprofiled",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | pan"
+    ],
+    "bounds": [
+      [
+        0.23769354820251465,
+        0.5141145586967468
+      ],
+      [
+        -0.09095031023025513,
+        0.08308884501457214
+      ],
+      [
+        0.5416565537452698,
+        0.8490230441093445
+      ]
+    ],
+    "vertices": 704,
+    "materials": [
+      "FINISH | pan"
+    ],
+    "parent": "MinerRig",
+    "modifiers": []
+  },
+  {
+    "name": "Pickaxe | tapered hickory shaft",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | pickaxe"
+    ],
+    "bounds": [
+      [
+        -0.35239365696907043,
+        -0.212078258395195
+      ],
+      [
+        -0.01053222082555294,
+        0.061547379940748215
+      ],
+      [
+        0.061189357191324234,
+        0.8740562796592712
+      ]
+    ],
+    "vertices": 60,
+    "materials": [
+      "FINISH | wood"
+    ],
+    "parent": "MinerRig",
+    "modifiers": []
+  },
+  {
+    "name": "Pickaxe | forged central eye",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | pickaxe"
+    ],
+    "bounds": [
+      [
+        -0.2590782046318054,
+        -0.2046385109424591
+      ],
+      [
+        0.012196327559649944,
+        0.07052111625671387
+      ],
+      [
+        0.06891769915819168,
+        0.13811124861240387
+      ]
+    ],
+    "vertices": 24,
+    "materials": [
+      "FINISH | iron"
+    ],
+    "parent": "MinerRig",
+    "modifiers": []
+  },
+  {
+    "name": "Pickaxe | forged pick and adze",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "GEAR | pickaxe"
+    ],
+    "bounds": [
+      [
+        -0.4287474453449249,
+        -0.053747404366731644
+      ],
+      [
+        0.017753636464476585,
+        0.07175364345312119
+      ],
+      [
+        0.03799988329410553,
+        0.13799989223480225
+      ]
+    ],
+    "vertices": 56,
+    "materials": [
+      "FINISH | iron"
+    ],
+    "parent": "MinerRig",
+    "modifiers": []
+  },
+  {
+    "name": "Belt | rectangular forged buckle",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | belt"
+    ],
+    "bounds": [
+      [
+        -0.036000002175569534,
+        0.0349150188267231
+      ],
+      [
+        -0.14649999141693115,
+        -0.14149999618530273
+      ],
+      [
+        0.9958350658416748,
+        1.0460611581802368
+      ]
+    ],
+    "vertices": 30,
+    "materials": [
+      "FINISH | hardware"
+    ],
+    "parent": "MinerRig",
+    "modifiers": []
+  },
+  {
+    "name": "Belt | buckle tongue",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | belt"
+    ],
+    "bounds": [
+      [
+        -0.014612387865781784,
+        0.024562351405620575
+      ],
+      [
+        -0.15049868822097778,
+        -0.14600194990634918
+      ],
+      [
+        1.0196486711502075,
+        1.0238142013549805
+      ]
+    ],
+    "vertices": 12,
+    "materials": [
+      "FINISH | hardware"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Hair | curved scalp and nape",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "IDENTITY | hair and beard"
+    ],
+    "bounds": [
+      [
+        -0.09593647718429565,
+        0.09593647718429565
+      ],
+      [
+        -0.02370649389922619,
+        0.10879422724246979
+      ],
+      [
+        1.5329430103302002,
+        1.6859999895095825
+      ]
+    ],
+    "vertices": 287,
+    "materials": [
+      "Convergence | dark brown hair"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Hair | swept clump 0",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "IDENTITY | hair and beard"
+    ],
+    "bounds": [
+      [
+        0.08148704469203949,
+        0.11074977368116379
+      ],
+      [
+        -0.018834903836250305,
+        0.028702327981591225
+      ],
+      [
+        1.5557305812835693,
+        1.6530874967575073
+      ]
+    ],
+    "vertices": 35,
+    "materials": [
+      "Convergence | dark brown hair"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Hair | swept clump 1",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "IDENTITY | hair and beard"
+    ],
+    "bounds": [
+      [
+        0.08590557426214218,
+        0.10730914771556854
+      ],
+      [
+        0.0015958916628733277,
+        0.034759726375341415
+      ],
+      [
+        1.5651038885116577,
+        1.6572213172912598
+      ]
+    ],
+    "vertices": 35,
+    "materials": [
+      "Convergence | dark brown hair"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Hair | swept clump 2",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "IDENTITY | hair and beard"
+    ],
+    "bounds": [
+      [
+        0.08899737149477005,
+        0.10700108110904694
+      ],
+      [
+        0.020925085991621017,
+        0.05151742696762085
+      ],
+      [
+        1.551020622253418,
+        1.6575572490692139
+      ]
+    ],
+    "vertices": 35,
+    "materials": [
+      "Convergence | dark brown hair"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Hair | swept clump 3",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "IDENTITY | hair and beard"
+    ],
+    "bounds": [
+      [
+        0.08344921469688416,
+        0.11051702499389648
+      ],
+      [
+        0.03127771243453026,
+        0.05752658098936081
+      ],
+      [
+        1.5103867053985596,
+        1.6537055969238281
+      ]
+    ],
+    "vertices": 35,
+    "materials": [
+      "Convergence | dark brown hair"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Hair | swept clump 4",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "IDENTITY | hair and beard"
+    ],
+    "bounds": [
+      [
+        0.0772944837808609,
+        0.10631615668535233
+      ],
+      [
+        0.0415518656373024,
+        0.0677066296339035
+      ],
+      [
+        1.5357142686843872,
+        1.6567840576171875
+      ]
+    ],
+    "vertices": 35,
+    "materials": [
+      "Convergence | dark brown hair"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Hair | swept clump 5",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "IDENTITY | hair and beard"
+    ],
+    "bounds": [
+      [
+        0.07050444930791855,
+        0.09779392927885056
+      ],
+      [
+        0.05448565259575844,
+        0.08223897218704224
+      ],
+      [
+        1.5284847021102905,
+        1.6577945947647095
+      ]
+    ],
+    "vertices": 35,
+    "materials": [
+      "Convergence | dark brown hair"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Hair | swept clump 6",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "IDENTITY | hair and beard"
+    ],
+    "bounds": [
+      [
+        0.0629112720489502,
+        0.09279577434062958
+      ],
+      [
+        0.06594903767108917,
+        0.10623873770236969
+      ],
+      [
+        1.5073200464248657,
+        1.6543971300125122
+      ]
+    ],
+    "vertices": 35,
+    "materials": [
+      "Convergence | dark brown hair"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Hair | swept clump 7",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "IDENTITY | hair and beard"
+    ],
+    "bounds": [
+      [
+        0.05131139978766441,
+        0.08497141301631927
+      ],
+      [
+        0.07548018544912338,
+        0.12142619490623474
+      ],
+      [
+        1.5244101285934448,
+        1.6562849283218384
+      ]
+    ],
+    "vertices": 35,
+    "materials": [
+      "Convergence | dark brown hair"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Hair | swept clump 8",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "IDENTITY | hair and beard"
+    ],
+    "bounds": [
+      [
+        0.03348490968346596,
+        0.07071077823638916
+      ],
+      [
+        0.08311197906732559,
+        0.12715190649032593
+      ],
+      [
+        1.5367990732192993,
+        1.6579468250274658
+      ]
+    ],
+    "vertices": 35,
+    "materials": [
+      "Convergence | dark brown hair"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Hair | swept clump 9",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "IDENTITY | hair and beard"
+    ],
+    "bounds": [
+      [
+        0.02064499631524086,
+        0.0522344671189785
+      ],
+      [
+        0.09045770764350891,
+        0.13191625475883484
+      ],
+      [
+        1.5143861770629883,
+        1.6550606489181519
+      ]
+    ],
+    "vertices": 35,
+    "materials": [
+      "Convergence | dark brown hair"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Hair | swept clump 10",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "IDENTITY | hair and beard"
+    ],
+    "bounds": [
+      [
+        0.0012512834509834647,
+        0.03355960175395012
+      ],
+      [
+        0.09695275872945786,
+        0.13617347180843353
+      ],
+      [
+        1.512803316116333,
+        1.6557201147079468
+      ]
+    ],
+    "vertices": 35,
+    "materials": [
+      "Convergence | dark brown hair"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Hair | swept clump 11",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "IDENTITY | hair and beard"
+    ],
+    "bounds": [
+      [
+        -0.021120727062225342,
+        0.01351326797157526
+      ],
+      [
+        0.10124039649963379,
+        0.13441963493824005
+      ],
+      [
+        1.5352905988693237,
+        1.6579999923706055
+      ]
+    ],
+    "vertices": 35,
+    "materials": [
+      "Convergence | dark brown hair"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Hair | swept clump 12",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "IDENTITY | hair and beard"
+    ],
+    "bounds": [
+      [
+        -0.04306155443191528,
+        -0.006578308995813131
+      ],
+      [
+        0.1002860888838768,
+        0.13652922213077545
+      ],
+      [
+        1.5263844728469849,
+        1.655682921409607
+      ]
+    ],
+    "vertices": 35,
+    "materials": [
+      "Convergence | dark brown hair"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Hair | swept clump 13",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "IDENTITY | hair and beard"
+    ],
+    "bounds": [
+      [
+        -0.05962228775024414,
+        -0.022440249100327492
+      ],
+      [
+        0.0940551608800888,
+        0.1314636915922165
+      ],
+      [
+        1.5089317560195923,
+        1.6551008224487305
+      ]
+    ],
+    "vertices": 35,
+    "materials": [
+      "Convergence | dark brown hair"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Hair | swept clump 14",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "IDENTITY | hair and beard"
+    ],
+    "bounds": [
+      [
+        -0.07077813893556595,
+        -0.03708367422223091
+      ],
+      [
+        0.08391030877828598,
+        0.12409776449203491
+      ],
+      [
+        1.5255013704299927,
+        1.6579530239105225
+      ]
+    ],
+    "vertices": 35,
+    "materials": [
+      "Convergence | dark brown hair"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Hair | swept clump 15",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "IDENTITY | hair and beard"
+    ],
+    "bounds": [
+      [
+        -0.07901190966367722,
+        -0.05113804712891579
+      ],
+      [
+        0.07150354981422424,
+        0.1170312762260437
+      ],
+      [
+        1.534582257270813,
+        1.6562514305114746
+      ]
+    ],
+    "vertices": 35,
+    "materials": [
+      "Convergence | dark brown hair"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Hair | swept clump 16",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "IDENTITY | hair and beard"
+    ],
+    "bounds": [
+      [
+        -0.08813408017158508,
+        -0.05866313353180885
+      ],
+      [
+        0.0586983747780323,
+        0.11772997677326202
+      ],
+      [
+        1.515220046043396,
+        1.6544395685195923
+      ]
+    ],
+    "vertices": 35,
+    "materials": [
+      "Convergence | dark brown hair"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Hair | swept clump 17",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "IDENTITY | hair and beard"
+    ],
+    "bounds": [
+      [
+        -0.09441433101892471,
+        -0.06940340250730515
+      ],
+      [
+        0.046897344291210175,
+        0.1025729551911354
+      ],
+      [
+        1.5150535106658936,
+        1.6578069925308228
+      ]
+    ],
+    "vertices": 35,
+    "materials": [
+      "Convergence | dark brown hair"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Hair | swept clump 18",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "IDENTITY | hair and beard"
+    ],
+    "bounds": [
+      [
+        -0.09776061773300171,
+        -0.08254209160804749
+      ],
+      [
+        0.03654339909553528,
+        0.08464249223470688
+      ],
+      [
+        1.5330939292907715,
+        1.656754970550537
+      ]
+    ],
+    "vertices": 35,
+    "materials": [
+      "Convergence | dark brown hair"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Hair | swept clump 19",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "IDENTITY | hair and beard"
+    ],
+    "bounds": [
+      [
+        -0.10407441109418869,
+        -0.08718186616897583
+      ],
+      [
+        0.026763441041111946,
+        0.06680026650428772
+      ],
+      [
+        1.5267159938812256,
+        1.6537493467330933
+      ]
+    ],
+    "vertices": 35,
+    "materials": [
+      "Convergence | dark brown hair"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Hair | swept clump 20",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "IDENTITY | hair and beard"
+    ],
+    "bounds": [
+      [
+        -0.10818710178136826,
+        -0.08556099236011505
+      ],
+      [
+        0.016779618337750435,
+        0.056941963732242584
+      ],
+      [
+        1.547070860862732,
+        1.6575753688812256
+      ]
+    ],
+    "vertices": 35,
+    "materials": [
+      "Convergence | dark brown hair"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Hair | swept clump 21",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "IDENTITY | hair and beard"
+    ],
+    "bounds": [
+      [
+        -0.10668914020061493,
+        -0.08825946599245071
+      ],
+      [
+        0.004871821030974388,
+        0.03443121910095215
+      ],
+      [
+        1.5566074848175049,
+        1.6571974754333496
+      ]
+    ],
+    "vertices": 35,
+    "materials": [
+      "Convergence | dark brown hair"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Hair | swept clump 22",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "IDENTITY | hair and beard"
+    ],
+    "bounds": [
+      [
+        -0.10430555790662766,
+        -0.08879971504211426
+      ],
+      [
+        -0.01702878065407276,
+        0.014260627329349518
+      ],
+      [
+        1.5627448558807373,
+        1.6531306505203247
+      ]
+    ],
+    "vertices": 35,
+    "materials": [
+      "Convergence | dark brown hair"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Shirt | hanging torso",
+    "type": "MESH",
+    "source": 35,
+    "collections": [
+      "COSTUME | shirt"
+    ],
+    "bounds": [
+      [
+        -0.19271700084209442,
+        0.19271700084209442
+      ],
+      [
+        -0.13596183061599731,
+        0.1289999932050705
+      ],
+      [
+        0.9816509485244751,
+        1.4520000219345093
+      ]
+    ],
+    "vertices": 1024,
+    "materials": [
+      "FINISH | linen"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Shirt | sleeve L",
+    "type": "MESH",
+    "source": 36,
+    "collections": [
+      "COSTUME | shirt"
+    ],
+    "bounds": [
+      [
+        0.14819437265396118,
+        0.4061221182346344
+      ],
+      [
+        -0.0654730424284935,
+        0.06982358545064926
+      ],
+      [
+        1.0832014083862305,
+        1.440999984741211
+      ]
+    ],
+    "vertices": 1488,
+    "materials": [
+      "FINISH | linen"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Shirt | compressed rolled cuff L",
+    "type": "MESH",
+    "source": 39,
+    "collections": [
+      "COSTUME | shirt"
+    ],
+    "bounds": [
+      [
+        0.27154651284217834,
+        0.42118650674819946
+      ],
+      [
+        -0.07828705757856369,
+        0.07135293632745743
+      ],
+      [
+        1.0668182373046875,
+        1.130183458328247
+      ]
+    ],
+    "vertices": 830,
+    "materials": [
+      "FINISH | linen"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Shirt | sleeve R",
+    "type": "MESH",
+    "source": 37,
+    "collections": [
+      "COSTUME | shirt"
+    ],
+    "bounds": [
+      [
+        -0.40494126081466675,
+        -0.1481943577528
+      ],
+      [
+        -0.07215093821287155,
+        0.06412267684936523
+      ],
+      [
+        1.0832014083862305,
+        1.440999984741211
+      ]
+    ],
+    "vertices": 1488,
+    "materials": [
+      "FINISH | linen"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Shirt | compressed rolled cuff R",
+    "type": "MESH",
+    "source": 40,
+    "collections": [
+      "COSTUME | shirt"
+    ],
+    "bounds": [
+      [
+        -0.4214935004711151,
+        -0.271853506565094
+      ],
+      [
+        -0.07828705757856369,
+        0.07135293632745743
+      ],
+      [
+        1.070602297782898,
+        1.125684142112732
+      ]
+    ],
+    "vertices": 830,
+    "materials": [
+      "FINISH | linen"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Shirt placket",
+    "type": "MESH",
+    "source": 43,
+    "collections": [
+      "COSTUME | shirt"
+    ],
+    "bounds": [
+      [
+        -0.010010000318288803,
+        0.010010000318288803
+      ],
+      [
+        -0.1413237452507019,
+        -0.11351124942302704
+      ],
+      [
+        1.0437133312225342,
+        1.380806803703308
+      ]
+    ],
+    "vertices": 32,
+    "materials": [
+      "FINISH | linen"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Shirt collar R",
+    "type": "MESH",
+    "source": 48,
+    "collections": [
+      "COSTUME | shirt"
+    ],
+    "bounds": [
+      [
+        -0.06290000677108765,
+        -0.02590000070631504
+      ],
+      [
+        -0.12099999934434891,
+        -0.06800000369548798
+      ],
+      [
+        1.3830000162124634,
+        1.440999984741211
+      ]
+    ],
+    "vertices": 30,
+    "materials": [
+      "FINISH | linen"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Shirt collar L",
+    "type": "MESH",
+    "source": 49,
+    "collections": [
+      "COSTUME | shirt"
+    ],
+    "bounds": [
+      [
+        0.02590000070631504,
+        0.06290000677108765
+      ],
+      [
+        -0.12099999934434891,
+        -0.06800000369548798
+      ],
+      [
+        1.3830000162124634,
+        1.440999984741211
+      ]
+    ],
+    "vertices": 30,
+    "materials": [
+      "FINISH | linen"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Shirt | horn button 44",
+    "type": "MESH",
+    "source": 44,
+    "collections": [
+      "COSTUME | shirt"
+    ],
+    "bounds": [
+      [
+        -0.0034674943890422583,
+        0.0034674943890422583
+      ],
+      [
+        -0.13564954698085785,
+        -0.13075046241283417
+      ],
+      [
+        1.1021372079849243,
+        1.1091960668563843
+      ]
+    ],
+    "vertices": 60,
+    "materials": [
+      "FINISH | horn"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Shirt | horn button 45",
+    "type": "MESH",
+    "source": 45,
+    "collections": [
+      "COSTUME | shirt"
+    ],
+    "bounds": [
+      [
+        -0.0033754787873476744,
+        0.0033754787873476744
+      ],
+      [
+        -0.14464955031871796,
+        -0.13975046575069427
+      ],
+      [
+        1.190470576286316,
+        1.1975294351577759
+      ]
+    ],
+    "vertices": 60,
+    "materials": [
+      "FINISH | horn"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Shirt | horn button 46",
+    "type": "MESH",
+    "source": 46,
+    "collections": [
+      "COSTUME | shirt"
+    ],
+    "bounds": [
+      [
+        -0.003283462952822447,
+        0.003283462952822447
+      ],
+      [
+        -0.14554953575134277,
+        -0.1406504511833191
+      ],
+      [
+        1.2788039445877075,
+        1.285862684249878
+      ]
+    ],
+    "vertices": 60,
+    "materials": [
+      "FINISH | horn"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Shirt | horn button 47",
+    "type": "MESH",
+    "source": 47,
+    "collections": [
+      "COSTUME | shirt"
+    ],
+    "bounds": [
+      [
+        -0.003213121322914958,
+        0.003213121322914958
+      ],
+      [
+        -0.1320495307445526,
+        -0.12715044617652893
+      ],
+      [
+        1.3460044860839844,
+        1.3539955615997314
+      ]
+    ],
+    "vertices": 60,
+    "materials": [
+      "FINISH | horn"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Shirt | sleeve seam Left",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | shirt"
+    ],
+    "bounds": [
+      [
+        0.16146112978458405,
+        0.3805259168148041
+      ],
+      [
+        -0.05894023925065994,
+        0.049706827849149704
+      ],
+      [
+        1.1132735013961792,
+        1.4226138591766357
+      ]
+    ],
+    "vertices": 824,
+    "materials": [
+      "FINISH | dark linen thread"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Shirt | sleeve seam Right",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | shirt"
+    ],
+    "bounds": [
+      [
+        -0.38110101222991943,
+        -0.16146112978458405
+      ],
+      [
+        -0.05670773237943649,
+        0.05250050872564316
+      ],
+      [
+        1.113793134689331,
+        1.4226138591766357
+      ]
+    ],
+    "vertices": 816,
+    "materials": [
+      "FINISH | dark linen thread"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Trousers | overlapping fly",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | trousers"
+    ],
+    "bounds": [
+      [
+        -0.009999999776482582,
+        0.017000000923871994
+      ],
+      [
+        -0.11475521326065063,
+        -0.09087958931922913
+      ],
+      [
+        0.895263135433197,
+        1.024999976158142
+      ]
+    ],
+    "vertices": 8,
+    "materials": [
+      "FINISH | trouser"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Trousers | continuous work-cloth shell",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | trousers"
+    ],
+    "bounds": [
+      [
+        -0.20578403770923615,
+        0.20578782260417938
+      ],
+      [
+        -0.11387913674116135,
+        0.11388589441776276
+      ],
+      [
+        0.3661157488822937,
+        1.038004755973816
+      ]
+    ],
+    "vertices": 9033,
+    "materials": [
+      "FINISH | trouser"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Trousers | exposed knee warp and fray",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | trousers"
+    ],
+    "bounds": [
+      [
+        -0.14527387917041779,
+        -0.07635727524757385
+      ],
+      [
+        -0.1065593957901001,
+        -0.09281012415885925
+      ],
+      [
+        0.6072898507118225,
+        0.6465480923652649
+      ]
+    ],
+    "vertices": 176,
+    "materials": [
+      "FINISH | dark linen thread"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Boot | tall shaft 1",
+    "type": "MESH",
+    "source": 6,
+    "collections": [
+      "COSTUME | boots"
+    ],
+    "bounds": [
+      [
+        0.03700000047683716,
+        0.18299999833106995
+      ],
+      [
+        -0.08431426435709,
+        0.08431426435709
+      ],
+      [
+        0.04887174814939499,
+        0.39305853843688965
+      ]
+    ],
+    "vertices": 1560,
+    "materials": [
+      "FINISH | boot"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Boot | structured toe 0",
+    "type": "MESH",
+    "source": 0,
+    "collections": [
+      "COSTUME | boots"
+    ],
+    "bounds": [
+      [
+        0.032999999821186066,
+        0.18700000643730164
+      ],
+      [
+        -0.21699999272823334,
+        0.0689999982714653
+      ],
+      [
+        0.028555000200867653,
+        0.13702499866485596
+      ]
+    ],
+    "vertices": 320,
+    "materials": [
+      "FINISH | boot"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Boot | tall shaft -1",
+    "type": "MESH",
+    "source": 7,
+    "collections": [
+      "COSTUME | boots"
+    ],
+    "bounds": [
+      [
+        -0.18299999833106995,
+        -0.03700000047683716
+      ],
+      [
+        -0.08431426435709,
+        0.08431426435709
+      ],
+      [
+        0.04887174814939499,
+        0.39305853843688965
+      ]
+    ],
+    "vertices": 1560,
+    "materials": [
+      "FINISH | boot"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Boot | structured toe 1",
+    "type": "MESH",
+    "source": 1,
+    "collections": [
+      "COSTUME | boots"
+    ],
+    "bounds": [
+      [
+        -0.18700000643730164,
+        -0.032999999821186066
+      ],
+      [
+        -0.21699999272823334,
+        0.0689999982714653
+      ],
+      [
+        0.028555000200867653,
+        0.13702499866485596
+      ]
+    ],
+    "vertices": 320,
+    "materials": [
+      "FINISH | boot"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Boot | welt and outsole 2",
+    "type": "MESH",
+    "source": 2,
+    "collections": [
+      "COSTUME | boots"
+    ],
+    "bounds": [
+      [
+        -0.18799999356269836,
+        -0.03199999779462814
+      ],
+      [
+        -0.21199999749660492,
+        0.06199999153614044
+      ],
+      [
+        0.014999999664723873,
+        0.023000000044703484
+      ]
+    ],
+    "vertices": 64,
+    "materials": [
+      "FINISH | boot"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Boot | welt and outsole 4",
+    "type": "MESH",
+    "source": 4,
+    "collections": [
+      "COSTUME | boots"
+    ],
+    "bounds": [
+      [
+        -0.18900001049041748,
+        -0.03099999576807022
+      ],
+      [
+        -0.2150000035762787,
+        0.06499999761581421
+      ],
+      [
+        0.029999999329447746,
+        0.03799999877810478
+      ]
+    ],
+    "vertices": 64,
+    "materials": [
+      "FINISH | boot"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Boot | welt and outsole 3",
+    "type": "MESH",
+    "source": 3,
+    "collections": [
+      "COSTUME | boots"
+    ],
+    "bounds": [
+      [
+        0.03199999779462814,
+        0.18799999356269836
+      ],
+      [
+        -0.21199999749660492,
+        0.06199999153614044
+      ],
+      [
+        0.014999999664723873,
+        0.023000000044703484
+      ]
+    ],
+    "vertices": 64,
+    "materials": [
+      "FINISH | boot"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Boot | welt and outsole 5",
+    "type": "MESH",
+    "source": 5,
+    "collections": [
+      "COSTUME | boots"
+    ],
+    "bounds": [
+      [
+        0.03099999576807022,
+        0.18900001049041748
+      ],
+      [
+        -0.2150000035762787,
+        0.06499999761581421
+      ],
+      [
+        0.029999999329447746,
+        0.03799999877810478
+      ]
+    ],
+    "vertices": 64,
+    "materials": [
+      "FINISH | boot"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Boot | separate shaft collar Left",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | boots"
+    ],
+    "bounds": [
+      [
+        0.03500000014901161,
+        0.1850000023841858
+      ],
+      [
+        -0.07500000298023224,
+        0.07500000298023224
+      ],
+      [
+        0.36968278884887695,
+        0.3983202874660492
+      ]
+    ],
+    "vertices": 80,
+    "materials": [
+      "FINISH | boot"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Boot | diagonal instep strap Left",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | boots"
+    ],
+    "bounds": [
+      [
+        0.041999999433755875,
+        0.1770000010728836
+      ],
+      [
+        -0.13500000536441803,
+        -0.0729999989271164
+      ],
+      [
+        0.06599999964237213,
+        0.12174999713897705
+      ]
+    ],
+    "vertices": 10,
+    "materials": [
+      "FINISH | boot"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Boot | instep buckle Left",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | boots"
+    ],
+    "bounds": [
+      [
+        0.1354999989271164,
+        0.167665034532547
+      ],
+      [
+        -0.13249999284744263,
+        -0.1274999976158142
+      ],
+      [
+        0.09333493560552597,
+        0.12452869117259979
+      ]
+    ],
+    "vertices": 30,
+    "materials": [
+      "FINISH | hardware"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Boot | stacked heel Left",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | boots"
+    ],
+    "bounds": [
+      [
+        0.04800000041723251,
+        0.1720000058412552
+      ],
+      [
+        -0.026000000536441803,
+        0.06400000303983688
+      ],
+      [
+        0.008999999612569809,
+        0.04198906570672989
+      ]
+    ],
+    "vertices": 32,
+    "materials": [
+      "FINISH | boot"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Boot | separate shaft collar Right",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | boots"
+    ],
+    "bounds": [
+      [
+        -0.1850000023841858,
+        -0.03500000014901161
+      ],
+      [
+        -0.07500000298023224,
+        0.07500000298023224
+      ],
+      [
+        0.36968278884887695,
+        0.3983202874660492
+      ]
+    ],
+    "vertices": 80,
+    "materials": [
+      "FINISH | boot"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Boot | diagonal instep strap Right",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | boots"
+    ],
+    "bounds": [
+      [
+        -0.1770000010728836,
+        -0.041999999433755875
+      ],
+      [
+        -0.13500000536441803,
+        -0.0729999989271164
+      ],
+      [
+        0.06599999964237213,
+        0.12174999713897705
+      ]
+    ],
+    "vertices": 10,
+    "materials": [
+      "FINISH | boot"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ],
+      [
+        "Constructed thickness",
+        "SOLIDIFY"
+      ]
+    ]
+  },
+  {
+    "name": "Boot | instep buckle Right",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | boots"
+    ],
+    "bounds": [
+      [
+        -0.16849999129772186,
+        -0.13633495569229126
+      ],
+      [
+        -0.13249999284744263,
+        -0.1274999976158142
+      ],
+      [
+        0.09333493560552597,
+        0.12452869117259979
+      ]
+    ],
+    "vertices": 30,
+    "materials": [
+      "FINISH | hardware"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Boot | stacked heel Right",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | boots"
+    ],
+    "bounds": [
+      [
+        -0.1720000058412552,
+        -0.04800000041723251
+      ],
+      [
+        -0.026000000536441803,
+        0.06400000303983688
+      ],
+      [
+        0.008999999612569809,
+        0.04198906570672989
+      ]
+    ],
+    "vertices": 32,
+    "materials": [
+      "FINISH | boot"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Boot | stitched toe cap Left",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | boots"
+    ],
+    "bounds": [
+      [
+        0.0446113720536232,
+        0.17388199269771576
+      ],
+      [
+        -0.13346581161022186,
+        -0.10722319036722183
+      ],
+      [
+        0.0753609910607338,
+        0.08642273396253586
+      ]
+    ],
+    "vertices": 160,
+    "materials": [
+      "FINISH | dark linen thread"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Boot | stitched toe cap Right",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | boots"
+    ],
+    "bounds": [
+      [
+        -0.1753886342048645,
+        -0.04611802473664284
+      ],
+      [
+        -0.13346581161022186,
+        -0.10722319036722183
+      ],
+      [
+        0.0753609910607338,
+        0.08642274141311646
+      ]
+    ],
+    "vertices": 160,
+    "materials": [
+      "FINISH | dark linen thread"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Body | tapered forearm 1",
+    "type": "MESH",
+    "source": 32,
+    "collections": [
+      "BODY | hands and forearms"
+    ],
+    "bounds": [
+      [
+        0.29480472207069397,
+        0.4739745855331421
+      ],
+      [
+        -0.05066581815481186,
+        0.043464574962854385
+      ],
+      [
+        0.7578175067901611,
+        1.1596461534500122
+      ]
+    ],
+    "vertices": 800,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Palm L",
+    "type": "MESH",
+    "source": 28,
+    "collections": [
+      "BODY | hands and forearms"
+    ],
+    "bounds": [
+      [
+        0.4220000207424164,
+        0.5120717883110046
+      ],
+      [
+        -0.05119999870657921,
+        0.0333000011742115
+      ],
+      [
+        0.6869999766349792,
+        0.7769999504089355
+      ]
+    ],
+    "vertices": 144,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Thumb web L",
+    "type": "MESH",
+    "source": 30,
+    "collections": [
+      "BODY | hands and forearms"
+    ],
+    "bounds": [
+      [
+        0.45221686363220215,
+        0.4897945821285248
+      ],
+      [
+        -0.05761938914656639,
+        -0.019285030663013458
+      ],
+      [
+        0.7132744789123535,
+        0.751514196395874
+      ]
+    ],
+    "vertices": 100,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Thumb L",
+    "type": "MESH",
+    "source": 26,
+    "collections": [
+      "BODY | hands and forearms"
+    ],
+    "bounds": [
+      [
+        0.45877572894096375,
+        0.48272252082824707
+      ],
+      [
+        -0.06030000001192093,
+        -0.03970000147819519
+      ],
+      [
+        0.6506978273391724,
+        0.7461221814155579
+      ]
+    ],
+    "vertices": 120,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Index finger L",
+    "type": "MESH",
+    "source": 12,
+    "collections": [
+      "BODY | hands and forearms"
+    ],
+    "bounds": [
+      [
+        0.46906617283821106,
+        0.4924798905849457
+      ],
+      [
+        -0.0429999977350235,
+        -0.023000000044703484
+      ],
+      [
+        0.600703775882721,
+        0.6960894465446472
+      ]
+    ],
+    "vertices": 120,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Middle finger L",
+    "type": "MESH",
+    "source": 10,
+    "collections": [
+      "BODY | hands and forearms"
+    ],
+    "bounds": [
+      [
+        0.47887498140335083,
+        0.5026378035545349
+      ],
+      [
+        -0.026200000196695328,
+        -0.00579999852925539
+      ],
+      [
+        0.6006998419761658,
+        0.696111261844635
+      ]
+    ],
+    "vertices": 120,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Ring finger L",
+    "type": "MESH",
+    "source": 14,
+    "collections": [
+      "BODY | hands and forearms"
+    ],
+    "bounds": [
+      [
+        0.4896915555000305,
+        0.5120263695716858
+      ],
+      [
+        -0.008299998939037323,
+        0.010300001129508018
+      ],
+      [
+        0.6007174849510193,
+        0.6960132122039795
+      ]
+    ],
+    "vertices": 120,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Little finger L",
+    "type": "MESH",
+    "source": 16,
+    "collections": [
+      "BODY | hands and forearms"
+    ],
+    "bounds": [
+      [
+        0.5008529424667358,
+        0.521183967590332
+      ],
+      [
+        0.009999998845160007,
+        0.026000000536441803
+      ],
+      [
+        0.6007429957389832,
+        0.6958715915679932
+      ]
+    ],
+    "vertices": 120,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Body | tapered forearm -1",
+    "type": "MESH",
+    "source": 33,
+    "collections": [
+      "BODY | hands and forearms"
+    ],
+    "bounds": [
+      [
+        -0.4739745855331421,
+        -0.29480472207069397
+      ],
+      [
+        -0.05046495795249939,
+        0.04346710443496704
+      ],
+      [
+        0.7578175067901611,
+        1.1596461534500122
+      ]
+    ],
+    "vertices": 800,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Palm R",
+    "type": "MESH",
+    "source": 29,
+    "collections": [
+      "BODY | hands and forearms"
+    ],
+    "bounds": [
+      [
+        -0.5120717883110046,
+        -0.4220000207424164
+      ],
+      [
+        -0.05119999870657921,
+        0.0333000011742115
+      ],
+      [
+        0.6869999766349792,
+        0.7769999504089355
+      ]
+    ],
+    "vertices": 144,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Thumb web R",
+    "type": "MESH",
+    "source": 31,
+    "collections": [
+      "BODY | hands and forearms"
+    ],
+    "bounds": [
+      [
+        -0.4897945821285248,
+        -0.45221686363220215
+      ],
+      [
+        -0.05761938914656639,
+        -0.019285030663013458
+      ],
+      [
+        0.7132744789123535,
+        0.751514196395874
+      ]
+    ],
+    "vertices": 100,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Thumb R",
+    "type": "MESH",
+    "source": 27,
+    "collections": [
+      "BODY | hands and forearms"
+    ],
+    "bounds": [
+      [
+        -0.48272252082824707,
+        -0.45877572894096375
+      ],
+      [
+        -0.06030000001192093,
+        -0.03970000147819519
+      ],
+      [
+        0.6506978273391724,
+        0.7461221814155579
+      ]
+    ],
+    "vertices": 120,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Index finger R",
+    "type": "MESH",
+    "source": 13,
+    "collections": [
+      "BODY | hands and forearms"
+    ],
+    "bounds": [
+      [
+        -0.4924798905849457,
+        -0.46906617283821106
+      ],
+      [
+        -0.0429999977350235,
+        -0.023000000044703484
+      ],
+      [
+        0.600703775882721,
+        0.6960894465446472
+      ]
+    ],
+    "vertices": 120,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Middle finger R",
+    "type": "MESH",
+    "source": 11,
+    "collections": [
+      "BODY | hands and forearms"
+    ],
+    "bounds": [
+      [
+        -0.5026378035545349,
+        -0.47887498140335083
+      ],
+      [
+        -0.026200000196695328,
+        -0.00579999852925539
+      ],
+      [
+        0.6006998419761658,
+        0.696111261844635
+      ]
+    ],
+    "vertices": 120,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Ring finger R",
+    "type": "MESH",
+    "source": 15,
+    "collections": [
+      "BODY | hands and forearms"
+    ],
+    "bounds": [
+      [
+        -0.5120263695716858,
+        -0.4896915555000305
+      ],
+      [
+        -0.008299998939037323,
+        0.010300001129508018
+      ],
+      [
+        0.6007174849510193,
+        0.6960132122039795
+      ]
+    ],
+    "vertices": 120,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Little finger R",
+    "type": "MESH",
+    "source": 17,
+    "collections": [
+      "BODY | hands and forearms"
+    ],
+    "bounds": [
+      [
+        -0.521183967590332,
+        -0.5008529424667358
+      ],
+      [
+        0.009999998845160007,
+        0.026000000536441803
+      ],
+      [
+        0.6007429957389832,
+        0.6958715915679932
+      ]
+    ],
+    "vertices": 120,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Fingernail | original 18",
+    "type": "MESH",
+    "source": 18,
+    "collections": [
+      "BODY | hands and forearms"
+    ],
+    "bounds": [
+      [
+        -0.4953387677669525,
+        -0.4886612594127655
+      ],
+      [
+        -0.03824659436941147,
+        -0.027753403410315514
+      ],
+      [
+        0.608008861541748,
+        0.6239911317825317
+      ]
+    ],
+    "vertices": 48,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Fingernail | original 19",
+    "type": "MESH",
+    "source": 19,
+    "collections": [
+      "BODY | hands and forearms"
+    ],
+    "bounds": [
+      [
+        -0.505338728427887,
+        -0.49866122007369995
+      ],
+      [
+        -0.021246597170829773,
+        -0.010753404349088669
+      ],
+      [
+        0.608008861541748,
+        0.6239911317825317
+      ]
+    ],
+    "vertices": 48,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Fingernail | original 20",
+    "type": "MESH",
+    "source": 20,
+    "collections": [
+      "BODY | hands and forearms"
+    ],
+    "bounds": [
+      [
+        -0.5153387784957886,
+        -0.5086612701416016
+      ],
+      [
+        -0.004246596246957779,
+        0.006246596574783325
+      ],
+      [
+        0.608008861541748,
+        0.6239911317825317
+      ]
+    ],
+    "vertices": 48,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Fingernail | original 21",
+    "type": "MESH",
+    "source": 21,
+    "collections": [
+      "BODY | hands and forearms"
+    ],
+    "bounds": [
+      [
+        -0.5253387689590454,
+        -0.5186612606048584
+      ],
+      [
+        0.012753402814269066,
+        0.02324659563601017
+      ],
+      [
+        0.608008861541748,
+        0.6239911317825317
+      ]
+    ],
+    "vertices": 48,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Fingernail | original 22",
+    "type": "MESH",
+    "source": 22,
+    "collections": [
+      "BODY | hands and forearms"
+    ],
+    "bounds": [
+      [
+        0.4886612594127655,
+        0.4953387677669525
+      ],
+      [
+        -0.03824659436941147,
+        -0.027753403410315514
+      ],
+      [
+        0.608008861541748,
+        0.6239911317825317
+      ]
+    ],
+    "vertices": 48,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Fingernail | original 23",
+    "type": "MESH",
+    "source": 23,
+    "collections": [
+      "BODY | hands and forearms"
+    ],
+    "bounds": [
+      [
+        0.49866122007369995,
+        0.505338728427887
+      ],
+      [
+        -0.021246597170829773,
+        -0.010753404349088669
+      ],
+      [
+        0.608008861541748,
+        0.6239911317825317
+      ]
+    ],
+    "vertices": 48,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Fingernail | original 24",
+    "type": "MESH",
+    "source": 24,
+    "collections": [
+      "BODY | hands and forearms"
+    ],
+    "bounds": [
+      [
+        0.5086612701416016,
+        0.5153387784957886
+      ],
+      [
+        -0.004246596246957779,
+        0.006246596574783325
+      ],
+      [
+        0.608008861541748,
+        0.6239911317825317
+      ]
+    ],
+    "vertices": 48,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Fingernail | original 25",
+    "type": "MESH",
+    "source": 25,
+    "collections": [
+      "BODY | hands and forearms"
+    ],
+    "bounds": [
+      [
+        0.5186612606048584,
+        0.5253387689590454
+      ],
+      [
+        0.012753402814269066,
+        0.02324659563601017
+      ],
+      [
+        0.608008861541748,
+        0.6239911317825317
+      ]
+    ],
+    "vertices": 48,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Neck",
+    "type": "MESH",
+    "source": 50,
+    "collections": [
+      "BODY | head and face"
+    ],
+    "bounds": [
+      [
+        -0.061000000685453415,
+        0.061000000685453415
+      ],
+      [
+        -0.04399999976158142,
+        0.06800000369548798
+      ],
+      [
+        1.4149999618530273,
+        1.5399999618530273
+      ]
+    ],
+    "vertices": 192,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Body | original sculpted head",
+    "type": "MESH",
+    "source": 52,
+    "collections": [
+      "BODY | head and face"
+    ],
+    "bounds": [
+      [
+        -0.09066560864448547,
+        0.09066560864448547
+      ],
+      [
+        -0.12640361487865448,
+        0.08397781848907471
+      ],
+      [
+        1.4952199459075928,
+        1.705899953842163
+      ]
+    ],
+    "vertices": 3440,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Ear R",
+    "type": "MESH",
+    "source": 57,
+    "collections": [
+      "BODY | head and face"
+    ],
+    "bounds": [
+      [
+        -0.10799999535083771,
+        -0.07400000095367432
+      ],
+      [
+        -0.009999999776482582,
+        0.014000000432133675
+      ],
+      [
+        1.5620332956314087,
+        1.6219667196273804
+      ]
+    ],
+    "vertices": 144,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Ear inset R",
+    "type": "MESH",
+    "source": 59,
+    "collections": [
+      "BODY | head and face"
+    ],
+    "bounds": [
+      [
+        -0.10872355848550797,
+        -0.09727644175291061
+      ],
+      [
+        -0.010861780494451523,
+        -0.005138220265507698
+      ],
+      [
+        1.5770155191421509,
+        1.6049844026565552
+      ]
+    ],
+    "vertices": 72,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Eye R",
+    "type": "MESH",
+    "source": 63,
+    "collections": [
+      "BODY | head and face"
+    ],
+    "bounds": [
+      [
+        -0.050999999046325684,
+        -0.020999997854232788
+      ],
+      [
+        -0.07599999755620956,
+        -0.06400000303983688
+      ],
+      [
+        1.6114904880523682,
+        1.6205095052719116
+      ]
+    ],
+    "vertices": 112,
+    "materials": [
+      "Identity | warm sclera"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Iris R",
+    "type": "MESH",
+    "source": 65,
+    "collections": [
+      "BODY | head and face"
+    ],
+    "bounds": [
+      [
+        -0.03920000046491623,
+        -0.03180000185966492
+      ],
+      [
+        -0.07769999653100967,
+        -0.07723750174045563
+      ],
+      [
+        1.6132999658584595,
+        1.6207000017166138
+      ]
+    ],
+    "vertices": 96,
+    "materials": [
+      "Identity | dark hazel iris",
+      "Identity | pupil"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Upper eyelid R",
+    "type": "MESH",
+    "source": 67,
+    "collections": [
+      "BODY | head and face"
+    ],
+    "bounds": [
+      [
+        -0.05299999937415123,
+        -0.01899999938905239
+      ],
+      [
+        -0.08019732683897018,
+        -0.06099175661802292
+      ],
+      [
+        1.615399956703186,
+        1.6275218725204468
+      ]
+    ],
+    "vertices": 126,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Lower eyelid R",
+    "type": "MESH",
+    "source": 61,
+    "collections": [
+      "BODY | head and face"
+    ],
+    "bounds": [
+      [
+        -0.05299999937415123,
+        -0.01899999938905239
+      ],
+      [
+        -0.07832110673189163,
+        -0.061614491045475006
+      ],
+      [
+        1.6060700416564941,
+        1.6166000366210938
+      ]
+    ],
+    "vertices": 126,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Ear L",
+    "type": "MESH",
+    "source": 58,
+    "collections": [
+      "BODY | head and face"
+    ],
+    "bounds": [
+      [
+        0.07400000095367432,
+        0.10799999535083771
+      ],
+      [
+        -0.009999999776482582,
+        0.014000000432133675
+      ],
+      [
+        1.5620332956314087,
+        1.6219667196273804
+      ]
+    ],
+    "vertices": 144,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Ear inset L",
+    "type": "MESH",
+    "source": 60,
+    "collections": [
+      "BODY | head and face"
+    ],
+    "bounds": [
+      [
+        0.09727644175291061,
+        0.10872355848550797
+      ],
+      [
+        -0.010861780494451523,
+        -0.005138220265507698
+      ],
+      [
+        1.5770155191421509,
+        1.6049844026565552
+      ]
+    ],
+    "vertices": 72,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Eye L",
+    "type": "MESH",
+    "source": 64,
+    "collections": [
+      "BODY | head and face"
+    ],
+    "bounds": [
+      [
+        0.020999997854232788,
+        0.050999999046325684
+      ],
+      [
+        -0.07599999755620956,
+        -0.06400000303983688
+      ],
+      [
+        1.6114904880523682,
+        1.6205095052719116
+      ]
+    ],
+    "vertices": 112,
+    "materials": [
+      "Identity | warm sclera"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Iris L",
+    "type": "MESH",
+    "source": 66,
+    "collections": [
+      "BODY | head and face"
+    ],
+    "bounds": [
+      [
+        0.03180000185966492,
+        0.03920000046491623
+      ],
+      [
+        -0.07769999653100967,
+        -0.07723750174045563
+      ],
+      [
+        1.6132999658584595,
+        1.6207000017166138
+      ]
+    ],
+    "vertices": 96,
+    "materials": [
+      "Identity | dark hazel iris",
+      "Identity | pupil"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Upper eyelid L",
+    "type": "MESH",
+    "source": 68,
+    "collections": [
+      "BODY | head and face"
+    ],
+    "bounds": [
+      [
+        0.01899999938905239,
+        0.05299999937415123
+      ],
+      [
+        -0.08000827580690384,
+        -0.06155913323163986
+      ],
+      [
+        1.615399956703186,
+        1.6275218725204468
+      ]
+    ],
+    "vertices": 126,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Lower eyelid L",
+    "type": "MESH",
+    "source": 62,
+    "collections": [
+      "BODY | head and face"
+    ],
+    "bounds": [
+      [
+        0.01899999938905239,
+        0.05299999937415123
+      ],
+      [
+        -0.07848948985338211,
+        -0.06132035702466965
+      ],
+      [
+        1.6060700416564941,
+        1.6166000366210938
+      ]
+    ],
+    "vertices": 126,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Lower lip",
+    "type": "MESH",
+    "source": 53,
+    "collections": [
+      "BODY | head and face"
+    ],
+    "bounds": [
+      [
+        -0.024000000208616257,
+        0.024000000208616257
+      ],
+      [
+        -0.08246693760156631,
+        -0.0703425407409668
+      ],
+      [
+        1.5410000085830688,
+        1.5494999885559082
+      ]
+    ],
+    "vertices": 126,
+    "materials": [
+      "Identity | natural lip"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Face | nostril inset -1",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "BODY | head and face"
+    ],
+    "bounds": [
+      [
+        -0.01899999938905239,
+        -0.010999999940395355
+      ],
+      [
+        -0.10326327383518219,
+        -0.09045128524303436
+      ],
+      [
+        1.5722922086715698,
+        1.5757077932357788
+      ]
+    ],
+    "vertices": 16,
+    "materials": [
+      "Identity | nostril shadow"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Face | nostril inset 1",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "BODY | head and face"
+    ],
+    "bounds": [
+      [
+        0.010999999940395355,
+        0.01899999938905239
+      ],
+      [
+        -0.10457293689250946,
+        -0.09161359071731567
+      ],
+      [
+        1.5722922086715698,
+        1.5757077932357788
+      ]
+    ],
+    "vertices": 16,
+    "materials": [
+      "Identity | nostril shadow"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Brow R",
+    "type": "MESH",
+    "source": 70,
+    "collections": [
+      "IDENTITY | facial hair"
+    ],
+    "bounds": [
+      [
+        -0.05360681191086769,
+        -0.01628641039133072
+      ],
+      [
+        -0.08295486122369766,
+        -0.07203289121389389
+      ],
+      [
+        1.6234632730484009,
+        1.6308672428131104
+      ]
+    ],
+    "vertices": 40,
+    "materials": [
+      "Convergence | dark brown hair"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Brow L",
+    "type": "MESH",
+    "source": 69,
+    "collections": [
+      "IDENTITY | facial hair"
+    ],
+    "bounds": [
+      [
+        0.016310226172208786,
+        0.05358124524354935
+      ],
+      [
+        -0.08295486122369766,
+        -0.07203289121389389
+      ],
+      [
+        1.6250680685043335,
+        1.63234281539917
+      ]
+    ],
+    "vertices": 40,
+    "materials": [
+      "Convergence | dark brown hair"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Mouth line",
+    "type": "MESH",
+    "source": 54,
+    "collections": [
+      "IDENTITY | facial hair"
+    ],
+    "bounds": [
+      [
+        -0.024000000208616257,
+        0.024000000208616257
+      ],
+      [
+        -0.08306694030761719,
+        -0.07308948040008545
+      ],
+      [
+        1.547700047492981,
+        1.5494999885559082
+      ]
+    ],
+    "vertices": 42,
+    "materials": [
+      "Identity | nostril shadow"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Facial hair | shortened jaw-following beard",
+    "type": "MESH",
+    "source": 51,
+    "collections": [
+      "IDENTITY | facial hair"
+    ],
+    "bounds": [
+      [
+        -0.09051645547151566,
+        0.09049423784017563
+      ],
+      [
+        -0.08282708376646042,
+        -0.00954250618815422
+      ],
+      [
+        1.503000020980835,
+        1.5900812149047852
+      ]
+    ],
+    "vertices": 1296,
+    "materials": [
+      "FINISH | broken-density beard"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Moustache R",
+    "type": "MESH",
+    "source": 56,
+    "collections": [
+      "IDENTITY | facial hair"
+    ],
+    "bounds": [
+      [
+        -0.03400000184774399,
+        -0.0020000000949949026
+      ],
+      [
+        -0.1095261201262474,
+        -0.0684417113661766
+      ],
+      [
+        1.5509999990463257,
+        1.568000078201294
+      ]
+    ],
+    "vertices": 45,
+    "materials": [
+      "Convergence | dark brown hair"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Moustache L",
+    "type": "MESH",
+    "source": 55,
+    "collections": [
+      "IDENTITY | facial hair"
+    ],
+    "bounds": [
+      [
+        0.0020000000949949026,
+        0.03400000184774399
+      ],
+      [
+        -0.10984808951616287,
+        -0.06845790892839432
+      ],
+      [
+        1.5509999990463257,
+        1.568000078201294
+      ]
+    ],
+    "vertices": 45,
+    "materials": [
+      "Convergence | dark brown hair"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Hat | asymmetric slouch brim and dented crown",
+    "type": "MESH",
+    "source": 71,
+    "collections": [
+      "COSTUME | hat"
+    ],
+    "bounds": [
+      [
+        -0.20115558803081512,
+        0.20304441452026367
+      ],
+      [
+        -0.1886799931526184,
+        0.1886799931526184
+      ],
+      [
+        1.6213409900665283,
+        1.7535945177078247
+      ]
+    ],
+    "vertices": 768,
+    "materials": [
+      "FINISH | felt"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Hat | leather crown band",
+    "type": "MESH",
+    "source": 72,
+    "collections": [
+      "COSTUME | hat"
+    ],
+    "bounds": [
+      [
+        -0.10464999824762344,
+        0.10464999824762344
+      ],
+      [
+        -0.094760000705719,
+        0.094760000705719
+      ],
+      [
+        1.6657297611236572,
+        1.6908271312713623
+      ]
+    ],
+    "vertices": 80,
+    "materials": [
+      "FINISH | leather"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Hat | battered bound brim",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "COSTUME | hat"
+    ],
+    "bounds": [
+      [
+        -0.20150461792945862,
+        0.20342010259628296
+      ],
+      [
+        -0.1890205293893814,
+        0.18902051448822021
+      ],
+      [
+        1.6247960329055786,
+        1.6824445724487305
+      ]
+    ],
+    "vertices": 1032,
+    "materials": [
+      "FINISH | waxed saddle thread"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Belt | broad leather waist belt",
+    "type": "MESH",
+    "source": 38,
+    "collections": [
+      "COSTUME | belt and suspenders"
+    ],
+    "bounds": [
+      [
+        -0.1780415028333664,
+        0.1780415028333664
+      ],
+      [
+        -0.13922999799251556,
+        0.13922999799251556
+      ],
+      [
+        0.9890999794006348,
+        1.0416780710220337
+      ]
+    ],
+    "vertices": 96,
+    "materials": [
+      "FINISH | leather"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Suspender R",
+    "type": "MESH",
+    "source": 41,
+    "collections": [
+      "COSTUME | belt and suspenders"
+    ],
+    "bounds": [
+      [
+        -0.12895025312900543,
+        -0.05238691717386246
+      ],
+      [
+        -0.12177406251430511,
+        0.12344269454479218
+      ],
+      [
+        1.024999976158142,
+        1.434999942779541
+      ]
+    ],
+    "vertices": 192,
+    "materials": [
+      "FINISH | leather"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Suspender L",
+    "type": "MESH",
+    "source": 42,
+    "collections": [
+      "COSTUME | belt and suspenders"
+    ],
+    "bounds": [
+      [
+        0.0528036504983902,
+        0.12895025312900543
+      ],
+      [
+        -0.12144675105810165,
+        0.123291015625
+      ],
+      [
+        1.024999976158142,
+        1.434999942779541
+      ]
+    ],
+    "vertices": 192,
+    "materials": [
+      "FINISH | leather"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Skin",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Body | knee beneath trouser tear",
+    "type": "MESH",
+    "source": null,
+    "collections": [
+      "BODY | clothed anatomy"
+    ],
+    "bounds": [
+      [
+        -0.16699999570846558,
+        -0.05299999937415123
+      ],
+      [
+        -0.08000000566244125,
+        -0.05299999937415123
+      ],
+      [
+        0.5881454944610596,
+        0.6488823890686035
+      ]
+    ],
+    "vertices": 45,
+    "materials": [
+      "Convergence | warm weathered skin"
+    ],
+    "parent": "MinerRig",
+    "modifiers": [
+      [
+        "Rig deformation",
+        "ARMATURE"
+      ]
+    ]
+  },
+  {
+    "name": "Hair | swept strand groups.001",
+    "type": "CURVE",
+    "source": null,
+    "collections": [
+      "IDENTITY | groomed hair curves"
+    ],
+    "bounds": null,
+    "vertices": 0,
+    "materials": [
+      "Identity | hair fiber 0",
+      "Identity | hair fiber 1",
+      "Identity | hair fiber 2",
+      "Identity | hair fiber 3",
+      "Identity | hair fiber 4"
+    ],
+    "parent": "MinerRig",
+    "modifiers": []
+  },
+  {
+    "name": "Beard | short scruffy growth.001",
+    "type": "CURVE",
+    "source": null,
+    "collections": [
+      "IDENTITY | groomed hair curves"
+    ],
+    "bounds": null,
+    "vertices": 0,
+    "materials": [
+      "Identity | hair fiber 0",
+      "Identity | hair fiber 1",
+      "Identity | hair fiber 2",
+      "Identity | hair fiber 3",
+      "Identity | hair fiber 4"
+    ],
+    "parent": "MinerRig",
+    "modifiers": []
+  }
+]

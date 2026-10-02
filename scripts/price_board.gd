@@ -11,4 +11,6 @@ func refresh() -> void:
 	text=preload("res://scripts/store.gd").KEEPER.to_upper()+"\n"+Calendar.date_string(game.day)+"\nGOLD $%.2f / oz\n"
 	text=text % Prices.gold_price(game.day,game.seed)
 	for good in Stock.catalogue():
-		if good.for_sale: text+="%s $%.2f / %s\n" % [good.item.capitalize(),Prices.price(good.item,game.day,game.seed),"coil" if good.item=="line" else "each" if good.item=="rod" else good.unit]
+		if good.for_sale and not good.item in Stock.OUTFIT: text+="%s $%.2f / %s\n" % [good.item.capitalize(),Prices.price(good.item,game.day,game.seed),"coil" if good.item=="line" else "each" if good.item=="rod" else good.unit]
+	# Eighteen lines fill the painted board; shrink the hand when more are listed.
+	font_size=mini(52,floori(52*18.0/maxi(1,text.count("\n"))))

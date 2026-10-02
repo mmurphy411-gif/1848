@@ -41,7 +41,9 @@ func _ready() -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _unhandled_input(event: InputEvent) -> void:
+	if get_parent().has_node("Title"): return
 	if event.is_action_pressed("ui_cancel"):
+		if get_parent().has_method("open_pause") and get_parent().open_pause(): return
 		if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		else:
@@ -49,8 +51,11 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and not focused and not panning and _transition_time >= FOCUS_DURATION:
-		yaw -= event.relative.x * mouse_sensitivity
-		pitch = clampf(pitch - event.relative.y * mouse_sensitivity, -0.85, 0.32)
+		var settings := get_node_or_null("/root/Settings")
+		var scale: float = settings.get_value("mouse_sensitivity") if settings else 1.0
+		var invert: float = -1.0 if settings and settings.get_value("invert_y") else 1.0
+		yaw -= event.relative.x * mouse_sensitivity * scale
+		pitch = clampf(pitch - event.relative.y * mouse_sensitivity * scale * invert, -0.85, 0.32)
 
 func _process(delta: float) -> void:
 	if not focused and not panning and _transition_time >= FOCUS_DURATION:

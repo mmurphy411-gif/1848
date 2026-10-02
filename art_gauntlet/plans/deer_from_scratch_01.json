@@ -1,0 +1,9 @@
+{
+  "hypothesis": "Build a new black-tailed buck with a deep torso, anatomically connected neck and four planted legs. No previous deer geometry reused.",
+  "operations": [
+    {
+      "recipe": "build_deer",
+      "parameters": {}
+    }
+  ]
+}

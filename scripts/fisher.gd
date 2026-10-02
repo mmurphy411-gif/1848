@@ -15,6 +15,7 @@ var cast_from := Vector3.ZERO
 var hazard := 1.0
 var bite_in := -1.0
 var hooked_species := "trout"
+var hooked_spot := -1
 var weight := 1.0
 var fight: Dictionary={}
 var fish: Node3D
@@ -194,7 +195,7 @@ func _physics_process(delta: float) -> void:
 			var total := 0.0
 			var rates: Dictionary={}
 			for species in Fishery.SPECIES:
-				var rate := Fishery.bite_rate(species,spot,game.day,clock.hour_at(clock.elapsed),bait_type,game.seed,game.weather())
+				var rate := Fishery.bite_rate(species,spot,game.day,clock.hour_at(clock.elapsed),bait_type,game.seed,game.weather(),game.inventory.get("catch_log",[]))
 				if school.nearest(species,target)==null: rate=0
 				rates[species]=rate;total+=rate
 			hazard-=total*delta
@@ -202,7 +203,7 @@ func _physics_process(delta: float) -> void:
 				var roll := rng.randf()*total
 				for species in rates:
 					roll-=rates[species]
-					if roll<=0 and rates[species]>0: hooked_species=species;break
+					if roll<=0 and rates[species]>0: hooked_species=species;hooked_spot=spot.get("spot_index",-1);break
 				fish=school.nearest(hooked_species,target)
 				if is_instance_valid(fish): fish.approach=true;fish.approach_target=target;bite_in=2
 				else: hazard=1
@@ -232,7 +233,7 @@ func _physics_process(delta: float) -> void:
 		if is_instance_valid(trophy): trophy.global_position=visual.right_hand.global_position
 		if elapsed>=2:
 			state=State.SHOWING;elapsed=0
-			game.caught(Cooking.fresh(hooked_species,weight,game.day))
+			game.caught(Cooking.fresh(hooked_species,weight,game.day),hooked_spot)
 			bait_loaded=false
 	elif state==State.SHOWING:
 		if is_instance_valid(trophy):

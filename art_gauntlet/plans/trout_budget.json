@@ -1,0 +1,17 @@
+{
+  "hypothesis": "Reduce source complexity and preserve procedural base color in an exportable atlas. Inspect silhouette and surface losses explicitly.",
+  "metric_blind": true,
+  "operations": [
+    {
+      "recipe": "decimate",
+      "ratio": 0.25,
+      "minimum_triangles": 500
+    },
+    {
+      "recipe": "bake_atlas",
+      "size": 2048,
+      "roughness": 0.38,
+      "metallic": 0.18
+    }
+  ]
+}

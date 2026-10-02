@@ -22,6 +22,8 @@ var result: Dictionary = {}
 var rng := RandomNumberGenerator.new()
 var speed_scale := 1.0
 const ConditionModel=preload("res://scripts/condition_model.gd")
+const Crew=preload("res://scripts/crew_model.gd")
+var sample_point := Vector3.ZERO
 
 func _ready() -> void:
 	rng.seed = hash(walker.position)
@@ -53,7 +55,9 @@ func start_pan() -> bool:
 		return false
 	state = State.PANNING
 	elapsed = 0.0
-	sampled_density = GoldMap.density_at(walker.position.x, walker.position.z)
+	# Worked ground pans leaner; an untouched bar matches the geological map exactly.
+	var crew: Dictionary = get_node("/root/GameState").crew
+	sampled_density = Crew.channel_worked_density(crew, walker.position.x, walker.position.z) if Crew.in_channel(crew, walker.position.x, walker.position.z) else Crew.worked_density(crew.worked, walker.position.x, walker.position.z)
 	result = PanResult.roll(sampled_density, rng)
 	var condition: float=get_node("/root/GameState").condition
 	speed_scale=ConditionModel.speed(condition)
@@ -62,6 +66,7 @@ func start_pan() -> bool:
 		result.tier=demoted
 		var yields := [Vector2.ZERO,PanResult.SPECKS,PanResult.COLOR,PanResult.GOOD]
 		result.ounces=rng.randf_range(yields[demoted].x,yields[demoted].y)
+	sample_point = walker.global_position
 	walker.velocity.x = 0.0
 	walker.velocity.z = 0.0
 	var direction := -Layout.inland_normal(walker.position.x)
@@ -103,6 +108,12 @@ func _finish() -> void:
 	if state != State.SHOWING:
 		return
 	get_node("/root/Sack").add(result.ounces)
+	var game: Node = get_node("/root/GameState")
+	if Crew.in_channel(game.crew, sample_point.x, sample_point.z):
+		Crew.take_channel(game.crew, sample_point.x, sample_point.z, result.ounces)
+	else:
+		Crew.take(game.crew.worked, sample_point.x, sample_point.z, result.ounces)
+		Crew.record_prospect(game.crew, sample_point, result.ounces, game.day)
 	_reset()
 
 func _reset() -> void:

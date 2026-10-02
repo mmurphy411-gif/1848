@@ -155,7 +155,9 @@ func clear_equipment_override(item: String) -> void:
 
 func _update_equipment() -> void:
 	var inventory: Dictionary = get_node("/root/GameState").inventory
-	var pounds := preload("res://scripts/pack.gd").weight(inventory)
+	# A lone miner carries his provisions; an outfit's pantry stays at camp (2.0).
+	var Pack := preload("res://scripts/pack.gd")
+	var pounds := Pack.weight(inventory) if get_node("/root/GameState").crew.hands.is_empty() else Pack.field_weight(inventory)
 	pack_stage = 0 if pounds <= 5 else 1 if pounds < 15 else 2 if pounds < 30 else 3
 	var defaults := {"wear_pack":pack_stage > 0, "wear_satchel":true, "wear_canteen":true, "carry_pickaxe":inventory.get("pick", false), "carry_pan":true}
 	if activity_clip in ["lie_down", "cook", "eat", "tend_fire"]:

@@ -114,6 +114,9 @@ func _process(delta: float) -> void:
 	if get_parent().has_node("Mining"):
 		var mining_prompt: String=get_parent().get_node("Mining").prompt()
 		if mining_prompt!="": action_label.text="G / X · "+mining_prompt;return
+	if get_parent().has_node("Crew"):
+		var crew_prompt: String=get_parent().get_node("Crew").prompt()
+		if crew_prompt!="": action_label.text="G / X · "+crew_prompt;return
 	var camp: Node=get_parent().get_node("Camp")
 	var target: String=camp.target(activities.walker)
 	var names := {"FireRing":"Add wood" if camp.burning() else "Light fire · 3 driftwood","Skillet":"Skillet","Pot":"Pot","Rack":"Need salt to smoke" if game.inventory.goods.salt<.1 else "Smoke fish or meat","Cache":"Food cache","Bedroll":"Sleep","Crate":"Eat · carried food" if camp.has_stored() else "Cut bait" if game.inventory.goods.pork>=.25 else "Open ledger"}

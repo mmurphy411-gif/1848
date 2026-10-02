@@ -12,7 +12,13 @@ func water_level() -> float:
 func shore_z(x: float) -> float: return Model.shore_z(x,water_level())
 
 func work_edge(point: Vector3, limit: float) -> bool:
-	return Model.work_edge(point,water_level(),limit)
+	return Model.work_edge(point,water_level(),limit) or _in_channel(point)
 
 func depth_at(point: Vector3) -> float:
-	return Model.depth_at(point,water_level())
+	return 0.0 if _in_channel(point) else Model.depth_at(point,water_level())
+
+## 2.0: inside a standing wing dam the bed is dry and the channel can be panned.
+func _in_channel(point: Vector3) -> bool:
+	var game := get_node_or_null("/root/GameState")
+	if game==null or Engine.is_editor_hint() or not "crew" in game: return false
+	return preload("res://scripts/crew_model.gd").in_channel(game.crew,point.x,point.z)

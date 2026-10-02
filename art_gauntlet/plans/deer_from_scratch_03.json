@@ -1,0 +1,16 @@
+{
+  "hypothesis": "Correct the reference-measured height relationships: raise the belly and head, keep the antler tips at the same overall height, and seat the eyes beneath narrow lids.",
+  "operations": [
+    {
+      "recipe": "build_deer",
+      "parameters": {
+        "anatomy_version": 3,
+        "body_triangles": 6600,
+        "head_raise": 0.08,
+        "antler_height": 0.85,
+        "antler_spread": 0.9,
+        "antler_sweep": 0.07
+      }
+    }
+  ]
+}

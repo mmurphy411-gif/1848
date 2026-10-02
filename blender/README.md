@@ -1,5 +1,10 @@
 # Procedural asset pipeline
 
+The reusable [Art Gauntlet runner](../art_gauntlet/README.md) captures and iterates
+isolated deer/trout candidates, ingests blind reviews, and checks exported assets
+in Blender and Godot. See the [implementation report](../ART_GAUNTLET_IMPLEMENTATION.md)
+for tested behavior and current art/integration limitations.
+
 Blender 5.2.1 LTS, bundled Python. The original procedural builders use no downloaded art;
 the finished miner uses documented CC0 head anatomy and generated reference textures. Run from any
 directory using `blender --background --python <absolute-script-path>`.
@@ -113,6 +118,21 @@ compatible. See [MINER_ART_REVIEW.md](../MINER_ART_REVIEW.md) for captures,
 measured budgets, contact checks and remaining art limitations.
 
 ## Wildlife
+
+Reference convergence sources for the supplied buck and rainbow trout are
+`deer_convergence_working.blend` and `trout_convergence_working.blend`. Both have
+passed the subjective silhouette/proportion gate and received initial polish.
+See [ANIMAL_CONVERGENCE_REVIEW.md](../ANIMAL_CONVERGENCE_REVIEW.md) for checkpoints,
+comparisons, reproduction commands, geometric verification and remaining likeness
+limits. These high-detail art sources are independent of the live game exports.
+
+The later from-scratch gauntlet study is separate:
+`deer_gauntlet_blank.blend` is its empty baseline and
+`deer_from_scratch_working.blend` is the retained blind-reviewed checkpoint.
+See [DEER_FROM_SCRATCH_REVIEW.md](../DEER_FROM_SCRATCH_REVIEW.md) for the actual
+gate outcome. Rebuild through `gauntlet_recipes/deer.py` and the versioned plans
+in `art_gauntlet/plans/`; this study does not replace either the earlier source
+or the runtime deer.
 
 Run `blender --background --python blender/build_wildlife.py` to regenerate
 bear, deer, squirrel, quail and jay GLBs in `assets/wildlife/`, plus the matching

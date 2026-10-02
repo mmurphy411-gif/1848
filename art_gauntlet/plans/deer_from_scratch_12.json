@@ -1,0 +1,20 @@
+{
+  "hypothesis": "Orient the curved eye surfaces outward and slightly forward, with distinct corneal curvature and a subdued orbital margin, instead of inheriting the skulls steep upward-facing surface angle.",
+  "operations": [
+    {
+      "recipe": "build_deer",
+      "parameters": {
+        "anatomy_version": 12,
+        "body_triangles": 6800,
+        "head_raise": 0.04,
+        "antler_height": 0.85,
+        "antler_spread": 0.9,
+        "antler_sweep": 0.07,
+        "muzzle_shorten": 0.12,
+        "foreleg_spacing": 0.9,
+        "thigh_fullness": 1,
+        "shaped_torso": false
+      }
+    }
+  ]
+}

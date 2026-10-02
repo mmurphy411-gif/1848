@@ -199,7 +199,9 @@ func complete(kind: String) -> void:
 		game.mining.rocker_position=build_point;game.mining.rocker_built=true
 		game.event("Set the cradle beside running water.")
 	elif kind=="rocker" and Model.rocker_site(rocker.global_position,game.water_level()):
-		var ounces := Model.rocker_yield(source,game.seed,game.mining.rocker_actions)
+		var Crew=preload("res://scripts/crew_model.gd")
+		var ounces: float = Model.rocker_yield(source,game.seed,game.mining.rocker_actions)*Crew.remaining(game.crew.worked,source.x,source.z)
+		Crew.take(game.crew.worked,source.x,source.z,ounces)
 		game.mining.rocker_actions+=1;_award(ounces,"Washed a cradle load")
 	_cleanup()
 

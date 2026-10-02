@@ -75,7 +75,7 @@ func interact() -> bool:
 	if text!="Spear salmon": return true
 	var taken: int=game.expedition.salmon_taken.get(game.day,0)
 	var weight:=Model.salmon_weight(game.seed,game.day,taken)
-	if Pack.weight(game.inventory)+weight>Pack.LIMIT_LB:
+	if Pack.field_weight(game.inventory)+weight>Pack.LIMIT_LB:
 		get_parent().get_node("HUD").notify("Make room in the pack · salmon can weigh 20 lb");return true
 	selected=salmon_near()
 	if selected==null: return true
@@ -93,7 +93,7 @@ func complete(kind: String) -> void:
 	if kind=="spear" and is_instance_valid(selected) and not selected.retired:
 		var taken: int=game.expedition.salmon_taken.get(game.day,0)
 		var weight:=Model.salmon_weight(game.seed,game.day,taken)
-		if Pack.weight(game.inventory)+weight<=Pack.LIMIT_LB:
+		if Pack.field_weight(game.inventory)+weight<=Pack.LIMIT_LB:
 			game.inventory.fish.append_array(Model.food("salmon",weight,game.day))
 			game.inventory.catches.salmon=game.inventory.catches.get("salmon",0)+1
 			game.expedition.salmon_taken[game.day]=taken+1
@@ -214,7 +214,7 @@ func harvest() -> void:
 	var index:=corpse_near()
 	if index<0: return
 	var record: Dictionary=game.expedition.carcasses[index]
-	var room:=maxf(0,Pack.LIMIT_LB-Pack.weight(game.inventory));var hide_weight:=6.0 if record.species=="bear" else 3.0
+	var room:=maxf(0,Pack.LIMIT_LB-Pack.field_weight(game.inventory));var hide_weight:=6.0 if record.species=="bear" else 3.0
 	if record.hide and room>=hide_weight:
 		game.inventory.hides.append({"id":record.id,"species":record.species,"weight_lb":hide_weight});record.hide=false;room-=hide_weight
 	var meat:=minf(floorf(room),record.meat)

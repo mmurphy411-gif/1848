@@ -1,0 +1,12 @@
+{
+  "hypothesis": "Replace rounded head and beaded neck/body with continuous tapered anatomical sections. Preserve the four planted legs and antler structure.",
+  "operations": [
+    {
+      "recipe": "build_deer",
+      "parameters": {
+        "anatomy_version": 2,
+        "body_triangles": 7000
+      }
+    }
+  ]
+}

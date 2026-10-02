@@ -20,7 +20,7 @@ func _ready() -> void:
 	var layer := CanvasLayer.new();layer.layer=20;add_child(layer);layer.add_child(fade)
 	fade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT);fade.mouse_filter=Control.MOUSE_FILTER_IGNORE;fade.color=Color(0,0,0,0)
 func ui_open() -> bool:
-	for name in ["Ledger","Sandbox"]:
+	for name in ["Ledger","Sandbox","CrewBook","PauseMenu","Title"]:
 		var ui := get_parent().get_node_or_null(name)
 		if ui and ui.opened: return true
 	return false
@@ -44,6 +44,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	if get_parent().has_node("Expedition") and get_parent().get_node("Expedition").interact():
 		get_viewport().set_input_as_handled();return
 	if get_parent().has_node("Mining") and get_parent().get_node("Mining").interact():
+		get_viewport().set_input_as_handled();return
+	if get_parent().has_node("Crew") and get_parent().get_node("Crew").interact():
 		get_viewport().set_input_as_handled();return
 	var target: String=camp.target(walker)
 	match target:
@@ -100,6 +102,7 @@ func _process(delta: float) -> void:
 		if get_node("/root/GameState").season_ended:
 			fade.color.a=0;busy=false;action="";return
 		walker.global_position=camp.wake_position()
+		if get_parent().has_node("Crew"): get_parent().get_node("Crew").settle()
 		walker.velocity=Vector3.ZERO
 		sleep_phase=1;timer=1.5
 		walker.get_node("Visual").stop_activity()

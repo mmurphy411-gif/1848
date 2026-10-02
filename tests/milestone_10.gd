@@ -48,7 +48,11 @@ func run() -> void:
 	game.purchases.append({"day":30,"item":"line","count":Stock.stock("line",30,game.seed,[])})
 	check(counter.select("line")=="Sold out","empty peg refuses selection")
 	game.purchases.clear();game.inventory.goods.flour=38
-	check(counter.select("flour")=="Too heavy","pack limit includes starting salt and line")
+	# 2.0 rule change: stores already at camp stay at camp; the limit is today's carry.
+	check(counter.select("flour")=="","goods at camp do not count against the carry");counter.return_last()
+	for i in 40: counter.select("flour")
+	check(counter.pile.size()==40 and counter.select("flour")=="Too heavy","pack limit is one man's carry home")
+	while not counter.pile.is_empty(): counter.return_last()
 	game.inventory.goods.flour=0;game.dollars=0;sack.ounces=0;counter.select("flour")
 	check(not counter.settle() and counter.pile.is_empty() and counter.shortfall>0,"SHORT returns last item without awarding goods")
 	game.dollars=.1;sack.ounces=1;counter.select("flour");counter.select("hook")

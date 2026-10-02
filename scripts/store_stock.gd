@@ -19,7 +19,15 @@ const ROWS := [
 	["rifle",60.0,"each",9.0,1,0,-1,true],
 	["powder",4.0,"20 shots",1.0,3,2,112,true],
 	["tent",20.0,"canvas tent",18.0,1,1,84,true],
+	# 2.0 outfitting: what a growing claim needs for hired hands.
+	["pan",1.0,"tin pan",1.5,6,4,119,true],
+	["bunk",9.0,"bunk tent for four",12.0,2,1,112,true],
+	["strongbox",18.0,"iron strongbox",25.0,1,1,98,true],
+	["whiskey",1.5,"bottle",3.0,12,8,119,true],
+	["timber",30.0,"dam timber, packed in by mule",0.0,1,1,105,true],
 ]
+## Goods sold from the outfitting corner in front of the stall, not the shelves.
+const OUTFIT := ["pan","bunk","strongbox","whiskey","timber"]
 
 static func catalogue() -> Array[Dictionary]:
 	var result: Array[Dictionary]=[]

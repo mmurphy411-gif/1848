@@ -27,10 +27,10 @@ func run() -> void:
 	w.refresh(true)
 	check(w.actors.filter(func(a):return a.species=="deer").size()==1,"refresh cannot respawn killed deer")
 	var record: Dictionary=game.expedition.carcasses[0]
-	e.walker.position=record.position;game.inventory.goods.flour=24
+	e.walker.position=record.position;game.inventory.fish.append({"species":"salmon","weight_lb":24.0,"day":game.day,"state":"fresh"})
 	e.harvest()
 	check(record.meat>0 and not record.hide and game.inventory.hides.size()==1,"pack-limited harvest leaves finite meat at carcass")
-	game.inventory.goods.flour=0;e.harvest();var count: int=game.inventory.fish.size();e.harvest()
+	game.inventory.fish=game.inventory.fish.filter(func(f): return f.weight_lb!=24.0);e.harvest();var count: int=game.inventory.fish.size();e.harvest()
 	check(record.meat==0 and game.inventory.fish.size()==count and game.inventory.hides.size()==1,"exhausted carcass cannot duplicate food or hide")
 	var counter: Node=load("res://scripts/counter.gd").new();root.add_child(counter)
 	game.dollars=0;root.get_node("Sack").ounces=0

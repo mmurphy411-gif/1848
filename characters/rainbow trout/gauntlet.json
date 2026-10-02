@@ -1,0 +1,172 @@
+{
+  "schema_version": 1,
+  "budget": {
+    "max_candidates": 12,
+    "max_minutes": 90,
+    "max_model_calls": 30,
+    "max_review_images": 60
+  },
+  "game_budget": {
+    "max_triangles": 12000,
+    "max_materials": 2,
+    "max_objects": 40,
+    "atlas_size": 2048
+  },
+  "export_tolerance": 0.02,
+  "asset_id": "rainbow_trout",
+  "adapter": "trout",
+  "source": "blender/trout_convergence_working.blend",
+  "target": "Match the approved rainbow trout turnaround: natural anatomy, integrated features, readable species identity. Illustrated projections disagree; do not distort anatomy merely to increase overlap.",
+  "engine_profile": "fish_existing",
+  "gameplay_distance": 2.5,
+  "required_objects": [
+    "Trout body",
+    "Natural pupil -1",
+    "Natural pupil 1",
+    "Caudal fin",
+    "Dorsal fin"
+  ],
+  "references": {
+    "front": {
+      "path": "characters/rainbow trout/ChatGPT Image Sep 10, 2026, 11_21_02 AM (2).png",
+      "crop": [
+        60,
+        288,
+        285,
+        580
+      ],
+      "confidence": "medium",
+      "calibrated": false,
+      "form_floor": null,
+      "notes": "Illustrated projection; automatically extracted mask requires inspection. The trout third view is dorsal.",
+      "background_tolerance": 15
+    },
+    "side": {
+      "path": "characters/rainbow trout/ChatGPT Image Sep 10, 2026, 11_21_02 AM (2).png",
+      "crop": [
+        284,
+        301,
+        873,
+        578
+      ],
+      "confidence": "medium",
+      "calibrated": false,
+      "form_floor": null,
+      "notes": "Illustrated projection; automatically extracted mask requires inspection. The trout third view is dorsal.",
+      "background_tolerance": 15
+    },
+    "dorsal": {
+      "path": "characters/rainbow trout/ChatGPT Image Sep 10, 2026, 11_21_02 AM (2).png",
+      "crop": [
+        895,
+        278,
+        1058,
+        584
+      ],
+      "confidence": "medium",
+      "calibrated": false,
+      "form_floor": null,
+      "notes": "Illustrated projection; automatically extracted mask requires inspection. The trout third view is dorsal.",
+      "background_tolerance": 15
+    },
+    "three_quarter": {
+      "path": "characters/rainbow trout/ChatGPT Image Sep 10, 2026, 11_21_02 AM (2).png",
+      "crop": [
+        1084,
+        312,
+        1420,
+        574
+      ],
+      "confidence": "medium",
+      "calibrated": false,
+      "form_floor": null,
+      "notes": "Illustrated projection; automatically extracted mask requires inspection. The trout third view is dorsal.",
+      "background_tolerance": 15
+    }
+  },
+  "protocol": {
+    "version": "gauntlet-3",
+    "resolution": 512,
+    "samples": 12,
+    "light_scale": 0.16,
+    "details": [
+      "head_detail"
+    ],
+    "views": {
+      "front": {
+        "eye": [
+          -3,
+          0,
+          0.025
+        ],
+        "target": [
+          0.02,
+          0,
+          0
+        ],
+        "scale": 0.46
+      },
+      "side": {
+        "eye": [
+          0,
+          -3,
+          0
+        ],
+        "target": [
+          0.02,
+          0,
+          0
+        ],
+        "scale": 0.46
+      },
+      "dorsal": {
+        "eye": [
+          0,
+          0,
+          3
+        ],
+        "target": [
+          0.02,
+          0,
+          0
+        ],
+        "scale": 0.46,
+        "roll_degrees": 180
+      },
+      "three_quarter": {
+        "eye": [
+          -1.5,
+          -3,
+          0.4
+        ],
+        "target": [
+          0.02,
+          0,
+          0
+        ],
+        "scale": 0.46
+      },
+      "head_detail": {
+        "eye": [
+          -0.4,
+          -1,
+          0.15
+        ],
+        "target": [
+          -0.128,
+          0,
+          -0.002
+        ],
+        "scale": 0.145
+      }
+    }
+  },
+  "continuous_objects": [
+    "Trout body"
+  ],
+  "visibility_checks": {
+    "head_detail": [
+      "Natural pupil -1"
+    ]
+  }
+}

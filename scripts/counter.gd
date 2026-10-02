@@ -27,11 +27,21 @@ func select(item: String) -> String:
 	var good:=Stock.entry(item)
 	if good.is_empty() or not good.for_sale: return "Not this trip"
 	if available(item)<=0: return "Sold out"
-	if item in ["spear","rifle","tent"] and (game.inventory.get(item,false) or pile.has(item)): return "Already owned"
+	if item in ["spear","rifle","tent","strongbox"] and (game.inventory.get(item,false) or pile.has(item)): return "Already owned"
 	if item=="rod" and (game.inventory.rod or pile.has("rod")): return "Already have a rod"
 	if item in preload("res://scripts/mining_model.gd").TOOLS and (game.inventory.get(item,false) or pile.has(item)): return "Already owned"
-	if Pack.weight(Pack.add(projected_inventory(),item))>Pack.LIMIT_LB+.00001: return "Too heavy"
+	# 2.0: the limit is what one man carries home today; stores at camp stay at camp.
+	if carried(item)>Pack.LIMIT_LB+.00001: return "Too heavy"
 	pile.append(item);shortfall=0;changed.emit();return ""
+## Pounds of today's purchases, optionally with one more item.
+func carried(extra := "") -> float:
+	var empty := {"goods":{},"hooks":0,"line_m":0.0}
+	var bought := empty
+	for item in pile: bought=Pack.add(bought,item)
+	# Earlier settlements today are already on his back.
+	for line in visit.get("bought",[]): bought=Pack.add(bought,line.item,int(line.count))
+	if extra!="": bought=Pack.add(bought,extra)
+	return Pack.weight(bought)
 func return_last() -> String:
 	if pile.is_empty(): return ""
 	var item: String=pile.pop_back();changed.emit();return item

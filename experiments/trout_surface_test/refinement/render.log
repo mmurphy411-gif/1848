@@ -1,0 +1,40 @@
+00:01.360  blend            | Read blend: "C:\Users\mmurp\1848\experiments\trout_surface_test\trout_surface_candidate.blend"
+C:\Users\mmurp\1848\experiments\trout_surface_test\refinement\run.py:128: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  lip=bpy.data.materials.new('Surface2 | lip tissue');lip.use_nodes=True
+00:02.922  cycles           | WARNING HIPEW initialization failed: Error opening HIP dynamic library
+00:03.047  cycles           | WARNING Failed to execute query: unable to open database file (code: 14)
+                            | Statement: PRAGMA synchronous = OFF;
+                            | 
+00:03.047  cycles           | WARNING Error when configuring the database.
+                            | Unable to initialize the OptiX cache database at path C:\Users\mmurp\AppData\Local/NVIDIA/OptixCache/optix7cache.db. Delete or rename the file if this problem persists.
+00:05.094  render           | Saved: 'C:\Users\mmurp\1848\experiments\trout_surface_test\refinement\refined_side.png'
+00:05.172  cycles           | WARNING Failed to execute query: unable to open database file (code: 14)
+                            | Statement: PRAGMA synchronous = OFF;
+                            | 
+00:05.172  cycles           | WARNING Error when configuring the database.
+                            | Unable to initialize the OptiX cache database at path C:\Users\mmurp\AppData\Local/NVIDIA/OptixCache/optix7cache.db. Delete or rename the file if this problem persists.
+00:07.110  render           | Saved: 'C:\Users\mmurp\1848\experiments\trout_surface_test\refinement\refined_three_quarter.png'
+00:07.188  cycles           | WARNING Failed to execute query: unable to open database file (code: 14)
+                            | Statement: PRAGMA synchronous = OFF;
+                            | 
+00:07.188  cycles           | WARNING Error when configuring the database.
+                            | Unable to initialize the OptiX cache database at path C:\Users\mmurp\AppData\Local/NVIDIA/OptixCache/optix7cache.db. Delete or rename the file if this problem persists.
+00:09.094  render           | Saved: 'C:\Users\mmurp\1848\experiments\trout_surface_test\refinement\refined_dorsal.png'
+00:09.172  cycles           | WARNING Failed to execute query: unable to open database file (code: 14)
+                            | Statement: PRAGMA synchronous = OFF;
+                            | 
+00:09.172  cycles           | WARNING Error when configuring the database.
+                            | Unable to initialize the OptiX cache database at path C:\Users\mmurp\AppData\Local/NVIDIA/OptixCache/optix7cache.db. Delete or rename the file if this problem persists.
+00:11.094  render           | Saved: 'C:\Users\mmurp\1848\experiments\trout_surface_test\refinement\refined_opposite.png'
+00:11.172  cycles           | WARNING Failed to execute query: unable to open database file (code: 14)
+                            | Statement: PRAGMA synchronous = OFF;
+                            | 
+00:11.172  cycles           | WARNING Error when configuring the database.
+                            | Unable to initialize the OptiX cache database at path C:\Users\mmurp\AppData\Local/NVIDIA/OptixCache/optix7cache.db. Delete or rename the file if this problem persists.
+00:13.157  render           | Saved: 'C:\Users\mmurp\1848\experiments\trout_surface_test\refinement\refined_head.png'
+00:13.157  blend            | Read blend: "C:\Users\mmurp\1848\experiments\trout_surface_test\refinement\trout_surface_refined.blend"
+Info: Saved as "trout_surface_refined.blend"
+REFINEMENT VERIFIED
+Blender 5.2.1 LTS (hash 9e2066aef7ef built 2026-08-25 02:38:20)
+
+Blender quit

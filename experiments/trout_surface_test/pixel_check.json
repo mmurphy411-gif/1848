@@ -1,0 +1,22 @@
+{
+  "side": {
+    "changed_alpha_pixels": 0,
+    "changed_subject_rgb_pixels": 144847
+  },
+  "three_quarter": {
+    "changed_alpha_pixels": 0,
+    "changed_subject_rgb_pixels": 134271
+  },
+  "dorsal": {
+    "changed_alpha_pixels": 0,
+    "changed_subject_rgb_pixels": 74283
+  },
+  "opposite": {
+    "changed_alpha_pixels": 0,
+    "changed_subject_rgb_pixels": 134066
+  },
+  "head": {
+    "changed_alpha_pixels": 0,
+    "changed_subject_rgb_pixels": 437963
+  }
+}

@@ -15,6 +15,8 @@ static func guide_motion(point: Vector3,motion: Vector3) -> Vector3:
 	return motion-normal*maxf(0,motion.dot(normal))*push-normal*push*2.4
 static func item_position(item: String) -> Vector3:
 	var ids: Array=["flour","beans","pork","coffee","salt","hook","line","rod","crowbar","pick","shovel","boots","rocker","spear","rifle","powder","tent"]
+	var outfit := {"pan":Vector3(-5.3,.36,2.7),"whiskey":Vector3(-4.5,.36,3.1),"strongbox":Vector3(-3.75,0,3.55),"bunk":Vector3(-6.3,0,2.2),"timber":Vector3(-6.0,0,4.1)}
+	if outfit.has(item): return outfit[item]
 	var i:=ids.find(item)
 	if i<5: return Vector3(-1.5+i*.73,.48,-1.4)
 	if i<8: return Vector3(-1.35+(i-5)*1.2,1.4,-1.4)

@@ -1,0 +1,8 @@
+00:01.375  blend            | Read blend: "C:\Users\mmurp\1848\blender\miner_convergence_working.blend"
+00:01.546  blend            | Read blend: "C:\Users\mmurp\1848\experiments\miner_anatomy_study\miner_anatomy_candidate.blend"
+00:09.484  render           | Saved: 'C:\Users\mmurp\1848\experiments\miner_anatomy_study\pose_walk_full.png'
+VERIFIED 21 actions 63 pose samples 129 protected meshes
+ACTION_NAMES ['cast', 'cook', 'eat', 'fight', 'fish_idle', 'fish_wait', 'gather', 'idle', 'land', 'lie_down', 'pan_enter', 'pan_exit', 'pan_lift', 'pan_swirl', 'pan_swirl_2', 'pan_swirl_3', 'pan_wash', 'strike', 'tend_fire', 'wade', 'walk']
+Blender 5.2.1 LTS (hash 9e2066aef7ef built 2026-08-25 02:38:20)
+
+Blender quit

@@ -26,10 +26,13 @@ func refresh() -> void:
 	if not opened: return
 	if game.season_ended:
 		var result: Dictionary=game.final_ledger
-		left.text="November 5, 1848\nFirst snow\n\nThe season on the North Yuba is over.\n\n$%.2f in coin\n%.3f ounces of gold\n%.1f lb of food remaining\n\nCondition: %.0f / 100\n\nSpent this season: $%.2f\n%d store visits\n" % [result.coin,result.gold,result.food_lb,result.condition,result.spent,result.visits]
+		left.text="November 5, 1848\nFirst snow\n\n[font_size=30]%s[/font_size]\n\n" % result.get("title","")+"The season on the North Yuba is over.\n\n$%.2f in coin\n%.3f ounces of gold\n%.1f lb of food remaining\n\nCondition: %.0f / 100\n\nSpent this season: $%.2f\n%d store visits\n" % [result.coin,result.gold,result.food_lb,result.condition,result.spent,result.visits]
 		right.text="The season's account\nSince June 26\n\n"
 		for species in result.catches: right.text+="%d %s taken\n" % [result.catches[species],species]
-		right.text+="%d deer taken · %d bear taken\n%d hides sold · %d rifle shots\n\nEquipment brought out\n%s\n\nG / X closes or reopens the book." % [result.deer,result.bear,result.hides_sold,result.shots,", ".join(result.tools)]
+		right.text+="%d deer taken · %d bear taken\n%d hides sold · %d rifle shots\n\nEquipment brought out\n%s\n" % [result.deer,result.bear,result.hides_sold,result.shots,", ".join(result.tools)]
+		if result.get("crew_hands",0)>0 or result.get("crew_take",0.0)>0:
+			right.text+="\n%s\nThe outfit washed %.2f oz · wages $%.2f\n%s\n" % [result.bar_name,result.crew_take,result.wages,", ".join(result.crew_names)]
+		right.text+="\nG / X closes or reopens the book."
 		return
 	var condition := "Fit" if game.condition>=70 else "Tired" if game.condition>=40 else "Weak"
 	left.text=Calendar.date_string(game.day)+"\n"+Calendar.weekday(game.day)+" — "+game.weather().capitalize()+"\n\n"+condition+".  %d meals today.\n\n" % game.inventory.meals_today
@@ -72,6 +75,8 @@ func refresh() -> void:
 		if game.inventory.get(item,false): right.text+=("Crowbar and horn spoon" if item=="crowbar" else item.capitalize())+"\n"
 	right.text+="%d shots of powder and ball\n%d hides carried\n" % [game.inventory.get("ammo",0),game.inventory.get("hides",[]).size()]
 	right.text+="Crevice gold: %.3f oz\nCradle loads: %d\n" % [game.mining.taken[0]+game.mining.taken[1],game.mining.rocker_actions]
+	if not game.crew.hands.is_empty():
+		right.text+="\nThe outfit · %s\n%d hands · washed %.2f oz this season\nWages paid $%.2f · C opens the roll book\n" % [game.crew.bar_name,game.crew.hands.size(),game.crew.take_total,game.crew.wages_paid]
 func open_book() -> void:
 	opened=true;book.show();Input.mouse_mode=Input.MOUSE_MODE_VISIBLE;refresh()
 func close_book() -> void:

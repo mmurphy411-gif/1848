@@ -66,6 +66,7 @@ func _ready() -> void:
 	label(KEEPER.to_upper()+"\nFRENCH CAMP",Vector3(0,2.97,1.09),.0017)
 	for good in counter.Stock.catalogue():
 		if not good.for_sale: label("%s $%.2f" % [good.item.capitalize(),counter.Prices.price(good.item,game.day,game.seed)],Layout.item_position(good.item)+Vector3(0,.45,.05),.0009)
+	build_outfitting(game)
 	walker=load("res://scripts/store_walker.gd").new();walker.name="Walker"
 	walker.collision_layer=2;walker.collision_mask=1;walker.floor_snap_length=.35
 	var collider:=CollisionShape3D.new();var shape:=CapsuleShape3D.new();shape.radius=.25;shape.height=1.7;collider.shape=shape;collider.position.y=.85;walker.add_child(collider)
@@ -87,6 +88,25 @@ func _ready() -> void:
 	if game.start_hour==13 and get_node("/root/Trip").departure_hour==7: pass
 func label(text: String,point: Vector3,pixel: float) -> void:
 	var node:=Label3D.new();node.text=text;node.font_size=48;node.pixel_size=pixel;node.outline_size=0;node.modulate=Color(.17,.13,.08);add_child(node);node.position=point
+## 2.0: crates out front for the claims that hire, with a hand-lettered sign.
+func build_outfitting(game: Node) -> void:
+	for item in ["pan","whiskey"]:
+		var crate:=MeshInstance3D.new();var box:=BoxMesh.new();box.size=Vector3(.6,.36,.45);crate.mesh=box
+		crate.material_override=_crate_material()
+		add_child(crate);crate.position=Layout.item_position(item)-Vector3(0,.18,0)
+	var sign:=Label3D.new();sign.font=preload("res://assets/fonts/PatrickHand-Regular.ttf");sign.font_size=48;sign.pixel_size=.0016
+	sign.modulate=Color(.17,.13,.08);sign.outline_size=0;sign.shaded=true
+	sign.text="OUTFITTING\n"
+	var names:={"pan":"Tin pan","bunk":"Bunk tent, sleeps four","strongbox":"Iron strongbox","whiskey":"Whiskey, the bottle","timber":"Dam timber, by mule"}
+	for item in counter.Stock.OUTFIT: sign.text+="%s  $%.2f\n" % [names[item],counter.Prices.price(item,game.day,game.seed)]
+	add_child(sign);sign.position=Vector3(-4.75,1.25,2.32);sign.rotation.y=.35
+	var post:=MeshInstance3D.new();var pole:=BoxMesh.new();pole.size=Vector3(.08,1.0,.08);post.mesh=pole;post.material_override=_crate_material()
+	add_child(post);post.position=Vector3(-4.75,.5,2.28)
+	var board:=MeshInstance3D.new();var plank:=BoxMesh.new();plank.size=Vector3(.95,.62,.03);board.mesh=plank
+	var paper:=StandardMaterial3D.new();paper.albedo_color=Color(.86,.80,.64);paper.roughness=.95;board.material_override=paper
+	add_child(board);board.position=Vector3(-4.75,1.22,2.29);board.rotation.y=.35
+func _crate_material() -> Material:
+	var mat:=StandardMaterial3D.new();mat.albedo_color=Color(.42,.30,.18);mat.roughness=.9;return mat
 func build_ground() -> void:
 	var mesh:=MeshInstance3D.new();var plane:=PlaneMesh.new();plane.size=Vector2(100,100);mesh.mesh=plane;mesh.material_override=Library.rock("duff",2);add_child(mesh);mesh.create_trimesh_collision()
 	var rng:=RandomNumberGenerator.new();rng.seed=184810

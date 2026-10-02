@@ -1,0 +1,17 @@
+{
+  "geometry_transforms_visibility_existing_uvs_cameras_lights_unchanged": true,
+  "saved_scene_reopened_and_verified": true,
+  "source_sha256": "a2a78999d4b95128564dc18dfa0865162f994e21682fc3616be2b1eb9fe0b5bf",
+  "reference_sha256": "3eb2d2af5aefb76ae628847f133c179cd1ec50e2f25725eea4a07c7db3806265",
+  "reference": "C:\\Users\\mmurp\\1848\\characters\\rainbow trout\\ChatGPT Image Sep 10, 2026, 11_21_01 AM (1).png",
+  "original_scene": "C:\\Users\\mmurp\\1848\\blender\\trout_convergence_working.blend",
+  "protected_snapshot_sha256": "1be2d0180c1ac9e1bf98f8ddd7ec77a1097a8530a2b1978dc93e184c4b65e411",
+  "candidate_count": 1,
+  "renderer": "Cycles, 32 samples, fixed seed 1848, original AgX view settings",
+  "limitations": [
+    "Illustrated lighting remains in color image; no albedo reconstruction.",
+    "Reference side art mirrored onto opposite side.",
+    "Screen-size previews are Blender proxies, not Godot/water captures.",
+    "Material variant is not integrated into live game."
+  ]
+}

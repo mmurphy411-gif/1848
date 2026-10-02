@@ -9,6 +9,8 @@ const DAY_SECONDS := 1200.0
 const NIGHT_SECONDS := 180.0
 const CYCLE_SECONDS := DAY_SECONDS + NIGHT_SECONDS
 var running := false
+## 2.0: game-time multiplier (settings day length, holding T to let time pass).
+var rate := 1.0
 var elapsed := 0.0
 
 func hour_at(seconds: float) -> float:
@@ -17,15 +19,16 @@ func hour_at(seconds: float) -> float:
 		return lerpf(DAWN, DUSK, phase / DAY_SECONDS)
 	return fposmod(DUSK + (24.0-DUSK+DAWN)*(phase-DAY_SECONDS)/NIGHT_SECONDS,24.0)
 
-func start(hour := DAWN) -> void:
+func start(hour := DAWN, announce := true) -> void:
 	var h := fposmod(hour,24.0)
 	elapsed = (h-DAWN)/(DUSK-DAWN)*DAY_SECONDS if h >= DAWN and h <= DUSK else DAY_SECONDS+fposmod(h-DUSK,24.0)/(24.0-DUSK+DAWN)*NIGHT_SECONDS
 	running = true
-	advanced.emit(hour_at(elapsed))
+	# Scenery (the title) poses the hour silently: no meal checks, no crew work.
+	if announce: advanced.emit(hour_at(elapsed))
 
 func advance(delta: float) -> void:
 	if not running: return
-	var total := elapsed+maxf(delta,0.0)
+	var total := elapsed+maxf(delta,0.0)*rate
 	for i in int(total/CYCLE_SECONDS): day_ended.emit()
 	elapsed = fposmod(total,CYCLE_SECONDS)
 	advanced.emit(hour_at(elapsed))

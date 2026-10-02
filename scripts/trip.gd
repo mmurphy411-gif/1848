@@ -61,7 +61,7 @@ func depart(debug := false) -> void:
 		await fade_to(1);await rim_shot(departure_hour)
 	trail_meal()
 	var game: Node=get_node("/root/GameState")
-	game.check_midday(departure_hour+6)
+	game.check_midday(departure_hour+6,false)
 	claim.get_node("Soundscape").stop();claim.get_node("Camp").fire_sound.stop();claim.get_node("Rain").sound.stop()
 	if get_tree().root.close_requested.is_connected(claim.request_quit): get_tree().root.close_requested.disconnect(claim.request_quit)
 	get_tree().root.remove_child(claim)
@@ -95,6 +95,7 @@ func home(debug := false) -> void:
 	claim.get_node("Walker").set_physics_process(true)
 	claim.get_node("CameraRig/SpringArm3D/Camera3D").make_current()
 	claim.get_node("Daylight/Clock").start(hour);camp.last_hour=hour
+	if claim.has_node("Crew"): claim.get_node("Crew").settle()
 	game.event("Home at dusk.")
 	if not debug: await fade_to(0)
 	travelling=false

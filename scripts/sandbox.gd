@@ -19,12 +19,13 @@ func _ready() -> void:
 	var scroll := ScrollContainer.new();panel.add_child(scroll)
 	var column := VBoxContainer.new();column.size_flags_horizontal=Control.SIZE_EXPAND_FILL;scroll.add_child(column)
 	var title := Label.new();title.text="SEASON SANDBOX  ·  F4";column.add_child(title);column.add_child(date_label)
-	for key in ["seed","day","hour","dollars","gold","condition","hooks","line","firewood","bait.grasshopper","bait.hellgrammite","bait.worm","bait.pork","fish.fresh","fish.smoked","goods.flour","goods.beans","goods.pork","goods.coffee","goods.salt","crowbar","pick","shovel","boots","rocker","spear","rifle","ammo","tent","river"]:
+	for key in ["seed","day","hour","dollars","gold","condition","hooks","line","firewood","bait.grasshopper","bait.hellgrammite","bait.worm","bait.pork","fish.fresh","fish.smoked","goods.flour","goods.beans","goods.pork","goods.coffee","goods.salt","crowbar","pick","shovel","boots","rocker","spear","rifle","ammo","tent","river","crew","pans","bunks","whiskey","strongbox"]:
 		var row := HBoxContainer.new();column.add_child(row)
 		var label := Label.new();label.text=key;label.custom_minimum_size.x=170;row.add_child(label)
 		var value := SpinBox.new();value.min_value=0;value.max_value=2147483647 if key=="seed" else 132 if key=="day" else 24 if key=="hour" else 100000
 		value.step=.01 if key.begins_with("goods.") else .25 if key in ["hour","gold","dollars","condition","line"] else 1
-		if key in preload("res://scripts/mining_model.gd").TOOLS+["spear","rifle","tent"]: value.max_value=1
+		if key in preload("res://scripts/mining_model.gd").TOOLS+["spear","rifle","tent","strongbox"]: value.max_value=1
+		if key=="crew": value.max_value=preload("res://scripts/crew_model.gd").ROSTER.size()
 		if key=="river": value.min_value=-.75;value.max_value=.14;value.step=.01
 		value.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 		row.add_child(value);fields[key]=value
@@ -44,6 +45,9 @@ func refresh_fields() -> void:
 	values.rifle=1 if game.inventory.get("rifle",false) else 0
 	values.tent=1 if game.inventory.get("tent",false) else 0
 	values.ammo=game.inventory.get("ammo",0)
+	values.crew=game.crew.hands.size()
+	for key in ["pans","bunks","whiskey"]: values[key]=game.inventory.get(key,0)
+	values.strongbox=1 if game.inventory.get("strongbox",false) else 0
 	values.spear=1 if game.inventory.get("spear",false) else 0
 	values.river=game.water_level();river_auto.button_pressed=is_inf(game.river_override)
 	for key in fields: fields[key].value=values[key]
@@ -64,6 +68,7 @@ func command(name: String) -> void:
 			for key in fields:
 				if key!="gold": args[key]=str(fields[key].value)
 			if river_auto.button_pressed: args.river="auto"
+			if int(fields.crew.value)==game.crew.hands.size(): args.erase("crew")
 			game.apply_scenario(args);get_node("/root/Sack").ounces=fields.gold.value;get_node("/root/Sack").changed.emit(fields.gold.value)
 			clock.start(game.start_hour);claim.get_node("Daylight").apply(game.start_hour)
 			claim.counter.abandon();claim.counter.begin_visit();claim.board.refresh();claim.refresh()
@@ -79,6 +84,7 @@ func command(name: String) -> void:
 			args.weather=weather.get_item_text(weather.selected)
 			args.rod="1" if rod.button_pressed else "0"
 			if river_auto.button_pressed: args.river="auto"
+			if int(fields.crew.value)==game.crew.hands.size(): args.erase("crew")
 			game.apply_scenario(args)
 			get_node("/root/Sack").ounces=fields.gold.value;get_node("/root/Sack").changed.emit(fields.gold.value)
 			clock.start(game.start_hour)
