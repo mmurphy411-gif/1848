@@ -11,3 +11,4 @@ experiments/miner_anatomy_study/source/*.target filter=lfs diff=lfs merge=lfs -t
 experiments/miner_anatomy_study/source/LICENSE.md conflict-marker-size=32
 # Union-merge CC0 provenance rows (opt-in driver: see tools/art/manifest.py; falls back to text merge).
 assets/CC0_MANIFEST.json merge=cc0manifest
+*.sh text eol=lf
