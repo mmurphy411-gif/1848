@@ -895,4 +895,68 @@ Camp dressing adds about 115 draw calls in the downstream view.
 
 ## Integration
 
-(pending: orchestrator)
+Done October 2–3, 2026 by the orchestrator.
+
+**Method.** Stages 1–6 ran as eight parallel agents in separate git worktrees branched from
+the Stage 0 commit (Stage 1 split into ground and sky; Stage 5 into wildlife and crew), each
+with a file-ownership lane. Each branch was cherry-picked onto `2.0` as one commit per stage.
+Conflicts were limited to shared files and resolved by union: `assets/CC0_MANIFEST.json`
+(via `tools/art/manifest.py merge`), `tools/art/budgets.json`, `.gitignore`,
+`tests/visual_tour.gd` (new views from crew and props), `project.godot` (`rain_wetness` and
+`season` shader globals), `scripts/greybox.gd` (`_sync_river` now updates both
+`Assets.set_water_level` and `ScanRocks.set_water_level`; the water surface gets both the
+broken-water UVs and the canyon bend) and `scripts/asset_library.gd`.
+
+**Fixes made during integration.**
+
+- Exposure: `exposure_multiplier = lerpf(1.0, 1.6, warmth) * (1.0 + .3 * (1.0 - daylight))`.
+  With darker ground, golden hour and night had fallen to 0.81 and 0.72 of baseline; after
+  the change the ground-and-sky merge measured 0.91 and 1.01, with 10:00/13:00 unchanged.
+- VRAM: textures Godot extracts from GLBs imported as lossless (`compress/mode=0`) because
+  3D-use detection only happens in the editor, so the scan rocks alone took ~276 MiB. A
+  project `[importer_defaults]` entry now makes new texture imports VRAM-compressed (BPTC);
+  committed `.import` files keep their own settings. Committing `.import` files for the
+  extracted copies does not work: when one exists, Godot skips extraction and loads the
+  image uncompressed. 191 extracted copies were re-imported in the main checkout.
+- `tests/miner_game.gd` now creates `artifacts/miner-game/`; without it the suite hung in
+  any fresh clone or worktree.
+- Stage 2's back-wall colliders attached an empty `ConvexPolygonShape3D` before setting its
+  points, logging ten physics errors per claim load (the hulls were correct). Points are
+  now set first.
+- The tour's per-view setup slot went from 180 to 300 frames; the merged claim overran it.
+
+**Worktree lesson.** Fresh worktrees contain Git LFS pointer files, not art; run
+`git lfs checkout` before importing, or Godot silently writes broken imports.
+
+**After all eight stages (tour `merge8`).** Suite 37/37. Stage 1 gates: `downstream_10h`
+0.430 / 0.281, `downstream_13h` 0.455 / 0.275 (pass); night 1.33× baseline (pass); golden
+hour 0.877× (fail, needs ≥ 0.90).
+
+**Blind reviews of `merge8`** (one reviewer per stage, shown only the merged frames and the
+stage questions):
+
+| Stage | Passed | Failed |
+| --- | --- | --- |
+| 1 light | daylight colour (marginal), rain (weak), water (marginal) | clouds not readable after merge; golden hour milky, no amber |
+| 2 canyon | reads as a rock canyon; views end on ridges, no flat horizon | loose boulders look dropped on; distant slopes a rockless fogged backdrop |
+| 3 rocks | no visible tiling; rocks grounded (just) | ~7 distinct boulder silhouettes (needs 10); quarry-block shapes; no visible wet band; garden-gravel colours |
+| 4 plants | season change reads as autumn | black oak trunk; stretched leaf strips; no understory under oaks; cloned riparian hedge |
+| 5 animals and crew | deer read as deer; no two crew identical | squirrel and jay unreadable in their framing; bear and quail primitives (sourcing gap); denim and balloon sleeves; rigid supper poses |
+| 6 props | — | goods below character detail; modern-looking price board, sign font and parlour bench; sparse shelves; rigid canvas; moulded fire ring, weak fire; hard-edged camp dirt disc |
+
+A floating untextured grey square appears in `near_wall_10h`, only in full tour runs and only
+since Stage 4 merged.
+
+**Frame budget.** The machine still had hung Godot test processes from the stage agents
+(stopping them was not permitted to the orchestrator), two of them rendering continuously,
+so absolute timings are inflated. A same-session A/B against the pre-upgrade commit gives
+`miner_performance` p95 +1.5 / +2.0 / +1.1 ms (downstream / wade / overview); projected on
+the quiet Stage 0 baseline, wade is over 5.5 ms and the overview at the edge. GPU attribution
+(`artifacts/perf_probe/attribution.md`, git-ignored) puts nearly all of it in vegetation:
+foliage alpha-to-coverage, understory shadow casting and distant-conifer shadows. Cutting
+those three saves 1.21 / 1.35 / 1.86 ms in the probe. Terrain texture-sample reductions,
+clouds, water, rocks and props measured at or near zero.
+
+**Wave C.** Six fix-up agents (ground, plants, sky, canyon, characters, props) take the review
+findings and the frame budget as the second and last attempt before anything goes to the
+owner. Their notes follow.
