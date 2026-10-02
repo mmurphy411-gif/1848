@@ -11,6 +11,16 @@ Sources
              HDRIs download the .hdr (or "-exr").
   ambientcg  https://ambientcg.com/api/v2/full_json; resolution is the download
              attribute, e.g. 1K-JPG, 2K-PNG. The zip is verified and unpacked.
+  polypizza  https://poly.pizza/m/<PublicID>; resolution must be `glb` (the only
+             format served without an API key). The model page's embedded state
+             gives title, creator, ResourceID and licence; anything whose licence
+             is not CC0 is refused (Poly Pizza mixes CC0 with CC-BY "Poly by
+             Google" models). The GLB comes from static.poly.pizza. One page
+             request per fetch; robots.txt asks for 10 s between page requests.
+  opengameart  https://opengameart.org/content/<slug>; resolution is the name of
+             one attached file (e.g. `doe.blend`, `fish.zip`). The page must list
+             CC0 among its licences. Zips are unpacked; other archives (7z) are
+             cached as downloaded.
 
 Files land in <main checkout>/.tools/cc0_cache/<source>/<id>/<resolution>/, so every
 git worktree shares one cache. A `_fetch.json` sidecar there records sizes and
@@ -21,7 +31,7 @@ The row is written to assets/CC0_MANIFEST.json of the checkout this script lives
 in (see tools/art/manifest.py for format and merging). The local path(s) are
 printed on success; the last line is `main: <path>`.
 
-Adding a source (e.g. polypizza, quaternius): subclass `Source`, implement
+Adding a source (e.g. quaternius, sketchfab): subclass `Source`, implement
 `plan()` to return a `Plan` of `Remote` files (url, relative path, optional
 size/md5, `unpack=True` for archives), and register it in `SOURCES`. Download,
 verification, unpacking, caching and the manifest row are shared.
@@ -31,7 +41,9 @@ from __future__ import annotations
 import argparse
 import datetime
 import hashlib
+import html
 import json
+import re
 import shutil
 import sys
 import urllib.error
@@ -73,6 +85,15 @@ def get_json(url: str):
     try:
         with urllib.request.urlopen(req, timeout=60) as r:
             return json.load(r)
+    except urllib.error.HTTPError as e:
+        raise SystemExit("%s: HTTP %d %s" % (url, e.code, e.reason))
+
+
+def get_text(url: str) -> str:
+    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    try:
+        with urllib.request.urlopen(req, timeout=60) as r:
+            return r.read().decode("utf-8", "replace")
     except urllib.error.HTTPError as e:
         raise SystemExit("%s: HTTP %d %s" % (url, e.code, e.reason))
 
@@ -173,8 +194,62 @@ class AmbientCG(Source):
         return p
 
 
-# Extension point: polypizza / quaternius sources register here.
-SOURCES = {s.name: s for s in (PolyHaven(), AmbientCG())}
+class PolyPizza(Source):
+    """Poly Pizza model pages; CC0 rows only (e.g. Quaternius' animal packs)."""
+    name = "polypizza"
+    PAGE = "https://poly.pizza/m/%s"
+    STATIC = "https://static.poly.pizza/%s.glb"
+
+    def plan(self, asset_id, resolution, args):
+        if resolution.lower() != "glb":
+            raise SystemExit("polypizza serves GLB only; use resolution `glb`")
+        page = self.PAGE % urllib.parse.quote(asset_id)
+        text = get_text(page)
+        at = text.find("__SERVER_APP_STATE__")
+        if at < 0:
+            raise SystemExit("polypizza %s: no embedded model state on %s" % (asset_id, page))
+        state = json.JSONDecoder().raw_decode(text[at + len("__SERVER_APP_STATE__"):].lstrip().lstrip("=").lstrip())[0]
+        model = (state.get("initialData") or {}).get("model") or {}
+        if model.get("PublicID") != asset_id or not model.get("ResourceID"):
+            raise SystemExit("polypizza: no model %r" % asset_id)
+        licence = str(model.get("Licence", ""))
+        if not licence.upper().startswith("CC0"):
+            raise SystemExit("polypizza %s: licence %r is not CC0; refused" % (asset_id, licence))
+        title = model.get("Title") or asset_id
+        stem = re.sub(r"[^A-Za-z0-9_.-]+", "_", title).strip("_") or asset_id
+        p = Plan(kind="model", page=page, name=title,
+                 authors=[model["Creator"]["Username"]] if model.get("Creator", {}).get("Username") else [])
+        p.files.append(Remote(stem + ".glb", self.STATIC % model["ResourceID"]))
+        p.main = stem + ".glb"
+        return p
+
+
+class OpenGameArt(Source):
+    """OpenGameArt content pages; one attached file per row, CC0 pages only."""
+    name = "opengameart"
+    PAGE = "https://opengameart.org/content/%s"
+    FILES = "https://opengameart.org/sites/default/files/"
+
+    def plan(self, asset_id, resolution, args):
+        page = self.PAGE % urllib.parse.quote(asset_id)
+        text = get_text(page)
+        licences = [html.unescape(x).strip() for x in re.findall(r"class='license-name'>([^<]+)<", text)]
+        if not any(x.upper() == "CC0" for x in licences):
+            raise SystemExit("opengameart %s: licences %s do not include CC0; refused" % (asset_id, licences or "none"))
+        links = sorted(set(re.findall(r'href="(%s[^"?]+)"' % re.escape(self.FILES), text)))
+        named = {urllib.parse.unquote(u.rsplit("/", 1)[1]): u for u in links if "/files/css/" not in u and "/styles/" not in u}
+        if resolution not in named:
+            raise SystemExit("opengameart %s: no attached file %r (have %s)" % (asset_id, resolution, ", ".join(sorted(named))))
+        title = re.search(r"<title>(.*?)</title>", text, re.S)
+        title = html.unescape(title.group(1)).split("|")[0].strip() if title else asset_id
+        author = re.search(r"field-name-author-submitter.*?class='username'><a[^>]*>([^<]+)</a>", text, re.S)
+        p = Plan(kind="model", page=page, name=title, authors=[html.unescape(author.group(1)).strip()] if author else [])
+        p.files.append(Remote(resolution, named[resolution], unpack=resolution.lower().endswith(".zip")))
+        p.main = resolution
+        return p
+
+
+SOURCES = {s.name: s for s in (PolyHaven(), AmbientCG(), PolyPizza(), OpenGameArt())}
 
 
 def digest(path: Path):

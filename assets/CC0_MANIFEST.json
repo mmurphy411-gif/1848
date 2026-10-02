@@ -34,6 +34,29 @@
       "options": {}
     },
     {
+      "source": "opengameart",
+      "id": "undead-squirrel-animated",
+      "resolution": "undeadsquirrell.zip",
+      "kind": "model",
+      "name": "Undead Squirrel (ANIMATED)",
+      "licence": "CC0-1.0",
+      "fetched": "2026-10-02",
+      "page": "https://opengameart.org/content/undead-squirrel-animated",
+      "authors": ["CDmir"],
+      "outputs": [
+        "assets/wildlife/squirrel.glb"
+      ],
+      "files": [
+        {"path": "lecense.txt", "from": "undeadsquirrell.zip", "size": 61, "sha256": "8d9d600c6a94201059ab69e2a976efb48bb2b8eb4289499b20debab0284042de"},
+        {"path": "squirrel-anim.blend", "from": "undeadsquirrell.zip", "size": 11226828, "sha256": "150016dac5a6a700f5726c84e18bb66f7d03b23c35f2b7d636a41f413980927f"},
+        {"path": "squirrel-body-norm.png", "from": "undeadsquirrell.zip", "size": 330758, "sha256": "67feb49457736301642dbf0213e1f0e50d802282b641208b9a4c57552b50c483"},
+        {"path": "squirrel-body.png", "from": "undeadsquirrell.zip", "size": 1062322, "sha256": "842ac1f7d43477e7cb3818a7da2d10f9f0aed6ecf3eb78fccbd2e4992c43c7de"},
+        {"path": "squirrel-head-norm.png", "from": "undeadsquirrell.zip", "size": 367013, "sha256": "17c94ea3c123a55f92381d1447abfa191214c08cd18b1fbe6a5787c5d7fca9e1"},
+        {"path": "squirrel-head.png", "from": "undeadsquirrell.zip", "size": 877994, "sha256": "210de47d5797dcb928d4cdecc755ceaba7b51b4a864a7f2009e3846bb02f9321"},
+        {"path": "undeadsquirrell.zip", "url": "https://opengameart.org/sites/default/files/undeadsquirrell.zip", "size": 3530676, "sha256": "96e4c1c4581cbc2b2b65ef6cc24be09cc0059cafd5673b380d3b26fd2f6511cf"}
+      ]
+    },
+    {
       "source": "polyhaven",
       "id": "bark_brown_02",
       "resolution": "1k",
@@ -835,6 +858,40 @@
         {"path": "textures/wooden_stool_02_nor_gl_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/wooden_stool_02/wooden_stool_02_nor_gl_1k.jpg", "size": 854910, "md5": "0ca081d4d50b73f0e4e02b8586c7638d", "sha256": "463af01cee188aaaeb2b89298b6f3b814ef3991315fafa5ea2e66c2e8402c570"},
         {"path": "wooden_stool_02.bin", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/wooden_stool_02/wooden_stool_02.bin", "size": 268448, "md5": "ea27eb52e71c40319d9ca108843b19a0", "sha256": "6b277259e77b8359fa6bd97a2b09d2b59ec615dd78f301f9ef63d25013d257b8"},
         {"path": "wooden_stool_02_1k.gltf", "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/1k/wooden_stool_02/wooden_stool_02_1k.gltf", "size": 4077, "md5": "44db244a27f82a7a8536c689e2995e79", "sha256": "8bb8bc3e420db0f69cee3d2ee74eccad7cabd1110a864a7d945549684e6f32cf"}
+      ]
+    },
+    {
+      "source": "polypizza",
+      "id": "T6Cs7tmMHJ",
+      "resolution": "glb",
+      "kind": "model",
+      "name": "Deer",
+      "licence": "CC0-1.0",
+      "fetched": "2026-10-02",
+      "page": "https://poly.pizza/m/T6Cs7tmMHJ",
+      "authors": ["Quaternius"],
+      "outputs": [
+        "assets/wildlife/deer.glb"
+      ],
+      "files": [
+        {"path": "Deer.glb", "url": "https://static.poly.pizza/4b6c2a41-43c7-404c-ae37-e8c4645ff93b.glb", "size": 1007564, "sha256": "fabf360b22eaccccd056ee99d698a9562d15aa245821f96e4fbad6db3751604e"}
+      ]
+    },
+    {
+      "source": "polypizza",
+      "id": "tQdzbZ1Cmw",
+      "resolution": "glb",
+      "kind": "model",
+      "name": "Stag",
+      "licence": "CC0-1.0",
+      "fetched": "2026-10-02",
+      "page": "https://poly.pizza/m/tQdzbZ1Cmw",
+      "authors": ["Quaternius"],
+      "outputs": [
+        "assets/wildlife/deer_buck.glb"
+      ],
+      "files": [
+        {"path": "Stag.glb", "url": "https://static.poly.pizza/a9c69fbc-bf7c-4585-9a49-a82e0be1ac6b.glb", "size": 1044172, "sha256": "3c2df7c13a3d37c8660684e46aa1e5a2bf7e91a9b279983921d48bd93d0b67ed"}
       ]
     }
   ]

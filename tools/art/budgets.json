@@ -18,11 +18,9 @@
     {"name": "prop", "globs": ["assets/camp/*.glb", "assets/store/*.glb", "assets/expedition/*.glb", "assets/mining/*.glb", "assets/miner/*.glb", "assets/props/*.glb"], "triangles": 1500, "texture_px": 1024, "note": "Provisional: no Section 5 line; uses the driftwood/stump/log line"}
   ],
   "allow": {
-    "assets/wildlife/bear.glb": "Legacy primitive animal (29,450 tris); replaced in Stage 5",
-    "assets/wildlife/deer.glb": "Legacy primitive animal (28,564 tris); replaced in Stage 5",
-    "assets/wildlife/jay.glb": "Legacy primitive animal (17,890 tris); replaced in Stage 5",
-    "assets/wildlife/quail.glb": "Legacy primitive animal (22,110 tris); replaced in Stage 5",
-    "assets/wildlife/squirrel.glb": "Legacy primitive animal (25,714 tris); replaced in Stage 5",
+    "assets/wildlife/bear.glb": "Legacy primitive animal (29,450 tris); Stage 5 GAP: no acceptable CC0 black bear (owner decision pending)",
+    "assets/wildlife/jay.glb": "Legacy primitive animal (17,890 tris); Stage 5 GAP: no CC0 jay with rig and clips (owner decision pending)",
+    "assets/wildlife/quail.glb": "Legacy primitive animal (22,110 tris); Stage 5 GAP: no CC0 California quail (owner decision pending)",
     "assets/miner/intrepid/miner.glb": "Hero Intrepid Miner (116,477 tris, 2k maps); protected by the plan. Its atlases and clips also dress the crew kit",
     "assets/crew/crew_kit.glb": "Crew kit (Stage 5): the hero miner's game meshes re-cut for the 14 hands and Lambert (107,376 tris with the beard shell; no textures, clips or gear, which come from the miner); one copy shared by every man, LODs generated on import",
     "assets/miner/miner.glb": "Legacy miner rig (19,828 tris) kept for clips and tests",

@@ -30,6 +30,7 @@ __pycache__/
 # Godot extracts these copies from the Stage 6 prop GLBs; the maps live inside the GLBs.
 /assets/props/*.jpg*
 /assets/camp/*.jpg*
+/assets/wildlife/*_*.jpg*
 
 # OS / editors
 Thumbs.db

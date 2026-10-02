@@ -276,7 +276,126 @@ meshes at unit scale with `Assets.rock()`, which S2 may want to revisit.
 
 ## Stage 5 — Wildlife and fish
 
-(pending: S5-wildlife)
+Done October 2, 2026 (S5-wildlife). Sourcing followed `research_animals.md`; the plan's
+stop rule held: no animal was sculpted from code.
+
+**Deer: replaced.** Both candidates were put in the live claim at 3 m and 8–16 m next to
+the miner (previews in the ignored `artifacts/visual-tour/s5wildlife/extra/`). Kelgar's doe has photo
+fur but reads as a rust-red guanaco at 16 m (long thin neck, mottled coat, white eye) and
+has no walk; Quaternius' doe has deer proportions, big ears and every clip the actor needs.
+Shipped: Quaternius **Deer** as `assets/wildlife/deer.glb` (doe, `deer0`) and **Stag** as
+the new `assets/wildlife/deer_buck.glb` (buck, `deer1`), via Poly Pizza (CC0 1.0).
+Recoloured from rust red toward Columbian black-tailed deer: grey-brown coat, cream belly,
+throat and rump, dark hooves, dark eye with a pale ring; the top of the tail and the crown
+painted dark by bone weight; flat facets welded and smoothed below 60°; the stag's rack
+(a red-deer shape) scaled to 62 % and coloured as hard antler. Height 1.45 m doe / 1.55 m
+buck to the ears or poll (shoulder ≈ 0.9 / 1.0 m), so both now stand at the miner's chest
+instead of his shoulder. Clips: idle, walk, run (gallop), graze (eating), alert, headlow,
+death.
+
+**Squirrel: replaced (the conditional base passed).** Kelgar "Undead Squirrel" made healthy
+with non-sculpting edits only: the Teeth mesh and the red-squirrel ear-tuft cards deleted;
+the snarl closed by a constant −30° on the `Mouth` bone in every clip (the open jaw is the
+rest pose, not animated); the coat repainted by `tools/art/repaint_squirrel.py` (blood,
+rot and raw flesh masked by hue, filled by inpainting from the surrounding fur with the
+fur's own grain added back, orange recoloured to silver grey by luminance with white
+underparts, the empty sockets painted as large dark eyes with a pale eye ring, which
+`wildlife.gdshader` gives a wet glint). It reads
+as a western gray squirrel sitting up with a bushy tail at 8 m; see weaknesses for 1 m.
+Clips: idle, alert (rears up), graze (sits eating), run (bound, also the slow foraging gait).
+
+**Bear, jay, quail: GAP, unchanged.** No acceptable CC0 base exists (research §2.2–2.4).
+They keep their legacy part models and procedural animation, allow-listed in
+`tools/art/budgets.json` with the reason "Stage 5 GAP". Owner decision needed, cheapest
+first: (1) accept a non-CC0 licence for these three (itch.io "Low World Forest Animals Kit",
+$9.99, has a rigged bear; nothing found for the birds); (2) the deferred image-to-3D trial
+(ComfyUI + TRELLIS) for bear, jay and quail, then rig in Blender; (3) model from the CC0
+bases listed (OGA polar-bear mesh, "Raven" for a Steller's jay, Kelgar hen for the quail)
+with authored clips. Birds need authored hop/walk/fly clips whatever base is chosen.
+
+**Actor.** `scripts/wildlife_actor.gd` keeps the steering, state machine, population and
+habitat rules untouched and adds a skinned path for species in its `SKELETAL` table (deer,
+squirrel): the GLB's AnimationPlayer runs in manual mode and `animate(delta)` advances it,
+so the tour's frozen poses stay deterministic; idle alternates graze and idle by phase,
+alert plays `alert`, foraging steps play walk and flight plays run with playback rate =
+ground speed / the clip's measured stance speed (doe 0.95 / 3.8 m/s, squirrel 0.65 m/s,
+at scale 1). The body is tilted to the bank as before and settled by the mean hoof gap.
+Test contracts kept: `parts` Head/Tail/FrontL… are BoneAttachment3D nodes on the matching
+bones; `legs` and `foot_world()` use each foot bone's lowest skinned vertex (the sitting
+squirrel stands on its hind feet only, so only those are legs); no collision objects; hit
+detection is the existing physics ray to the actor, unchanged. Legacy species run the old
+code path unchanged. Shared-file hunks: `scripts/expedition.gd` carcasses now come from
+`wildlife_actor.gd`'s static `carcass()` (intake models lie in the last frame of their death clip; legacy
+models as before; the buck's carcass is the buck); `scripts/fisher.gd` dresses the landed
+trophy with the fish shader (one line); `.gitignore` ignores the JPEGs Godot extracts from
+`squirrel.glb`.
+
+**Tools.** `tools/art/fetch_cc0.py` gained `polypizza` (page state → ResourceID, licence must
+start "CC0", GLB from static.poly.pizza; resolution `glb`) and `opengameart` (page licences
+must include CC0; resolution names one attached file; zips unpacked). `blender/
+normalize_animal.py` normalises rigged models (normalize_asset.py drops armatures): clip
+selection and renaming, material recolour or rebuild around legacy images, vertex-colour
+paint by bone weight and facing, rest-pose UVs for fur noise, weld + smooth, ≤ 4
+influences, scale/placement (feet on the origin, head to −Z), sampled clips, manifest
+output. `tools/art/intake_wildlife.sh` rebuilds all three files from the cache.
+`shaders/wildlife.gdshader` takes rest-pose coordinates (no swimming fur) and photo coats.
+
+**Fish: materials improved, no proxy shipped.** Reviewed `fish_underwater_10h`, the
+M9 landed view and side/top renders of all five. The CC0 proxies do not read better *as
+these species*: the Esox texture is unmistakably a northern pike (bean spots, rear dorsal),
+the Kelgar rudd is a deep-bodied European minnow with orange fins, and the Quaternius tuna
+is coarser than what we have; from the game's usual top-down view through water all would
+be dark spindles anyway. `shaders/fish.gdshader` now adds countershading (dark dorsal, pale
+belly), species spotting (trout, Chinook), overlapping-scale relief that fades with
+distance, silvered flanks and a wet clear coat, and glossy black eyes (the old override
+painted the eyes with the atlas); per-species looks live in `scripts/fish.gd` (`LOOKS`).
+Meshes, atlas and the 300–600-triangle assertion are unchanged.
+
+| Gate | Target | Measured | Result |
+| --- | --- | --- | --- |
+| Deer reads as deer at 8–25 m | blind check (orchestrator) | self-check: `wildlife_deer` 10 m, deer in `wildlife_jay` ~25 m and `downstream_06h` read as a doe and an antlered buck | pass (self) |
+| Squirrel reads as western gray squirrel | blind check (orchestrator) | self-check: `wildlife_squirrel` 8 m, grey, white belly, bushy tail, sitting up | pass (self) |
+| Animal budget | ≤ 8,000 tris, ≤ 1k textures | doe 2,096, buck 3,665, squirrel 5,416 (2 × 1k JPEG) | pass |
+| `audit_assets.py` | exit 0 | 54 files: 38 ok, 16 allow-listed, 0 failing (deer and squirrel left the allow-list) | pass |
+| Skin influences | ≤ 4 | 4 (limited and normalised) | pass |
+| Suite | all pass | 37/37 (`miner_game` needs `artifacts/miner-game/` to exist, see Suite) | pass |
+| Frame budget | 5.5 ms p95 | not measurable here (GPU 91–98 % busy with other agents); render and CPU cost both fell, see Cost | pass by cost; re-time on a quiet machine |
+
+**Cost.** Deer 28,564 → 2,096 triangles (85,692 → 6,288 render vertices; buck 3,665),
+squirrel 25,714 → 5,416. In the `wildlife_performance` view, the ten animals' frame cost
+fell from 79,548 to 59,217 primitives, 401 to 298 draw calls and 678 to 428 objects (the
+remaining legacy bear, jay and four quail are most of what is left). Asset size:
+`deer.glb` 1,034 → 482 KB, `squirrel.glb` 1,446 → 581 KB, new `deer_buck.glb` 534 KB
+(net −0.9 MB). Headless CPU time of the ten animals' per-frame update (900 frames,
+median): 349 µs before, 283 and 289 µs after (two runs). Timed runs of
+`wildlife_performance` and `miner_performance`, interleaved before/after twice, swung
+between 3.4 and 18 ms medians on both sides with the GPU shared, so no timing delta is
+claimed.
+
+**Tour.** `artifacts/visual-tour/s5wildlife/` (label `s5wildlife`, no views added). Views
+without animals are unchanged (SSIM ≥ 0.999 against the baseline); changed are
+`wildlife_deer` 0.981, `wildlife_deer_close` 0.912, `wildlife_squirrel` 0.995,
+`wildlife_jay` 0.997 (deer in the background), `downstream_06h` 0.989 and
+`downstream_1925` 0.994 (the deer's dawn and dusk visits). Close-ups (clips, carcasses,
+squirrel at 0.5 m, fish side by side) are in its `extra/` folder.
+
+**Suite.** 37/37 pass. On the first pass `miner_game` timed out before and after alike:
+it writes `res://artifacts/miner-game/runtime_audit.json` without creating the folder, so
+in a fresh worktree it hits a null `FileAccess` and stalls; with the folder present it
+passes in 5 s. No assertion changed, so no regression amendment.
+
+**Still weak.** The Quaternius deer are stylised low poly (2–4k triangles, flat vertex
+colour with procedural fur) and look it at 3 m next to the miner; smoothing removed the
+facets but not the simple silhouette. The buck's rack is still a multi-tined red-deer
+shape, only smaller, and its cream bib is larger than a black-tail's throat patch. The
+squirrel's eyes are the source's deep sockets painted dark (glossy but large under a
+metre), the inpainted face shows a mirrored grain within 1 m, the flanks keep some pale
+streaks from the source's light fur, the tail lacks the white fringe, and the slow
+foraging gait is the bound clip slowed down. Fish remain tube
+meshes. In `fish_underwater_10h` the trout's back is white: `water.gdshader`'s contact
+foam (`foam_distance` 0.35 m against the depth buffer) treats a fish holding 0.4 m down
+as a rock and foams over it (Stage 1 water; not changed here; excluding fish from the
+contact term or shrinking the distance would fix it).
 
 ## Stage 5 — Crew and Lambert
 

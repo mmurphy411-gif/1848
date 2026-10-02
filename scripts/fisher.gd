@@ -250,6 +250,7 @@ func _physics_process(delta: float) -> void:
 func land() -> void:
 	if is_instance_valid(fish): fish.retired=true
 	trophy=MeshInstance3D.new();trophy.mesh=school.sources[hooked_species]
+	preload("res://scripts/fish.gd").dress(trophy,hooked_species)
 	trophy.scale=Vector3.ONE*pow(weight,1.0/3.0)
 	walker.get_parent().add_child(trophy)
 	change(State.LAND,"land")

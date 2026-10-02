@@ -229,8 +229,7 @@ func refresh_corpses() -> void:
 		if record.meat<=0 and not record.hide: continue
 		wanted.append(record.id)
 		if corpses.has(record.id): continue
-		var body: Node3D=load("res://assets/wildlife/"+record.species+".glb").instantiate();add_child(body)
-		body.global_position=record.position+Vector3.UP*.28;body.rotation=Vector3(0,record.rotation,PI/2)
+		var body: Node3D=preload("res://scripts/wildlife_actor.gd").carcass(self,record)
 		corpses[record.id]=body
 	for id in corpses.keys():
 		if id not in wanted: corpses[id].queue_free();corpses.erase(id)
