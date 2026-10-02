@@ -113,7 +113,9 @@ func _update_light(time: float) -> void:
 	environment.tonemap_white = 1.0
 	environment.tonemap_exposure = 1.0
 	camera_attributes.auto_exposure_enabled = false
-	camera_attributes.exposure_multiplier = lerpf(1.0, 1.3, warmth)
+	# Stage 1 darkened the ground albedo into range; low sun and night get more
+	# exposure so golden hour and moonlight hold their baseline brightness.
+	camera_attributes.exposure_multiplier = lerpf(1.0, 1.6, warmth) * (1.0 + .3 * (1.0 - daylight))
 	camera_attributes.dof_blur_far_enabled = false
 	camera_attributes.dof_blur_near_enabled = false
 	_configure_indirect_light()

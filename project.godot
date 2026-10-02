@@ -53,3 +53,10 @@ rain_wetness={
 "type": "float",
 "value": 0.0
 }
+
+[importer_defaults]
+
+texture={
+"compress/high_quality": true,
+"compress/mode": 2
+}
