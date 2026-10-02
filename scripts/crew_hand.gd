@@ -2,6 +2,7 @@ extends Node3D
 ## One hired hand (or a man waiting for work) on the bar. Visual only: the crew
 ## model decides what he produces; this walks him to it and plays the work.
 const Layout=preload("res://scripts/claim_layout.gd")
+const Figure=preload("res://scripts/crew_figure.gd")
 const WALK_SPEED:=1.35
 const PAN_SEQUENCE:=[["pan_enter",2.0],["pan_swirl",2.0],["pan_swirl_2",2.0],["pan_swirl_3",2.0],["pan_wash",1.5],["pan_lift",1.5]]
 var id:=""
@@ -23,36 +24,20 @@ var away:=false
 var clip:=""
 var sequence_time:=0.0
 var rate:=1.0
-var materials: Array[ShaderMaterial]=[]
+var figure: Node3D
 
-## look: {"tint":Color, "hair":Color, "scale":float, "pack":bool, "satchel":bool, "canteen":bool}
+## look: a casting from crew_look.gd (hat, hair, beard, garments, skin, build, gear).
 func setup(hand_id: String, look: Dictionary) -> void:
 	id=hand_id
-	miner=preload("res://assets/miner/intrepid/miner.glb").instantiate()
-	miner.rotation.y=PI
-	add_child(miner)
-	scale=Vector3.ONE*float(look.get("scale",1.0))
-	skeleton=miner.find_children("*","Skeleton3D",true,false)[0]
-	player=miner.find_children("*","AnimationPlayer",true,false)[0]
+	figure=Figure.new();figure.name="Figure"
+	add_child(figure);figure.dress(look)
+	# The kit faces +Z; hands face -Z like the miner.
+	figure.rotation.y=PI
+	miner=figure
+	skeleton=figure.skeleton
+	player=figure.player
 	player.add_animation_library("crew",manager.library)
-	var keys:={"Pack":"pack","Satchel":"satchel","Canteen":"canteen","Pickaxe":"pickaxe","TravelPan":"travel_pan"}
-	for node: MeshInstance3D in miner.find_children("*","MeshInstance3D",true,false):
-		node.extra_cull_margin=1.25
-		for surface in node.mesh.get_surface_count():
-			var source:=node.mesh.surface_get_material(surface) as StandardMaterial3D
-			if source==null: continue
-			var part:=source.resource_name.trim_prefix("Intrepid_")
-			var material:=ShaderMaterial.new()
-			material.shader=preload("res://shaders/intrepid_miner.gdshader")
-			material.set_shader_parameter("albedo_atlas",source.albedo_texture)
-			material.set_shader_parameter("normal_atlas",source.normal_texture)
-			material.set_shader_parameter("surface_atlas",source.roughness_texture)
-			material.set_shader_parameter("hair_cutout",part=="Hair")
-			var tint: Color=look.get("hair",Color.WHITE) if part=="Hair" else look.get("tint",Color.WHITE) if part=="Body" else Color.WHITE
-			material.set_shader_parameter("tint",Vector3(tint.r,tint.g,tint.b))
-			node.set_surface_override_material(surface,material)
-			if keys.has(part): equipment[keys[part]]=node
-	for item in equipment: equipment[item].visible=bool(look.get(item,false))
+	equipment=figure.equipment
 	var pan_socket:=_attachment("pan_socket")
 	pan_prop=preload("res://assets/miner/pan.glb").instantiate();pan_socket.add_child(pan_prop);pan_prop.hide()
 	var hand:=_attachment("RightHand")

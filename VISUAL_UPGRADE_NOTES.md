@@ -96,7 +96,93 @@ is an "undead" model that needs a repaint.
 
 ## Stage 5 — Crew and Lambert
 
-(pending: S5-crew)
+Done October 2, 2026 (S5-crew, worktree branch `worktree-agent-a2ea568f2c2aa27c7`).
+
+**Crew kit.** `blender/build_crew_kit.py` re-cuts the hero's exported game meshes
+(`blender/miner_game_export.blend`, with each face's source garment read from the
+identical-topology `artifacts/miner-game/prepared.blend`) into `assets/crew/crew_kit.glb`:
+Body (costume), Hat (split off the costume), Skin and Hair on MinerRig, 107,376 triangles.
+Every face carries its garment id (UV2) and its rest position (CUSTOM0). The kit has no
+textures, clips or gear: the miner's 2k atlases, its clip library and its pack, satchel and
+canteen meshes are shared at runtime. Variants are procedural: 20 shape keys (hat
+`crown_tall`, `crown_cone`, `crown_low`, `brim_wide`, `brim_narrow`, `brim_flat`,
+`brim_droop`, `cap`, `tuque`; hair `hair_short`, `hair_long`, `hair_capped`; beard
+`beard_long`, `beard_bushy`, `moustache_walrus`; `sleeves_rolled`, `sleeves_down`) and a
+beard shell, the face's own lower-face triangles lifted 4.5 mm and split into moustache,
+chin, jaw and cheek. The miner's 3,000 single-quad beard strands do not read beyond about
+2 m; the shell gives beards mass at working distance and the shader frays its edge. A
+quantisation pass (normalised-short weights and UVs, byte garment ids, no hair morph
+normals) took the GLB from 10.0 to 7.7 MB. Lambert's `assets/store/shopkeeper.glb` is
+stripped to his five clips (1.02 MB to 0.25 MB).
+
+**Runtime.** `scripts/crew_look.gd` is a fixed casting per roster entry, drawn from each
+man's origin; `scripts/crew_figure.gd` dresses the kit; `scripts/crew_build.gd` (a
+SkeletonModifier3D) gives lean, average, stocky, heavy and broad builds and a head shape on
+top of the clips' own bone scales; height is the figure scale. `shaders/crew.gdshader` is
+one shared material per surface with the look in 13 instance uniforms: luminance-preserving
+garment dyes, box-filtered checks, stripes and plaid, the harness straps worn as braces or
+hidden, a plain faja or a ceinture flechee at the waist, the miner's torn knee left, patched
+or whole, skin tone, shaving (lifts the painted stubble), a bald crown, hair and beard
+colours, and which beard regions grow. Unworn garments collapse in the vertex shader.
+`crew_hand.gd` uses the figure (same `skeleton`, `player`, `equipment` fields);
+`crew.gd` reads the casting and gives waiting applicants their bedroll pack.
+
+The fourteen: Pike (navy watch cap, striped frock, duck trousers, goatee), Boyle (grey
+slouch, butternut shirt on braces, long chin-curtain), Soto (flat black vaquero hat,
+crimson faja, moustache, tan), Kalama (low straw hat, long black hair, red check, brown,
+clean-shaven, broad), Roux (blue wool cap, blue ceinture flechee, dark full beard, short and
+stocky), Whitcomb (brown slouch, long grey beard, checked shirt), Doyle (charcoal slouch,
+sky-blue army trousers, ginger mutton-chops), Brandt (heavy, bushy blond beard, blue
+check), Ruiz (straw sombrero, white manta, faja, moustache), Freeman (black low hat, dark
+skin, grey-flecked beard, red neckerchief), Lacy (straw farmer's hat, red flannel, braces,
+lanky, clean-shaven), Ortuzar (flat-brimmed Chilean felt, plaid, full black beard), Fisk
+(black plug hat, pale, clean-shaven, white shirt, black vest), Price (bare bald crown,
+white chin-curtain). **Lambert** is built from the same kit: red toque, red ceinture
+flechee, grey walrus moustache and side-whiskers, blue-checked shirt, blue neckerchief,
+heavy build; `shopkeeper.gd` keeps `state`, `history`, `play`, `settle` and `busy`.
+
+**Tour.** `crew_lineup` is appended (29 views): the fourteen in roster order on an arc 6 m
+from the camera at 10:00, sun behind it. `store` and `crew_supper_1936` keep their cameras.
+Evidence beyond the tour (plain-light lineup, head sheet, Lambert close-ups, kit report):
+`artifacts/visual-tour/s5crew/extra/`.
+
+| Gate | Target | Measured | Result |
+| --- | --- | --- | --- |
+| Supper view, no two alike | distinct | 7 men; closest pair differs in 8 of 13 cast attributes (hat, colours, beard, skin, shirt, pattern, vest, trousers, scarf, braces, sash, build) | pass |
+| Lineup, no two alike | distinct | 14 men; closest pair (Boyle, Price) differs in 7 of 13 | pass |
+| Lambert at the miner's detail in `store` | same standard | the miner's own meshes and 2k atlases; red toque, moustache and check read at the counter | pass (for blind review) |
+| Views without crew | unchanged | SSIM 0.994 to 1.000; `near_wall_10h`, `under_oak_10h` differ only where Pike and Boyle wait at the trail (new looks, packs) | pass |
+| `store`, `crew_supper_1936` framing | unchanged | same cameras; SSIM 0.999 and 0.976 | pass |
+| Suite | 37/37 | 37/37 in 172 s | pass |
+| `audit_assets.py` | exit 0 | 54 files, 0 failing; kit allow-listed, shopkeeper now within budget (0 tris) | pass |
+| `crew_performance` p95 (work, dam, supper) | baseline 4.1 to 4.3 ms | before 4.22, 4.11, 4.40 ms; after 4.30, 4.47, 4.76 ms (best of 6 rounds each); medians 3.49, 3.40, 3.67 vs 3.50, 3.43, 3.75 ms | +0.1 to +0.4 ms p95, within 5.5 ms |
+| `miner_performance` p95 (downstream, wade, overview) | unchanged: no hands in these views, hero untouched | before 3.44, 3.90, 4.28 ms; after 4.20, 6.96, 4.31 ms (best of 8); medians 3.06, 3.29, 3.70 vs 3.35, 3.29, 3.74 ms | noise; overview (binding) +0.03 ms |
+
+Frame times were taken in alternating before/after rounds in this worktree (before = the
+Stage 0 `crew.gd`, `crew_hand.gd`, `shopkeeper.gd`) while other agents rendered on the same
+GPU; single rounds swung by up to 10x, so the table gives the best round of each. Load-free
+counts in the `crew_performance` views: ten hands at work 1,027 draw calls (1,007 before),
+4.15 M primitives (4.22 M); supper 1,353 draws (1,345), 6.13 M primitives (6.15 M); mesh
+buffers 147.8 MB (134.0 MB), the one shared kit.
+
+**Regression amendments.** None; no assertion changed. `tests/visual_tour.gd` gains the
+`crew_lineup` view (shared file, one hunk). Harness note: in a fresh worktree `miner_game`
+hangs until the suite timeout because `artifacts/miner-game/` does not exist and its
+runtime-audit write fails (`miner_game.gd` line 107); create the directory before running
+the suite. Not a game fault; left for the orchestrator.
+
+**Assets.** Added `assets/crew/crew_kit.glb` 7.7 MB; `assets/store/shopkeeper.glb` 1.02 to
+0.25 MB. Net +7.0 MB.
+
+**Still weak.** Every man has the miner's face: head proportions, skin, hair and beard
+separate them at 6 m, but in close-up they are brothers. The beard shell is a painted
+sheet, flat in profile close-ups, and long beards hang as a single blade. `sleeves_down`
+still billows. The knit caps keep the felt texture (a crease highlight shows on the
+toque's crown). Knee patches are flat squares. Lambert's sash is hidden by the counter in
+the `store` view. Rebuilding the kit needs `prepared.blend` (regenerated by
+`export_intrepid_miner.py prepare`) and must be redone whenever the miner is re-exported,
+since the kit's faces follow the miner's atlases. The hero's own walk clip keys arm and hand
+scale (hands about 15% wide while walking); the builds preserve it rather than fix it.
 
 ## Stage 6 — Camp, store and props
 

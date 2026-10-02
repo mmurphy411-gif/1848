@@ -1,4 +1,7 @@
-"""Reuse the miner rig and body, with separate clothing and work clips."""
+"""Reuse the miner rig and body, with separate clothing and work clips.
+
+Since visual upgrade Stage 5 only the five clips are used: Lambert is drawn from the crew
+kit, and blender/build_crew_kit.py strips this mesh from assets/store/shopkeeper.glb."""
 import sys,bmesh
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).parent))

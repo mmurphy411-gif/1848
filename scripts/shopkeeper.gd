@@ -1,20 +1,22 @@
 extends Node3D
+## Lambert, the storekeeper at French Camp: a French-Canadian, once a Hudson's Bay
+## voyageur, who never speaks. He is built from the crew kit like the hired hands
+## (crew_look.gd LAMBERT: red toque, ceinture flechee, grey walrus moustache) and plays
+## his five store clips, which assets/store/shopkeeper.glb carries on the miner's rig.
+const Figure=preload("res://scripts/crew_figure.gd")
+const Look=preload("res://scripts/crew_look.gd")
 var state := "keep_idle"
 var history: Array[String]=[]
 var player: AnimationPlayer
 var busy := false
+var figure: Node3D
 func _ready() -> void:
-	var model: Node3D=load("res://assets/store/shopkeeper.glb").instantiate();add_child(model)
-	for mesh in model.find_children("*","MeshInstance3D",true,false):
-		for surface in mesh.mesh.get_surface_count():
-			var original: Material=mesh.mesh.surface_get_material(surface)
-			if original.resource_name=="Lambert 3":
-				var skin: StandardMaterial3D=original.duplicate()
-				skin.albedo_color=Color.WHITE
-				skin.albedo_texture=preload("res://assets/miner/body_albedo.png")
-				skin.normal_enabled=true;skin.normal_texture=preload("res://assets/miner/body_normal.png");skin.normal_scale=.12
-				mesh.set_surface_override_material(surface,skin)
-	player=model.find_children("*","AnimationPlayer",true,false)[0]
+	var clips: Node=load("res://assets/store/shopkeeper.glb").instantiate()
+	var library: AnimationLibrary=clips.find_children("*","AnimationPlayer",true,false)[0].get_animation_library("")
+	clips.free()
+	figure=Figure.new();figure.name="Figure";add_child(figure)
+	figure.dress(Look.LAMBERT,library)
+	player=figure.player
 	player.get_animation("keep_idle").loop_mode=Animation.LOOP_LINEAR
 	player.animation_finished.connect(func(clip: StringName):
 		if clip=="shelve": play("keep_idle"))

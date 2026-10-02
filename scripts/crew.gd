@@ -7,6 +7,7 @@ const Layout=preload("res://scripts/claim_layout.gd")
 const Hand=preload("res://scripts/crew_hand.gd")
 const Calendar=preload("res://scripts/calendar.gd")
 const Visual=preload("res://scripts/miner_visual.gd")
+const Look=preload("res://scripts/crew_look.gd")
 const FIRE_OFFSET:=Vector3(7.5,0,.6)
 const BUNK_SPOTS:=[Vector3(6.2,0,5.2),Vector3(9.8,0,5.6),Vector3(5.6,0,8.6),Vector3(9.4,0,9.0)]
 const TUNES:=["tune_susanna","tune_traveler","tune_home"]
@@ -99,12 +100,8 @@ func _build_notice() -> void:
 	paper.add_child(notice);notice.position=Vector3(0,0,-.008)
 	stake.visible=false
 
-func _look(id: String) -> Dictionary:
-	var rng:=RandomNumberGenerator.new();rng.seed=hash(id+"look")
-	var warm:=rng.randf_range(-.08,.08)
-	var hair: Array=[Color(.55,.5,.45),Color(.3,.28,.26),Color(1.1,1.0,.85),Color(.75,.62,.5),Color(1.3,1.25,1.2)]
-	return {"tint":Color(1+warm,1,1-warm)*rng.randf_range(.86,1.06),"hair":hair[rng.randi()%hair.size()],"scale":rng.randf_range(.95,1.05),
-		"pack":rng.randf()<.25,"satchel":rng.randf()<.6,"canteen":rng.randf()<.7}
+## Each man's fixed casting (hat, hair, beard, garments, skin and build): crew_look.gd.
+func _look(id: String) -> Dictionary: return Look.look(id)
 
 func _spawn(id: String) -> Node3D:
 	var hand: Node3D=Hand.new();hand.manager=self;hand.name="Hand_"+id
@@ -118,7 +115,10 @@ func sync() -> void:
 	for h in game.crew.hands:
 		keep.append(h.id)
 		if not hands.has(h.id):
-			if waiting.has(h.id): hands[h.id]=waiting[h.id];waiting.erase(h.id)
+			if waiting.has(h.id):
+				hands[h.id]=waiting[h.id];waiting.erase(h.id)
+				# Hired, he leaves his bedroll pack at camp.
+				hands[h.id].figure.show_equipment("pack",bool(_look(h.id).get("pack",false)))
 			else:
 				hands[h.id]=_spawn(h.id)
 				var start:=Trip_point()+Vector3(0,0,1.5);hands[h.id].place(start,PI,"idle")
@@ -131,6 +131,8 @@ func sync() -> void:
 		var id: String=arrivals[i]
 		if waiting.has(id): continue
 		waiting[id]=_spawn(id)
+		# Men come up the trail with their blankets on their backs.
+		waiting[id].figure.show_equipment("pack",true)
 		var spot:=Trip_point()+Vector3(1.3+i*.9,0,.4+i*.5);spot.y=Layout.height_at(spot.x,spot.z)
 		waiting[id].place(spot,PI*.85,"idle")
 	var count: int=game.inventory.get("bunks",0)

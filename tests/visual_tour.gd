@@ -51,6 +51,7 @@ const VIEWS := [
 	["wildlife_deer","wildlife"],["wildlife_deer_close","wildlife"],["wildlife_bear","wildlife"],
 	["wildlife_jay","wildlife"],["wildlife_quail","wildlife"],["wildlife_squirrel","wildlife"],
 	["crew_work_10h","crew"],["crew_supper_1936","crew"],
+	["crew_lineup","crew"],
 ]
 ## Rig poses shared by paired views: x, metres inland of the June shore, yaw, pitch.
 const DOWNSTREAM := [-20.0, 8.0, -1.1475, -.08]
@@ -432,10 +433,32 @@ func crew_scenes() -> void:
 		var f: Vector3 = crew.fire_point()
 		view(f + Vector3(-3, 2.6, -7.5), f + Vector3(0, .8, 1.5), 52)
 		await shot("crew_supper_1936", "crew at the supper fire, 19:36")
+	if await begin("crew_lineup"):
+		await crew_lineup(crew)
 	crew.fire_sound.stop(); crew.music.stop()
 	await close_claim()
 	# Later runs in this process must not inherit the outfit.
 	game.apply_scenario({"crew": "0", "pans": "0"})
+
+## Stage 5: all fourteen hands in roster order on an arc 6 m from the camera at 10:00,
+## facing it with the sun behind it, to judge whether every man can be told apart.
+func crew_lineup(crew: Node3D) -> void:
+	game.apply_scenario({"crew": "14", "pans": "14"})
+	crew.sync(); crew.set_process(false)
+	pose_time(10.0)
+	var forward := Vector3(.75, 0, .66).normalized()
+	var centre := Vector3(-2.0, 0, 2.0)
+	var eye := centre - forward * 6.0
+	eye.y = Layout.height_at(eye.x, eye.z) + 1.15
+	var ids: Array = Crew.ROSTER.map(func(m): return m.id)
+	for i in ids.size():
+		var direction := forward.rotated(Vector3.UP, lerpf(.64, -.64, i / float(ids.size() - 1)))
+		var p := Vector3(eye.x, 0, eye.z) + direction * 6.0
+		p.y = Layout.height_at(p.x, p.z)
+		crew.hands[ids[i]].place(p, crew._face(p, eye), "idle")
+	var target := centre; target.y = Layout.height_at(centre.x, centre.z) + .95
+	view(eye, target, 52)
+	await shot("crew_lineup", "all fourteen hands in roster order, an arc 6 m from the camera, 10:00")
 
 func crew_settle(crew: Node3D) -> void:
 	crew.set_process(true)
