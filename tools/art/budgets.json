@@ -1,0 +1,37 @@
+{
+  "_comment": "Section 5 budgets of VISUAL_UPGRADE_PLAN.md for tools/art/audit_assets.py. Categories are tried in order; the first whose glob matches the repo-relative path wins (fnmatch: * also matches /). triangles = LOD0 triangles over the default scene; texture_px = largest image side. Rows marked provisional have no Section 5 line and borrow the nearest one.",
+  "categories": [
+    {"name": "distant_tree", "globs": ["assets/trees/*_distant.glb"], "triangles": 500, "texture_px": 2048, "note": "Distant tree; shares the species atlas"},
+    {"name": "near_tree", "globs": ["assets/trees/*.glb"], "triangles": 9000, "texture_px": 2048, "note": "Near tree; shared 2k atlas per species"},
+    {"name": "cobble", "globs": ["assets/boulders/cobble_*.glb", "assets/rocks/cobble*.glb"], "triangles": 400, "texture_px": 1024, "note": "Provisional: not in Section 5; instanced about 600 times"},
+    {"name": "boulder", "globs": ["assets/boulders/*.glb", "assets/rocks/boulder*.glb"], "triangles": 3000, "texture_px": 1024, "texture_px_large": 2048, "large_quota": 2, "note": "Bar boulder; 1k textures, 2k for the two largest"},
+    {"name": "cliff_outcrop", "globs": ["assets/cliffs/*.glb", "assets/rocks/*.glb", "assets/bedrock/*.glb"], "triangles": 6000, "texture_px": 2048, "note": "Cliff or outcrop kit piece; at most 12 unique pieces"},
+    {"name": "shrub", "globs": ["assets/plants/shrub*.glb", "assets/plants/bush*.glb", "assets/plants/willow*.glb", "assets/plants/*sapling*.glb", "assets/plants/manzanita*.glb", "assets/plants/deerbrush*.glb", "assets/plants/toyon*.glb"], "triangles": 800, "texture_px": 2048, "note": "Shrub (saplings provisional here); shared atlases"},
+    {"name": "fern", "globs": ["assets/plants/fern*.glb"], "triangles": 300, "texture_px": 2048, "note": "Fern; shared atlases"},
+    {"name": "grass_clump", "globs": ["assets/plants/*.glb"], "triangles": 60, "texture_px": 2048, "note": "Grass clump and flower cards; shared atlases"},
+    {"name": "debris", "globs": ["assets/clutter/*.glb", "assets/debris/*.glb", "assets/*/driftwood*.glb", "assets/*/stump*.glb", "assets/*/log_*.glb", "assets/*/*_log.glb"], "triangles": 1500, "texture_px": 1024, "note": "Driftwood, stump, log"},
+    {"name": "animal", "globs": ["assets/wildlife/*.glb", "assets/fish/*.glb"], "triangles": 8000, "texture_px": 1024, "note": "Animal"},
+    {"name": "character", "globs": ["assets/miner/intrepid/*.glb", "assets/miner/miner.glb", "assets/*/miner_clips.glb", "assets/store/shopkeeper.glb", "assets/crew/*.glb"], "triangles": 8000, "texture_px": 1024, "note": "Provisional: no Section 5 line; uses the Animal line"},
+    {"name": "prop", "globs": ["assets/camp/*.glb", "assets/store/*.glb", "assets/expedition/*.glb", "assets/mining/*.glb", "assets/miner/*.glb", "assets/props/*.glb"], "triangles": 1500, "texture_px": 1024, "note": "Provisional: no Section 5 line; uses the driftwood/stump/log line"}
+  ],
+  "allow": {
+    "assets/wildlife/bear.glb": "Legacy primitive animal (29,450 tris); replaced in Stage 5",
+    "assets/wildlife/deer.glb": "Legacy primitive animal (28,564 tris); replaced in Stage 5",
+    "assets/wildlife/jay.glb": "Legacy primitive animal (17,890 tris); replaced in Stage 5",
+    "assets/wildlife/quail.glb": "Legacy primitive animal (22,110 tris); replaced in Stage 5",
+    "assets/wildlife/squirrel.glb": "Legacy primitive animal (25,714 tris); replaced in Stage 5",
+    "assets/miner/intrepid/miner.glb": "Hero Intrepid Miner (116,477 tris, 2k maps), also drawn for the 14 crew hands; protected by the plan, crew variety is Stage 5",
+    "assets/miner/miner.glb": "Legacy miner rig (19,828 tris) kept for clips and tests",
+    "assets/expedition/miner_clips.glb": "Animation clip carrier on the legacy miner rig (19,828 tris)",
+    "assets/mining/miner_clips.glb": "Animation clip carrier on the legacy miner rig (19,828 tris)",
+    "assets/store/miner_clips.glb": "Animation clip carrier on the legacy miner rig (13,812 tris)",
+    "assets/store/shopkeeper.glb": "Lambert (13,492 tris); brought to the miner's standard in Stage 5",
+    "assets/camp/camp.glb": "Multi-prop camp kit (1,972 tris, 2k atlas); rebuilt in Stage 6",
+    "assets/store/store.glb": "Multi-prop store kit (2,676 tris, 2k atlas); rebuilt in Stage 6",
+    "assets/store/goods.glb": "Multi-prop shelf goods kit (2,864 tris, 2k atlas); rebuilt in Stage 6",
+    "assets/miner/pack.glb": "Miner's pack (2,436 tris); matches the hero miner",
+    "assets/miner/handline.glb": "Handline with the 2k camp atlas embedded (48 tris)",
+    "assets/miner/rod.glb": "Rod with the 2k store atlas embedded (24 tris)",
+    "assets/mining/rocker.glb": "Rocker cradle (1,516 tris); just over the provisional prop line"
+  }
+}

@@ -88,7 +88,8 @@ fresh clone. `tools/art/.gdignore` keeps Godot out of `node_modules`.
 
 Seed scripts from the audit, working but unpolished, are in `tools/art/seed/`:
 
-- `visual_tour.gd`: the 16-view tour used for the audit.
+- `visual_tour.gd`: the 16-view tour used for the audit (promoted to
+  `tests/visual_tour.gd` in Stage 0 and removed from the seed folder).
 - `normalize_scan.py`: Poly Haven glTF → weld → decimate → GLB.
 - `proof_in_scene.gd`: loads un-imported GLBs into the live claim for a quick look.
 

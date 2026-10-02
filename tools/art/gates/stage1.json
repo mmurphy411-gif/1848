@@ -1,0 +1,8 @@
+{
+  "_source": "VISUAL_UPGRADE_PLAN.md Stage 1 gates; baseline lower-half luminance 0.665/0.681, saturation 0.123/0.118",
+  "downstream_10h": {"lower_mean_luminance": [0.38, 0.50], "lower_mean_saturation": [0.20, null]},
+  "downstream_13h": {"lower_mean_luminance": [0.38, 0.50], "lower_mean_saturation": [0.20, null]},
+  "_golden_and_night": "must not get darker than baseline by more than 10 percent",
+  "downstream_1925": {"mean_luminance/before": [0.9, null]},
+  "downstream_00h": {"mean_luminance/before": [0.9, null]}
+}

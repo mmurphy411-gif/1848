@@ -9,3 +9,5 @@ experiments/miner_anatomy_study/source/*.obj filter=lfs diff=lfs merge=lfs -text
 experiments/miner_anatomy_study/source/*.target filter=lfs diff=lfs merge=lfs -text
 # The upstream license has a seven-equals Markdown heading, not a merge conflict.
 experiments/miner_anatomy_study/source/LICENSE.md conflict-marker-size=32
+# Union-merge CC0 provenance rows (opt-in driver: see tools/art/manifest.py; falls back to text merge).
+assets/CC0_MANIFEST.json merge=cc0manifest

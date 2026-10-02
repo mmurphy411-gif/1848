@@ -5,6 +5,10 @@ from mathutils import Vector
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "assets"
+# Static-asset glTF export conventions shared by the builders and normalize_asset.py.
+GLTF_EXPORT = dict(export_format='GLB', export_yup=True, export_apply=True, export_normals=True,
+    export_tangents=True, export_animations=False, export_cameras=False, export_lights=False,
+    export_vertex_color='ACTIVE', export_all_vertex_colors=True)
 
 def reset():
     bpy.ops.object.select_all(action='SELECT')
@@ -57,10 +61,8 @@ def export(obj, relative):
     bpy.ops.object.select_all(action='DESELECT')
     obj.select_set(True)
     bpy.context.view_layer.objects.active = obj
-    bpy.ops.export_scene.gltf(filepath=str(path), export_format='GLB', use_selection=True,
-        export_yup=True, export_apply=True, export_normals=True, export_tangents=True,
-        export_animations=False, export_cameras=False, export_lights=False,
-        export_materials='PLACEHOLDER' if relative.startswith('trees/') else 'EXPORT', export_vertex_color='ACTIVE', export_all_vertex_colors=True)
+    bpy.ops.export_scene.gltf(filepath=str(path), use_selection=True,
+        export_materials='PLACEHOLDER' if relative.startswith('trees/') else 'EXPORT', **GLTF_EXPORT)
     print('EXPORTED', relative, sum(len(p.vertices)-2 for p in obj.data.polygons), 'triangles')
 
 def save(name):
