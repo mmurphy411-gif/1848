@@ -104,6 +104,7 @@ func run() -> void:
 	metrics={"mesh_objects":meshes.size(),"surfaces":surfaces,"triangles":triangles,"generated_lod_levels":lod_count,"animations":visual.player.get_animation_list(),"equipment_cases":32,"hair_cutout_valid":hair_cutout_valid,"panning_wrist_angle_max_degrees":panning_wrist_angle,"failures":failures}
 	metrics["panning_skin_rotation_max_degrees"]=panning_skin_rotation
 	metrics["panning_joint_separation_max_meters"]=panning_joint_separation
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://artifacts/miner-game"))
 	var file:=FileAccess.open("res://artifacts/miner-game/runtime_audit.json",FileAccess.WRITE);file.store_string(JSON.stringify(metrics,"  "));file.close()
 	claim.get_node("Soundscape").stop();claim.queue_free();await frames(8)
 	print("MINER GAME: ","PASS" if failures.is_empty() else "FAIL");quit(0 if failures.is_empty() else 1)
