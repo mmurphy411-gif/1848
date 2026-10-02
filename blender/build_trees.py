@@ -1,4 +1,8 @@
-"""Species-specific branching and geometry-node foliage atlases, no external art."""
+"""Species-specific branching and geometry-node foliage atlases, no external art.
+
+Legacy (Milestone 5/6). Visual upgrade Stage 4 replaced its outputs: the foliage atlases come
+from tools/art/build_foliage_atlases.py and the trees from tools/art/build_trees.mjs. Running
+this script overwrites the Stage 4 trees and atlases with the old ones."""
 import sys, random, math, time
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parent))

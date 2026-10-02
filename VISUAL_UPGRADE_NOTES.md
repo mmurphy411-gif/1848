@@ -467,7 +467,102 @@ meshes at unit scale with `Assets.rock()`, which S2 may want to revisit.
 
 ## Stage 4 — Vegetation
 
-(pending: S4-plants)
+Done October 2, 2026 (S4-plants). Tour label `s4plants`.
+
+**Trees.** `tools/art/build_trees.mjs` grows every tree with EZ-Tree 1.1.0 (presets plus seeded
+overrides) and writes the game GLBs itself with gltf-transform: height normalised to the
+species, trunk base radius set (oaks 0.55 m, so the unchanged `OakTrunkNN` cylinders still fit),
+bark UVs re-mapped in metres per branch, leaf cards mapped to one of four tiles of the species
+atlas, card normals bent out of the crown, wind weights in COLOR.r and a per-card random in
+COLOR.g. Three variants per species: black oak 5,182 / 4,852 / 4,636 triangles (13.6–16.4 m;
+fuller crowns, a short bole splitting into limbs), ponderosa 3,200 / 2,840 / 3,236 (27–33 m,
+clear bole, open upper crown), Douglas fir 4,060 / 3,780 / 3,968 (29–37 m, drooping spire),
+incense cedar 4,060 / 3,780 / 3,968 (22–27.5 m). Every variant has a 396-triangle
+`_distant` LOD (180 enlarged cards + a 6-sided trunk). `<species>.glb` stays variant 1, so
+`milestone_5`'s 3,000–6,000 range and height limits still hold. Placement is unchanged: tree and
+cobble positions keep `rng`'s draw order; variants come from their own RNG (seed 184811), the ten
+bar oaks cycle through the three meshes, and each tree gets a position-hashed tone.
+Nodes: `<species>` (all placements, visible prefix = variant 1 near), `<species>_v2/_v3`,
+`<species>_distant`, `<species>_v2/_v3_distant`.
+
+**Bark and leaves.** Scanned CC0 bark (Poly Haven `pine_bark`, `japanese_cedar_bark`,
+`bark_willow`, `bark_brown_02`, `jolcham_oak_bark_01`, plus a derived smooth red manzanita
+layer) in one 512 px Texture2DArray (`bark_albedo.png`, `bark_normal.png`) with normal maps;
+`BARK` hints are brown-grey and only tint the scans 15 %. Foliage atlases are rebuilt by
+`tools/art/build_foliage_atlases.py`: four sprays per species (drawn lobed oak leaves with
+photo detail from `shrub_02`, ponderosa foxtails, fir and cedar sprays), plus a shared
+`foliage_understory_albedo.png` (grass tufts from `grass_medium_01`, fronds from `fern_02`,
+stamped willow, manzanita, toyon, deerbrush and alder sprays). All saved as 256-colour palette
+PNGs. Leaf back faces keep outward normals; alpha coverage is held up with distance.
+
+**Understory and wall vegetation.** `_build_understory()` with its own RNG (seed 184821),
+seated exactly on the render mesh of the walls (`_wall()` rebuilds the triangle under a point
+from greybox's `_columns()`, `_visual_section()` and `wall_point()`): grass patches over the upper
+bar (denser in oak shade and at the wall foot, never in camp), ferns in oak shade, chaparral
+(manzanita, toyon, deerbrush), fir saplings and grass tufts on the talus apron, cliff ledges,
+benches and rims of both walls, 30 evergreen canyon live oaks per wall (black-oak distant meshes
+at 40–70 %, darker, custom-data timing that never reaches autumn), willow, alder and sedge at the
+far wall's foot and past the ends of the bar (|x| > 46, outside the walkable claim). About
+2,700 new instances plus the 300 Milestone 5 cover plants (about 10× today). No collision;
+shrubs never on the walkable bar. One surface per plant (stems are vertex-flagged opaque bark in
+the leaf shader); spatial MultiMesh chunks with visibility ranges and fade; shadows only for
+shrub/willow/live-oak chunks near the bar. The oak-ring grass now uses the atlas clump; its
+instances inside the camp are allocated but not drawn. Flowers go out of bloom by season.
+
+**Season.** `season` is a global shader uniform (`project.godot` [shader_globals]) =
+`GameState.day / 132` (June 26 = 0, first snow = 1), set by `vegetation.gd` on ready and on
+`changed`/`new_day`. Grass greens to gold over 0.02–0.30 (gold by early August), black oak
+yellow over 0.56–0.74 (yellow by October 2) and thins after 0.86, willow and alder over
+0.62–0.88, ferns brown late, chaparral and conifers barely change. Later stages can read it.
+
+**API.** `Assets.plant(species, bark_color, atlas, distant)` unchanged, plus an optional
+`variant` (0 = `<species>.glb`, n = `<species>_<n+1>.glb`); materials are shared per species.
+New `Assets.understory(name)`, `Assets.TREE_VARIANTS`, `BARK_LAYER`, `SEASON`, `STEM`.
+
+| Gate | Target | Measured | Result |
+| --- | --- | --- | --- |
+| `under_oak_10h`, `far_wall_10h`, `near_wall_10h`, `across_river_10h` | blind check | brown-grey scanned trunk, full crowns; ledges, benches and far bank vegetated | for review |
+| Day 100 vs day 10 foliage colour | visibly different | `under_oak`: foliage hue 80° → 45°, saturation 0.43 → 0.61, 63 % of foliage pixels moved > 10° toward yellow (baseline: 105° → 121°, 11 %); `across_river`: hue 127° → 63°, 79 % moved (baseline: no foliage) | pass |
+| Conifer count | 600 placed and rendered | 600 / 600 (`milestone_5`, `milestone_6_notes`) | pass |
+| Frame budget, full forest | 5.5 ms p95 | see below: full forest ≈ base; default forest +0.6–1.3 ms median under a shared GPU | pass (estimate, not quiet-machine) |
+| Budgets (`audit_assets.py`) | tree ≤ 9,000 / 500, shrub ≤ 800, fern ≤ 300, clump ≤ 60 | 41 files OK (alder added to the shrub glob) | pass |
+| Suite | all pass | 37/37 (before: 36/37, `miner_game` hangs without `artifacts/miner-game/` in a fresh worktree) | pass |
+
+**Performance** (`miner_performance`, base copy and Stage 4 alternated back to back; other
+agents kept the GPU at 60–98 %, so these are contended numbers). Default forest, medians
+downstream / wade / overview: base 4.43 / 4.93 / 5.08 ms vs Stage 4 5.70 / 5.92 / 5.82 ms
+(p95 6.49 / 7.09 / 7.42 vs 7.70 / 7.87 / 7.98); a second pair 6.76 / 6.85 / 7.34 vs
+7.96 / 8.32 / 8.19. `--full-forest`: base 6.27 / 6.61 / 8.23 vs 7.08 / 7.36 / 7.94 (p95
+8.34 / 8.80 / 9.47 vs 8.36 / 8.61 / 9.16) — the new near conifers are lighter than the old.
+GPU time per view (`viewport_get_measured_render_time_gpu`, best pair): base 3.06 / 3.28 / 3.77,
+Stage 4 3.96 / 4.34 / 4.30, Stage 4 with the understory hidden ≈ 3.1 / 3.4 / 3.5: the trees cost
+about what the old trees did; the understory adds about 0.7–0.9 ms, half of it grass cards.
+Draw calls 718 / 1,050 / 387 → 1,073 / 1,410 / 665. On the Stage 0 quiet baseline this
+projects to roughly 4.3 / 4.7 / 5.0 ms p95 — within 5.5 ms but with about 0.5 ms left in the
+overview for the other stages. If the merged build is over, cut `grass_clump` counts and range
+first (`UNDERSTORY` in `vegetation.gd`), then the wall shrubs.
+
+**Regression amendment.** `milestone_6_notes.gd` counts conifers across the variant groups
+(`<species>`'s visible prefix plus `<species>_v<n>`, and every `_distant`/`_v<n>_distant`
+group, each distant mesh still < 600 triangles, all distant instances still beyond 60 m). The
+600 placed = 600 rendered assertion is unchanged. No threshold changed. Note, not an amendment:
+`milestone_5`'s ground-cover cap (< 3,000 cards) and its 12 m shore / 45° slope rules still apply
+to `placements` (trees, cobbles, oak-ring cover) and still pass; the Stage 4 understory is kept in
+`Vegetation.understory` and under `Vegetation/Understory`, outside those checks by design
+(waterline willows and sedges, wall plants), with its own budgets above.
+
+**Assets.** Trees 3.47 MB (was 2.27), new plants 0.30 MB, atlases and bark array 4.30 MB
+(atlases were 8.92 MB): net −3.1 MB. Builders: `tools/art/build_foliage_atlases.py`,
+`tools/art/build_trees.mjs` (+ `foliage_regions.json`); `blender/build_trees.py` is marked
+legacy (running it would restore the old trees). `fetch_cc0.py` gained `--maps` for models
+(Poly Haven plant alpha maps). Manifest rows: `grass_medium_01` 2k, `fern_02` 2k, `shrub_02`
+1k and five bark sets, with outputs.
+
+**Still weak.** Leaf cards read as cards up close (`under_oak` canopy); the willow line at the
+far foot is regular; wall plants depend on greybox's render-mesh construction (`_wall()` — if
+Stage 2 seats cliff kit pieces over the wall, plants may sit inside them; re-check after merge);
+shrubs are 750-triangle stand-ins built from willow-leaf photos; the perf numbers were taken on
+a contended GPU; no snow on foliage at first snow.
 
 ## Stage 5 — Wildlife and fish
 

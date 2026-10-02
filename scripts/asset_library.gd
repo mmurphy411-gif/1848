@@ -49,16 +49,96 @@ static func set_water_level(level: float) -> void:
 	for material in materials.values():
 		if material.get_meta("wet", false): material.set_shader_parameter("water_level", level)
 
-static func plant(species: String, bark_color: Color, atlas := true, distant := false) -> ArrayMesh:
-	var tree := mesh("res://assets/%s/%s%s.glb" % ["trees" if atlas else "plants", species,"_distant" if distant else ""])
+## Stage 4 vegetation. Mesh variants per tree species: `<species>.glb`, `<species>_2.glb`, ...
+## (tools/art/build_trees.mjs), each with a `_distant` LOD.
+const TREE_VARIANTS := {"ponderosa": 3, "incense_cedar": 3, "douglas_fir": 3, "black_oak": 3}
+## Layer of the bark Texture2DArray (tools/art/build_foliage_atlases.py BARK_LAYERS).
+const BARK_LAYER := {"ponderosa": 0, "incense_cedar": 1, "douglas_fir": 2, "fir_sapling": 2,
+	"black_oak": 3, "toyon": 3, "alder": 4, "willow": 4, "deerbrush": 4, "manzanita": 5}
+## Seasonal leaf response: autumn colour (sRGB), season window (0 = June 26, 1 = first snow),
+## strength, leaf-drop start, atlas mean luminance (linear). Black oak is yellow by October;
+## grass is gold by August; chaparral and conifers barely change.
+const SEASON := {
+	"black_oak": [Color(.72, .55, .16), Vector2(.56, .74), 1.0, .86, .075],
+	"ponderosa": [Color(.55, .52, .28), Vector2(.25, .75), .10, 2.0, .10],
+	"incense_cedar": [Color(.55, .50, .26), Vector2(.25, .75), .10, 2.0, .11],
+	"douglas_fir": [Color(.50, .50, .30), Vector2(.25, .75), .08, 2.0, .065],
+	"grass": [Color(.78, .66, .40), Vector2(.02, .30), 1.0, 2.0, .11],
+	"fern": [Color(.60, .40, .20), Vector2(.55, .85), .85, 2.0, .10],
+	"sedge": [Color(.70, .62, .36), Vector2(.45, .95), .6, 2.0, .09],
+	"shrub": [Color(.58, .56, .36), Vector2(.10, .60), .22, 2.0, .10],
+	"riparian": [Color(.78, .68, .22), Vector2(.62, .88), 1.0, .97, .10],
+}
+## Understory meshes (assets/plants/) -> [season key, atlas]. Saplings use their species atlas.
+const UNDERSTORY := {"grass_clump": "grass", "sedge_clump": "sedge", "fern": "fern",
+	"manzanita": "shrub", "toyon": "shrub", "deerbrush": "shrub",
+	"willow": "riparian", "alder": "riparian",
+	"fir_sapling": "douglas_fir"}
+
+static func _bark_material(layer: int, bark_color: Color) -> ShaderMaterial:
+	# Callers pass a bark colour; on scanned bark it is only a gentle hue hint.
+	var hint := bark_color / maxf(bark_color.get_luminance(), .05)
+	var key := "bark%d_%s" % [layer, Color.WHITE.lerp(hint, .15).to_html()]
+	if materials.has(key): return materials[key]
+	var result := ShaderMaterial.new()
+	result.shader = preload("res://shaders/bark.gdshader")
+	result.set_shader_parameter("bark_albedo", load("res://assets/textures/bark_albedo.png"))
+	result.set_shader_parameter("bark_normal", load("res://assets/textures/bark_normal.png"))
+	result.set_shader_parameter("layer", float(layer))
+	result.set_shader_parameter("tint", Color.WHITE.lerp(hint, .15))
+	materials[key] = result
+	return result
+
+static func _leaf_material(atlas_name: String, season_key: String) -> ShaderMaterial:
+	var key := "leaves_%s_%s" % [atlas_name, season_key]
+	if materials.has(key): return materials[key]
+	var result := ShaderMaterial.new()
+	result.shader = preload("res://shaders/foliage.gdshader")
+	result.set_shader_parameter("leaves", true)
+	result.set_shader_parameter("use_atlas", true)
+	result.set_shader_parameter("leaf_atlas", load("res://assets/textures/foliage_%s_albedo.png" % atlas_name))
+	var s: Array = SEASON[season_key]
+	result.set_shader_parameter("autumn_color", s[0])
+	result.set_shader_parameter("autumn_window", s[1])
+	result.set_shader_parameter("autumn_strength", s[2])
+	result.set_shader_parameter("drop_start", s[3])
+	result.set_shader_parameter("atlas_luma", s[4])
+	result.set_shader_parameter("flutter", .025 if season_key in ["black_oak", "riparian", "shrub"] else .012)
+	materials[key] = result
+	return result
+
+## Trees (atlas) and the legacy procedural flower/grass cards (atlas = false). Variant 0 is
+## `<species>.glb`; variant n > 0 loads `<species>_<n+1>.glb`.
+static func plant(species: String, bark_color: Color, atlas := true, distant := false, variant := 0) -> ArrayMesh:
+	var file := species if variant <= 0 else "%s_%d" % [species, variant + 1]
+	var tree := mesh("res://assets/%s/%s%s.glb" % ["trees" if atlas else "plants", file, "_distant" if distant else ""])
 	for surface in tree.get_surface_count():
+		if atlas:
+			tree.surface_set_material(surface, _bark_material(BARK_LAYER.get(species, 3), bark_color) if surface == 0 else _leaf_material(species, species))
+			continue
 		var result := ShaderMaterial.new()
-		var bark := atlas and surface==0
-		result.shader = preload("res://shaders/bark.gdshader") if bark else preload("res://shaders/foliage.gdshader")
-		if not bark:
-			result.set_shader_parameter("leaves",true)
-			result.set_shader_parameter("use_atlas",atlas)
+		result.shader = preload("res://shaders/foliage.gdshader")
+		result.set_shader_parameter("leaves",true)
+		result.set_shader_parameter("use_atlas",false)
 		result.set_shader_parameter("tint", bark_color)
-		if atlas and not bark: result.set_shader_parameter("leaf_atlas", load("res://assets/textures/foliage_%s_albedo.png" % species))
 		tree.surface_set_material(surface, result)
 	return tree
+
+## Stem colour of one-surface understory plants (sRGB): manzanita's red-brown is the tell.
+const STEM := {"manzanita": Color(.45, .17, .1), "toyon": Color(.33, .27, .22), "deerbrush": Color(.42, .4, .33),
+	"willow": Color(.38, .32, .25), "alder": Color(.5, .48, .44), "fir_sapling": Color(.3, .22, .16)}
+
+## Shrubs, saplings, ferns and grass clumps from assets/plants/ (Stage 4 understory): one
+## surface each, stems flagged in vertex colour (tools/art/build_trees.mjs).
+static func understory(plant_name: String) -> ArrayMesh:
+	var result := mesh("res://assets/plants/%s.glb" % plant_name)
+	var season_key: String = UNDERSTORY[plant_name]
+	var atlas_name := season_key if season_key in TREE_VARIANTS else "understory"
+	var key := "understory_" + plant_name
+	if not materials.has(key):
+		var material := _leaf_material(atlas_name, season_key).duplicate() as ShaderMaterial
+		material.set_shader_parameter("stem_color", STEM.get(plant_name, Color(.32, .26, .2)))
+		materials[key] = material
+	for surface in result.get_surface_count():
+		result.surface_set_material(surface, materials[key])
+	return result

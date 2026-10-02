@@ -54,6 +54,11 @@ rain_wetness={
 "value": 0.0
 }
 
+season={
+"type": "float",
+"value": 0.0
+}
+
 [importer_defaults]
 
 texture={

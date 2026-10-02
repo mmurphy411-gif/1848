@@ -118,27 +118,37 @@ func run() -> void:
 	var placements := 0
 	for species in ["ponderosa","incense_cedar","douglas_fir"]:
 		placements+=forest.placements[species].size()
-		var near: MultiMeshInstance3D=forest.get_node(species)
-		rendered+=near.multimesh.visible_instance_count
-		var far: MultiMeshInstance3D=forest.get_node(species+"_distant")
-		rendered+=far.multimesh.instance_count
-		var triangles:=0
-		for s in far.multimesh.mesh.get_surface_count():
-			triangles+=far.multimesh.mesh.surface_get_arrays(s)[Mesh.ARRAY_INDEX].size()/3
-		check(triangles<600,"%s distant mesh %d triangles" % [species,triangles])
+		# Stage 4 mesh variants: `<species>` (whose visible prefix is variant 1) and
+		# `<species>_v<n>` near groups, `<species>_distant` and `<species>_v<n>_distant` far ones.
+		var near_groups: Array=[forest.get_node(species)]
+		var far_groups: Array=[forest.get_node(species+"_distant")]
+		for n in range(2,9):
+			if forest.has_node("%s_v%d" % [species,n]): near_groups.append(forest.get_node("%s_v%d" % [species,n]))
+			if forest.has_node("%s_v%d_distant" % [species,n]): far_groups.append(forest.get_node("%s_v%d_distant" % [species,n]))
+		rendered+=near_groups[0].multimesh.visible_instance_count
+		for near in near_groups.slice(1): rendered+=near.multimesh.instance_count
+		var far_count:=0
 		var legal := true
+		for far in far_groups:
+			rendered+=far.multimesh.instance_count
+			far_count+=far.multimesh.instance_count
+			var triangles:=0
+			for s in far.multimesh.mesh.get_surface_count():
+				triangles+=far.multimesh.mesh.surface_get_arrays(s)[Mesh.ARRAY_INDEX].size()/3
+			check(triangles<600,"%s distant mesh %d triangles" % [far.name,triangles])
+			if DisplayServer.get_name()!="headless":
+				for i in far.multimesh.instance_count:
+					var position: Vector3=far.multimesh.get_instance_transform(i).origin
+					legal=legal and Vector2(position.x,position.z).length()>60
 		if DisplayServer.get_name()=="headless":
 			# The dummy renderer returns identity for MultiMesh transform readback.
 			# Check allocation here; the graphical run checks actual GPU instances.
 			var expected := 0
 			for transform in forest.placements[species]:
 				if Vector2(transform.origin.x,transform.origin.z).length()>60:expected+=1
-			legal=far.multimesh.instance_count==expected
+			legal=far_count==expected
 			check(legal,species+" distant allocation matches the >60 m placement partition")
 		else:
-			for i in far.multimesh.instance_count:
-				var position:=far.multimesh.get_instance_transform(i).origin
-				legal=legal and Vector2(position.x,position.z).length()>60
 			check(legal,species+" distant variants only beyond 60 m")
 	check(placements==600 and rendered==600,"Exactly 600 conifers placed and rendered (%d/%d)" % [placements,rendered])
 	print("MILESTONE 6 NOTES: ","PASS" if failures.is_empty() else "FAIL (%d)" % failures.size())

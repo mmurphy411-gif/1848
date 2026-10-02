@@ -146,6 +146,12 @@ class PolyHaven(Source):
             p.files.append(Remote(main, g["url"], g.get("size"), g.get("md5")))
             for rel, f in sorted(g.get("include", {}).items()):
                 p.files.append(Remote(rel, f["url"], f.get("size"), f.get("md5")))
+            # Extra maps the glTF package omits (e.g. a plant's Alpha), as jpg.
+            for m in (args.maps.split(",") if args.maps else []):
+                if m not in files:
+                    raise SystemExit("polyhaven %s: no map %r (have %s)" % (asset_id, m, ", ".join(sorted(files))))
+                f = pick(files[m], m).get("jpg")
+                p.files.append(Remote("textures/" + Path(urllib.parse.urlparse(f["url"]).path).name, f["url"], f.get("size"), f.get("md5")))
             p.main = main
         elif kind == "texture":
             fmt = fmt or "jpg"
@@ -355,7 +361,7 @@ def main(argv=None) -> int:
     ap.add_argument("source", choices=sorted(SOURCES))
     ap.add_argument("id")
     ap.add_argument("resolution")
-    ap.add_argument("--maps", help="polyhaven textures: comma list of maps (e.g. Diffuse,nor_gl,arm,Displacement)")
+    ap.add_argument("--maps", help="polyhaven textures: comma list of maps (e.g. Diffuse,nor_gl,arm,Displacement); models: extra maps beside the glTF (e.g. Alpha)")
     ap.add_argument("--force", action="store_true", help="re-download even if the cache verifies")
     ap.add_argument("--no-manifest", action="store_true", help="do not write the manifest row")
     ap.add_argument("--manifest", default=str(manifest.MANIFEST), help=argparse.SUPPRESS)
