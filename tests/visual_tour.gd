@@ -30,7 +30,7 @@ const Gold = preload("res://scripts/gold_map.gd")
 const SIZE := Vector2i(1600, 900)
 const SETTLE := 180
 ## Frames a view may spend on setup (scene open, rig travel, crew walk) before settling.
-const SETUP := 180
+const SETUP := 300
 var settle_frames := SETTLE
 var slot_frames := SETTLE + SETUP
 var tour_start := 0

@@ -288,8 +288,10 @@ func _build_cliff_boulders() -> void:
 		group.add_child(rock)
 		var body := StaticBody3D.new()
 		var shape := CollisionShape3D.new()
-		shape.shape = ConvexPolygonShape3D.new()
-		shape.shape.points = hulls[i]
+		# Fill the hull before attaching it; an empty hull logs a physics error.
+		var hull := ConvexPolygonShape3D.new()
+		hull.points = hulls[i]
+		shape.shape = hull
 		body.add_child(shape, true)
 		rock.add_child(body, true)
 		colliders.append({"position": rock.position, "size": size, "stretch": stretch})
