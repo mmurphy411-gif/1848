@@ -2,6 +2,38 @@
   "about": "Provenance of outside assets. Raw downloads live in the git-ignored .tools/cc0_cache/<source>/<id>/<resolution>/ of the main checkout. Written by tools/art/fetch_cc0.py and blender/normalize_asset.py; merge with tools/art/manifest.py.",
   "rows": [
     {
+      "source": "ambientcg",
+      "id": "Rock022",
+      "resolution": "1K-JPG",
+      "kind": "material",
+      "name": "Rock 022",
+      "licence": "CC0-1.0",
+      "fetched": "2026-10-02",
+      "page": "https://ambientcg.com/a/Rock022",
+      "authors": ["ambientCG"],
+      "outputs": [
+        "assets/textures/bedrock_albedo.png",
+        "assets/textures/bedrock_normal.png",
+        "assets/textures/bedrock_orm.png"
+      ],
+      "files": [
+        {"path": "Rock022.png", "from": "Rock022_1K-JPG.zip", "size": 401094, "sha256": "c15a6d0e68d06a643b6b54e65013ba238f17398279b30b155c273a67713f240f"},
+        {"path": "Rock022_1K-JPG.blend", "from": "Rock022_1K-JPG.zip", "size": 1109428, "sha256": "ea4ab3d95453d736b82f5288f166ebfdea103b466414ba998b602fcf2809132e"},
+        {"path": "Rock022_1K-JPG.mtlx", "from": "Rock022_1K-JPG.zip", "size": 2242, "sha256": "f68d4a6fdea588dbe10e9d7b0ed854e102e2727e7570f3f88194b27688c59c85"},
+        {"path": "Rock022_1K-JPG.tres", "from": "Rock022_1K-JPG.zip", "size": 1010, "sha256": "151f52b546c316d79ead4bcbda1bcbc0c483ada715b7c70bf67f97ad6c4479ce"},
+        {"path": "Rock022_1K-JPG.usdc", "from": "Rock022_1K-JPG.zip", "size": 2996, "sha256": "b12aba38b45184d1b570077ab9a633336dad850c17861c8f8a9b9293445d951f"},
+        {"path": "Rock022_1K-JPG.zip", "url": "https://ambientcg.com/get?file=Rock022_1K-JPG.zip", "size": 8405011, "sha256": "126d623f268fa21e7fff88f9f74d9f0b2f60b5e26029388aa9bfeb29e1af62bf"},
+        {"path": "Rock022_1K-JPG_AmbientOcclusion.jpg", "from": "Rock022_1K-JPG.zip", "size": 348506, "sha256": "b6ba99805fc24b19e5ccf341611b840bf89fa33b0f162a6a3ed43171a2306a38"},
+        {"path": "Rock022_1K-JPG_Color.jpg", "from": "Rock022_1K-JPG.zip", "size": 1216353, "sha256": "8a163e37353e4d4acf56dca4eed42d77b52186b007d7ff6690f8d398f362ffe7"},
+        {"path": "Rock022_1K-JPG_Displacement.jpg", "from": "Rock022_1K-JPG.zip", "size": 251249, "sha256": "be56c27d6f3833b248becc8ba0e935484ff94c0474fe6bbf6bd1ba0d57d53424"},
+        {"path": "Rock022_1K-JPG_NormalDX.jpg", "from": "Rock022_1K-JPG.zip", "size": 2234575, "sha256": "210185e3e5892049b09bdffcdba67fd1b5f5ca7b5eeb6182f45c11f12ae726de"},
+        {"path": "Rock022_1K-JPG_NormalGL.jpg", "from": "Rock022_1K-JPG.zip", "size": 2231399, "sha256": "202871d180a013600218b84e15bc16e81338ceffeb06f60273499e9a44e983b0"},
+        {"path": "Rock022_1K-JPG_Roughness.jpg", "from": "Rock022_1K-JPG.zip", "size": 604155, "sha256": "73dd8904bc65ff1fa940a847d780fd89cec453a2794dc931dfe50df8657d821b"}
+      ],
+      "main": ".",
+      "options": {}
+    },
+    {
       "source": "polyhaven",
       "id": "boulder_01",
       "resolution": "1k",
@@ -19,6 +51,150 @@
         {"path": "textures/boulder_01_diff_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/boulder_01/boulder_01_diff_1k.jpg", "size": 987467, "md5": "25f8a843f13369d56d37f49db05ea8c3", "sha256": "c38f0e918f6dc16b8d386ba3cdd89805c78320c119a1ceec85856f82b09a65b8"},
         {"path": "textures/boulder_01_nor_gl_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/1k/boulder_01/boulder_01_nor_gl_1k.jpg", "size": 1183552, "md5": "0c4da644d901144b53e4fe2446f3c389", "sha256": "0810cf6e89d89bb6eb065b4d2e2855288f5dcbd2c15c6e40ab90d462021b50aa"}
       ]
+    },
+    {
+      "source": "polyhaven",
+      "id": "dense_sand",
+      "resolution": "1k",
+      "kind": "texture",
+      "name": "Dense Sand",
+      "licence": "CC0-1.0",
+      "fetched": "2026-10-02",
+      "page": "https://polyhaven.com/a/dense_sand",
+      "authors": ["Dimitrios Savva"],
+      "outputs": [
+        "assets/textures/sand_albedo.png",
+        "assets/textures/sand_normal.png",
+        "assets/textures/sand_orm.png"
+      ],
+      "files": [
+        {"path": "dense_sand_arm_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/dense_sand/dense_sand_arm_1k.jpg", "size": 685180, "md5": "1310b2067203e410a0df79df9a080bfb", "sha256": "30d042f0b81e12eccdf2d32398c34c1f8416687a42f8ed453e9337c141c90015"},
+        {"path": "dense_sand_diff_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/dense_sand/dense_sand_diff_1k.jpg", "size": 681515, "md5": "1c3d2c1f41b24ea9133973f2dedd5fea", "sha256": "0d2430c115167a2da3f60d60eb9ea2aa51e71472e2672f94c7f5df78342081ff"},
+        {"path": "dense_sand_disp_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/dense_sand/dense_sand_disp_1k.jpg", "size": 289836, "md5": "b87dd37bcbb0299f34723a9a6c5a4b13", "sha256": "d0bf37757e865513200b96d63cfb5357cd69c32ca48f4a5b7c8bc25f667cfc72"},
+        {"path": "dense_sand_nor_gl_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/dense_sand/dense_sand_nor_gl_1k.jpg", "size": 993025, "md5": "ade5aef220f7ad2904bf902ea02d003f", "sha256": "776fe4f5008ee5043a709b0b63a9a7ec758f18ac5e62db65a0e99c04cc782617"}
+      ],
+      "main": "dense_sand_diff_1k.jpg",
+      "options": {}
+    },
+    {
+      "source": "polyhaven",
+      "id": "forest_leaves_04",
+      "resolution": "1k",
+      "kind": "texture",
+      "name": "Forest Leaves 04",
+      "licence": "CC0-1.0",
+      "fetched": "2026-10-02",
+      "page": "https://polyhaven.com/a/forest_leaves_04",
+      "authors": ["Rob Tuytel"],
+      "outputs": [
+        "assets/textures/duff_albedo.png",
+        "assets/textures/duff_normal.png",
+        "assets/textures/duff_orm.png"
+      ],
+      "files": [
+        {"path": "forest_leaves_04_arm_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/forest_leaves_04/forest_leaves_04_arm_1k.jpg", "size": 355419, "md5": "9acce765bc598c57f7ddd7fe75a2fc3e", "sha256": "e253ba0615d1da2376a18d8edf26dd02a0be92e5729efd3402be02f7f2ae53be"},
+        {"path": "forest_leaves_04_diff_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/forest_leaves_04/forest_leaves_04_diff_1k.jpg", "size": 423500, "md5": "4ab1368d2d0d7fee652caa5f71f706bf", "sha256": "a898e6ef0668a40faaf1bcbc6b024f6ef437ec424a10fa47aa6d35d013c9dade"},
+        {"path": "forest_leaves_04_disp_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/forest_leaves_04/forest_leaves_04_disp_1k.jpg", "size": 146105, "md5": "419bc897710e8c8ab9d03da0cd22d9e4", "sha256": "2d434700f1c38bc3ec49eb5ec0b27aeed2e4a0b42c71c0390f0e55ecbfc5cc72"},
+        {"path": "forest_leaves_04_nor_gl_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/forest_leaves_04/forest_leaves_04_nor_gl_1k.jpg", "size": 581919, "md5": "ca21a728629bf25d9dcbe327e0f005db", "sha256": "6b7c4086fc28b7b1f11f4d04aedcc27772ce3bb894cfc00835b4637092c1bb0c"}
+      ],
+      "main": "forest_leaves_04_diff_1k.jpg",
+      "options": {}
+    },
+    {
+      "source": "polyhaven",
+      "id": "ganges_river_pebbles",
+      "resolution": "2k",
+      "kind": "texture",
+      "name": "Ganges River Pebbles",
+      "licence": "CC0-1.0",
+      "fetched": "2026-10-02",
+      "page": "https://polyhaven.com/a/ganges_river_pebbles",
+      "authors": ["Amal Kumar"],
+      "outputs": [
+        "assets/textures/gravel_albedo.png",
+        "assets/textures/gravel_normal.png",
+        "assets/textures/gravel_orm.png"
+      ],
+      "files": [
+        {"path": "ganges_river_pebbles_arm_2k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/ganges_river_pebbles/ganges_river_pebbles_arm_2k.jpg", "size": 2802994, "md5": "f910ae30990a926dba3f098cecd46c5a", "sha256": "0eff7b74b212195259a5b84daaa06bf57f8d4cb22ff9c568dd89bccc1b0a55dc"},
+        {"path": "ganges_river_pebbles_diff_2k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/ganges_river_pebbles/ganges_river_pebbles_diff_2k.jpg", "size": 3264787, "md5": "c7265256e7cb4ee18d189c48e5d66f06", "sha256": "4284c19b6a546c8536a2d5383e5dcdbbae83ab6c2c337c7a0fb25284b0bea419"},
+        {"path": "ganges_river_pebbles_disp_2k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/ganges_river_pebbles/ganges_river_pebbles_disp_2k.jpg", "size": 1180201, "md5": "83489c0b87318d42dab877e79327db86", "sha256": "b94d0412ba92f1dba019a73f915b2aaffd2737111c605dd9a6ff166f3cb3b536"},
+        {"path": "ganges_river_pebbles_nor_gl_2k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/ganges_river_pebbles/ganges_river_pebbles_nor_gl_2k.jpg", "size": 4615719, "md5": "652fc148857ee24cd1f0024796d5f58c", "sha256": "c73e2ea059f50f25d7f8dd719048d26bc0ca355d3009b0ef806898531231d03b"}
+      ],
+      "main": "ganges_river_pebbles_diff_2k.jpg",
+      "options": {}
+    },
+    {
+      "source": "polyhaven",
+      "id": "gray_rocks",
+      "resolution": "1k",
+      "kind": "texture",
+      "name": "Gray Rocks",
+      "licence": "CC0-1.0",
+      "fetched": "2026-10-02",
+      "page": "https://polyhaven.com/a/gray_rocks",
+      "authors": ["Dimitrios Savva"],
+      "outputs": [
+        "assets/textures/talus_albedo.png",
+        "assets/textures/talus_normal.png",
+        "assets/textures/talus_orm.png"
+      ],
+      "files": [
+        {"path": "gray_rocks_arm_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/gray_rocks/gray_rocks_arm_1k.jpg", "size": 827806, "md5": "27433ddb7f502fad91d7abf476706a1b", "sha256": "ceaef1b0ee229a4c2ed3905b084d3015a39a59e5175ea936bb761417ed059c76"},
+        {"path": "gray_rocks_diff_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/gray_rocks/gray_rocks_diff_1k.jpg", "size": 1014209, "md5": "bf2b62bc5eaa54c34231f0c378c1e5ca", "sha256": "4c3b6fada26a9b564ca110ad47bca5921eceefc611d970159ce559c3c50728a0"},
+        {"path": "gray_rocks_disp_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/gray_rocks/gray_rocks_disp_1k.jpg", "size": 399894, "md5": "88193c1b9929332a04f613751bc2096e", "sha256": "926e87cfcc3697bb5af9372d1506332e3cd04f42c78e9bcebd1e72692520d124"},
+        {"path": "gray_rocks_nor_gl_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/gray_rocks/gray_rocks_nor_gl_1k.jpg", "size": 1266242, "md5": "f29d0ac8ebec48c699e156754e50fbdf", "sha256": "1922b18e09a95bb782794163117ea47d62771dd59501085cc95ab10081107a9d"}
+      ],
+      "main": "gray_rocks_diff_1k.jpg",
+      "options": {}
+    },
+    {
+      "source": "polyhaven",
+      "id": "red_dirt_mud_01",
+      "resolution": "1k",
+      "kind": "texture",
+      "name": "Red Dirt Mud 01",
+      "licence": "CC0-1.0",
+      "fetched": "2026-10-02",
+      "page": "https://polyhaven.com/a/red_dirt_mud_01",
+      "authors": ["Rob Tuytel"],
+      "outputs": [
+        "assets/textures/soil_albedo.png",
+        "assets/textures/soil_normal.png",
+        "assets/textures/soil_orm.png"
+      ],
+      "files": [
+        {"path": "red_dirt_mud_01_arm_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/red_dirt_mud_01/red_dirt_mud_01_arm_1k.jpg", "size": 443264, "md5": "0f13c8eb1bce4f3b0a27a21e0479a04e", "sha256": "748abbee5c017446547deb26e627882c0b83d34c84433ef602423f6614c1fece"},
+        {"path": "red_dirt_mud_01_diff_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/red_dirt_mud_01/red_dirt_mud_01_diff_1k.jpg", "size": 935891, "md5": "5c74ee47bd74c1d79a24a8c646797091", "sha256": "c3ac7c922bb5a8e390294b8097e61b882a15113b751c12395c526813d173882e"},
+        {"path": "red_dirt_mud_01_disp_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/red_dirt_mud_01/red_dirt_mud_01_disp_1k.jpg", "size": 267806, "md5": "2e5daf4b867c65386c163a40f2eb2f77", "sha256": "87776a74ef0fed833efafdc6db8d7927f3f6ca60d066820c2ff3de64bed2d527"},
+        {"path": "red_dirt_mud_01_nor_gl_1k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/red_dirt_mud_01/red_dirt_mud_01_nor_gl_1k.jpg", "size": 1136486, "md5": "1e9b0be324ef646f6c256f3c835f573a", "sha256": "c9dde2809a950e18c4155b8e33dcaf18369a6fefeb86ae7354775323bef0b05a"}
+      ],
+      "main": "red_dirt_mud_01_diff_1k.jpg",
+      "options": {}
+    },
+    {
+      "source": "polyhaven",
+      "id": "rock_boulder_dry",
+      "resolution": "2k",
+      "kind": "texture",
+      "name": "Rock Boulder Dry",
+      "licence": "CC0-1.0",
+      "fetched": "2026-10-02",
+      "page": "https://polyhaven.com/a/rock_boulder_dry",
+      "authors": ["Dimitrios Savva", "Rico Cilliers"],
+      "outputs": [
+        "assets/textures/granite_albedo.png",
+        "assets/textures/granite_normal.png",
+        "assets/textures/granite_orm.png"
+      ],
+      "files": [
+        {"path": "rock_boulder_dry_arm_2k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/rock_boulder_dry/rock_boulder_dry_arm_2k.jpg", "size": 3164814, "md5": "acee3a43c7fc3bbe79c343cb3bb3b113", "sha256": "9ef398eebef2a9477daa6a260ebe85003de0790bb7d8f7e5fd0d80b6943ea70e"},
+        {"path": "rock_boulder_dry_diff_2k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/rock_boulder_dry/rock_boulder_dry_diff_2k.jpg", "size": 3437626, "md5": "fbc9cf377db427f54381f463c0639e1f", "sha256": "c66de7f7b48ef1ba542c17af780787ca6d43da2160a46ff3544dd9fcdf65ca30"},
+        {"path": "rock_boulder_dry_disp_2k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/rock_boulder_dry/rock_boulder_dry_disp_2k.jpg", "size": 785931, "md5": "bea116eb30df0faed0748c69d57b460d", "sha256": "e8ef6d94411f6b8396425426c08d9848feb0c81ac29c4a6acae28342786f17a1"},
+        {"path": "rock_boulder_dry_nor_gl_2k.jpg", "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/rock_boulder_dry/rock_boulder_dry_nor_gl_2k.jpg", "size": 3307320, "md5": "513ef3fdaadd106c38a9c40919918cc0", "sha256": "72a3c96d563fc17ac36c568802e106222e6480512d98e07318e1f431cea33dd6"}
+      ],
+      "main": "rock_boulder_dry_diff_2k.jpg",
+      "options": {}
     }
   ]
 }

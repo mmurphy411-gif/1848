@@ -72,7 +72,95 @@ is an "undead" model that needs a repaint.
 
 ## Stage 1 — Ground colour and terrain textures
 
-(pending: S1-ground)
+Done October 2, 2026 (S1-ground; also plan Stage 3 item 3). Tour label `s1ground`.
+
+**Scan sets.** `blender/build_textures.py` is now a plain-Python (numpy + Pillow) intake:
+it fetches through `fetch_cc0.py`, grades albedo in linear light (periodic-blur flattening
+of the scan's baked macro shading, saturation, tint, exact mean), writes RGTC-ready normals
+(blue fixed, shaders rebuild Z) and packs ORM as AO, roughness, **height**, and records
+outputs on the manifest rows. Rebuilds are byte-identical; all 21 maps wrap without seams.
+Poly Haven `ganges_river_pebbles` (gravel, 2k), `dense_sand` (sand), `rock_boulder_dry`
+(granite), `gray_rocks` (talus), `forest_leaves_04` (duff), `red_dirt_mud_01` (new `soil`
+set), ambientCG `Rock022` (bedrock: slate strata). Mean linear albedo: gravel 0.250, sand
+0.300, granite 0.335, cliff rock 0.26 texture / about 0.23 after strata and crevices,
+talus 0.22, soil 0.13, duff 0.115. Imports switched from lossless to VRAM (BC7 albedo/ORM,
+RGTC normals). Palette quantisation was tested and rejected for scans (a rust pebble
+posterised to flat brown); `optimize_textures.py` now skips these sets. `build_gravel.py`
+and `gravel_stones.png` are retired; the old procedural graphs stay in `build_textures.blend`.
+
+**`terrain.gdshader`.** Layers are blended by masks sharpened with each layer's height
+(`cover()`: sand fills between cobbles, soil and duff creep between stones), so no edge
+follows a mesh strip. The sand rectangles were not strips: the old `fract(sin())` hash
+rounded differently in neighbouring cells on the GPU, so value noise jumped at cell edges;
+an exact integer hash fixes it. Anti-tiling: each planar layer uses a rotated, offset copy
+per noise patch, joined in narrow height-blended seams (~1.2 samples per map). Bar: cobble
+armour with low-frequency colour families (grey, rust, ochre, slate, dark) and a darkened
+sandy matrix, sand in the swash band and lower-bar pockets, red-brown soil toward the wall
+foot above the flood line, oak duff, and a wet band that soaks the bank to ~5 cm and dries
+by ~35 cm above `water_level` (so it follows the falling river), plus a faint silt film on
+newly exposed bank. Walls: tri-planar slate replaces the cliff multiplier with dipping
+strata (slate, greenstone, weathered brown, dark), laminations, crevice and joint
+darkening, vertical rust streaks, broad iron rind, moss on north-facing (+Z) rock above the
+flood line, scoured paler rock below it, rare pale quartz-granite veins, slate talus
+aprons, soil and duff on benches and the rim. `AO_LIGHT_AFFECT = 1` lets scan cavity AO
+dim direct sun (contact shading normal maps cannot cast). Meshes without vertex colours get
+a plain soil/gravel/duff ground with no river logic, so S6 can put `Assets.terrain()` on
+the store yard (tested). `snow_amount`, `oak_canopies`, `review_mode` (sand weight and a
+height-derived stone mask) and `water_level` still work.
+
+**`rock.gdshader`** (modest): new ORM layout, Z rebuilt from RGTC, fixed side-projection Y
+sign, crevice darkening from height, grey/warm/rust families, moss on north-facing tops,
+wet line at the river for granite and bedrock materials (`Assets.set_water_level()`).
+
+| Gate | Target | Measured | Result |
+| --- | --- | --- | --- |
+| `downstream_10h` lower-half luminance | 0.38–0.50 | 0.451 | pass |
+| `downstream_10h` lower-half saturation | ≥ 0.20 | 0.237 | pass |
+| `downstream_13h` lower-half luminance | 0.38–0.50 | 0.468 | pass |
+| `downstream_13h` lower-half saturation | ≥ 0.20 | 0.231 | pass |
+| `downstream_1925` mean luminance / baseline | ≥ 0.90 | 0.825 | **fail** |
+| `downstream_00h` mean luminance / baseline | ≥ 0.90 | 0.699 | **fail** |
+| No visible repeat, `gravel_close_10h`, `overview_10h` | visual | none seen | pass |
+
+The two failures cannot be fixed by material alone: ground albedo scales every hour alike
+(lower half −32 % at 10:00, −29 % at 19:25, −40 % at 00:00, night being in the tone
+curve's linear toe). Tested with this ground (then reverted; `daylight.gd` is S1-sky's):
+`exposure_multiplier = lerpf(1.0, 1.6, warmth) * (1.0 + .4 * (1.0 - daylight))` gives
+19:25 0.925 and 00:00 1.05 of baseline, with 10:00/13:00 unchanged (warmth is 0 above 40°);
+`.3` instead of `.4` should land night near 0.97. It also lifts 06:00 to 0.88 and supper to
+0.87 of baseline.
+
+Regression amendment: `milestone_5.gd` expects the granite set at 1024 instead of 2048
+(gravel stays 2048, the rest 1024). Granite now skins only cobbles, the fire ring, wing dam
+stones, cliff blobs until Stage 2 and quartz veins; Stage 3 gives the bar boulders their
+own material. Every set is still asserted at an exact size and referenced by the shader.
+
+**Shared files.** `greybox.gd::_sync_river` calls `Assets.set_water_level(level)` (one
+line); `asset_library.gd` adds the `soil` set, `water_level`, `set_water_level()` and drops
+the stone mask; `tests/milestone_5.gd` amendment above.
+
+**Perf.** Interleaved A/B in one process (old shader and lossless maps against the new,
+alternating every 38 frames, viewport GPU time, two runs): median downstream 2.77→2.89 and
+2.93→3.12 ms, overview 3.48→3.60 and 3.64→3.80 ms, so +0.12–0.19 ms GPU. Against a plain
+material the Stage 0 terrain cost 0.17–0.23 ms and the new one 0.29–0.42 ms. The cheaper
+integer hash saved 0.05–0.09 ms.
+`miner_performance` p95 is dominated by machine load from other agents (best of five,
+before/after: downstream 4.28/3.61, wade 4.87/4.04, overview 5.40/4.84 ms; single runs
+reached 26 ms either way).
+
+**Suite.** 37/37 before and after. `miner_game` writes `artifacts/miner-game/runtime_audit.json`
+and hangs on a null file when that git-ignored folder is missing, as in a fresh worktree;
+with the folder created it passes.
+
+**Size.** Terrain sets 26.9 → 49.9 MB (+23.0 MB): gravel 19.2, soil 6.0, duff 6.0, talus
+5.3, bedrock 5.0, sand 4.4, granite 4.1. AO and roughness are blurred 0.8 px and stored at
+64 levels (−35 % ORM bytes, no visible steps); albedo and normals are full 8-bit RGB.
+
+**Still weak.** North-facing walls read pale blue in shade under today's fog, so strata and
+moss are subtle there; the slate talus apron is speckled at 20–40 m; mid-distance cobble
+is busy with white quartz; the 13:00 gate margin depends partly on where sand pockets fall
+(a pocket in the foreground adds ~0.03); quartz veins are rare enough to be missed; the
+store's own `rock("duff"/"talus"/"sand")` materials changed look with the new sets.
 
 ## Stage 1 — Sky, water and grade
 

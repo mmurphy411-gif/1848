@@ -51,7 +51,8 @@ func _run() -> void:
 		for suffix in ["albedo","normal","orm"]:
 			var path := "res://assets/textures/%s_%s.png" % [set_name,suffix]
 			var tex: Texture2D = load(path)
-			var size := 2048 if set_name in ["gravel","granite"] else 1024
+			# Visual upgrade Stage 1 amendment: granite scan set is 1024 (VISUAL_UPGRADE_NOTES.md).
+			var size := 2048 if set_name=="gravel" else 1024
 			_check(tex!=null and tex.get_size()==Vector2(size,size),path+" %d texture" % size)
 	for name in ["textures","boulders","bedrock","trees","ground_cover"]:
 		_check(FileAccess.file_exists("res://blender/build_%s.py" % name) and FileAccess.file_exists("res://blender/build_%s.blend" % name),name+" script and inspectable Blender source")

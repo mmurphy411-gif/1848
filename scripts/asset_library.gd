@@ -3,7 +3,10 @@ extends RefCounted
 ## Imported assets share textures and shaders; geometry stays reusable by MultiMesh.
 static var meshes: Dictionary = {}
 static var materials: Dictionary = {}
-const SETS := ["granite", "talus", "gravel", "sand", "duff", "bedrock"]
+const SETS := ["granite", "talus", "gravel", "sand", "duff", "bedrock", "soil"]
+## Live river height for the wet bands of the terrain and the claim's rock sets.
+static var water_level := 0.0
+const WET_ROCK_SETS := ["granite", "bedrock"]
 
 static func mesh(path: String) -> ArrayMesh:
 	if meshes.has(path): return meshes[path]
@@ -18,13 +21,15 @@ static func terrain() -> ShaderMaterial:
 	if materials.has("terrain"): return materials.terrain
 	var result := ShaderMaterial.new()
 	result.shader = preload("res://shaders/terrain.gdshader")
-	result.set_shader_parameter("gravel_stone_mask",load("res://assets/textures/gravel_stones.png"))
 	for set_name in SETS:
 		for suffix in ["albedo", "normal", "orm"]:
 			result.set_shader_parameter(set_name + "_" + suffix, load("res://assets/textures/%s_%s.png" % [set_name, suffix]))
+	result.set_shader_parameter("water_level", water_level)
 	materials.terrain = result
 	return result
 
+## Tri-planar scan material; any mesh, any set. Granite and bedrock are the claim's
+## river rocks and darken at the live water line; the other sets stay dry.
 static func rock(set_name := "granite", tile := 4.0) -> ShaderMaterial:
 	var key := set_name + str(tile)
 	if materials.has(key): return materials[key]
@@ -33,8 +38,16 @@ static func rock(set_name := "granite", tile := 4.0) -> ShaderMaterial:
 	for suffix in ["albedo", "normal", "orm"]:
 		result.set_shader_parameter(suffix + "_map", load("res://assets/textures/%s_%s.png" % [set_name, suffix]))
 	result.set_shader_parameter("tile", tile)
+	if set_name in WET_ROCK_SETS: result.set_shader_parameter("water_level", water_level)
+	result.set_meta("wet", set_name in WET_ROCK_SETS)
 	materials[key] = result
 	return result
+
+static func set_water_level(level: float) -> void:
+	water_level = level
+	terrain().set_shader_parameter("water_level", level)
+	for material in materials.values():
+		if material.get_meta("wet", false): material.set_shader_parameter("water_level", level)
 
 static func plant(species: String, bark_color: Color, atlas := true, distant := false) -> ArrayMesh:
 	var tree := mesh("res://assets/%s/%s%s.glb" % ["trees" if atlas else "plants", species,"_distant" if distant else ""])

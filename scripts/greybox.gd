@@ -23,7 +23,7 @@ func _sync_river() -> void:
 	river_level=level
 	$River.position.y=level
 	_build_river(level)
-	Assets.terrain().set_shader_parameter("water_level",level)
+	Assets.set_water_level(level)
 
 func _build_ground() -> void:
 	var surfaces: Array[SurfaceTool] = []
