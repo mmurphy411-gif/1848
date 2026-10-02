@@ -23,6 +23,8 @@ var current_hour := 19.25
 var sun_azimuth := 0.0
 var _reflection_elapsed := 0.0
 var stars = preload("res://scripts/night_sky.gd").new()
+## Stage 1: cloud dome over the physical sky (scripts/sky_clouds.gd).
+var clouds: MeshInstance3D = preload("res://scripts/sky_clouds.gd").new()
 
 func _ready() -> void:
 	environment = Environment.new()
@@ -33,6 +35,7 @@ func _ready() -> void:
 	world.environment = environment
 	mist.material = FogMaterial.new()
 	rim_air.material = FogMaterial.new()
+	add_child(clouds)
 	clock.advanced.connect(_animate)
 	apply(hour)
 
@@ -122,15 +125,70 @@ func _update_light(time: float) -> void:
 		environment.volumetric_fog_density = lerpf(.004,.006,night)
 		mist.material.density = lerpf(mist.material.density,.008,night)
 		mist.material.albedo = mist.material.albedo.lerp(Color(.25,.35,.55),night)
-	sun.light_energy*=lerpf(1.0,.5,pow(overcast,.4))
-	environment.ambient_light_energy*=lerpf(1.0,1.3,overcast)
-	environment.volumetric_fog_density*=1.0+overcast
-	sky_material.turbidity=lerpf(sky_material.turbidity,6.0,overcast)
+	var weather := "clear"
+	var day := 0
+	var game_seed := 1848
 	if not Engine.is_editor_hint():
 		var state := get_node_or_null("/root/GameState")
-		if state and state.weather()=="hot": sky_material.turbidity=lerpf(sky_material.turbidity,5.0,clampf(overcast/.35,0,1))
-		if state and state.weather()=="frost": mist.material.density*=lerpf(3.0,1.0,smoothstep(9,10,h))
+		if state:
+			weather = state.weather()
+			day = state.day
+			game_seed = state.seed
+	_configure_grade()
+	_configure_weather(weather, h)
+	clouds.configure({"hour": h, "day": day, "seed": game_seed, "weather": weather, "overcast": overcast,
+		"sun_direction": direction, "sun_elevation": sun_elevation, "sun_color": sun.light_color,
+		"sun_energy": sun.light_energy, "moon_direction": Vector3(1, .28, -.15).normalized(),
+		"moon_color": moon.light_color, "moon_energy": moon.light_energy})
 	time_changed.emit(h,daylight)
+
+## Restrained grade over AgX: a little contrast and colour under a high sun, none
+## at golden hour or night, so the low-sun look and the fire-lit camp are untouched.
+## Saturation stays well within +10 %.
+func _configure_grade() -> void:
+	var high_sun := smoothstep(4.0, 25.0, sun_elevation)
+	environment.adjustment_enabled = true
+	environment.adjustment_brightness = 1.0
+	environment.adjustment_contrast = lerpf(1.0, 1.05, high_sun)
+	environment.adjustment_saturation = lerpf(1.0, 1.03, high_sun)
+
+## Rain's overcast becomes a low grey deck: the physical sky greys (it still lights
+## the ambient and the reflections), the sun all but goes, the air thickens. On hot
+## days rain.gd's 0.35 is heat haze instead; frost keeps a clear, cold sky.
+func _configure_weather(weather: String, h: float) -> void:
+	if weather == "hot":
+		var haze := clampf(overcast / .35, 0, 1)
+		sun.light_energy *= lerpf(1.0, .85, haze)
+		sky_material.turbidity = lerpf(sky_material.turbidity, 5.0, haze)
+		sky_material.mie_coefficient = lerpf(sky_material.mie_coefficient, .007, haze)
+		environment.volumetric_fog_density *= 1.0 + .5 * haze
+		return
+	if weather == "frost":
+		mist.material.density *= lerpf(3.0, 1.0, smoothstep(9, 10, h))
+		sky_material.turbidity = minf(sky_material.turbidity, 1.7)
+		sky_material.rayleigh_coefficient = 2.6
+	var deck := smoothstep(0.0, .8, overcast)
+	if deck <= 0.0: return
+	var sun_left := lerpf(1.0, .12, deck)
+	sun.light_energy *= sun_left
+	# The sky's radiance scales with the sun's energy to about the 0.6 power;
+	# hold an overcast sky near half its clear brightness, grey rather than blue.
+	sky_material.energy_multiplier *= lerpf(1.0, pow(1.0 / sun_left, .62) * .55, deck)
+	sky_material.rayleigh_coefficient = lerpf(sky_material.rayleigh_coefficient, .45, deck)
+	sky_material.mie_coefficient = lerpf(sky_material.mie_coefficient, .03, deck)
+	sky_material.mie_eccentricity = lerpf(sky_material.mie_eccentricity, .35, deck)
+	sky_material.mie_color = Color(.96, .97, 1.0)
+	sky_material.turbidity = lerpf(sky_material.turbidity, 9.0, deck)
+	var grey := Color(.6, .62, .65)
+	environment.ambient_light_color = grey
+	environment.ambient_light_sky_contribution = lerpf(1.0, .4, deck)
+	environment.ambient_light_energy *= lerpf(1.0, 1.35, deck)
+	environment.volumetric_fog_density *= 1.0 + 2.5 * deck
+	environment.volumetric_fog_albedo = environment.volumetric_fog_albedo.lerp(grey, deck)
+	environment.fog_light_color = environment.fog_light_color.lerp(grey * .9, deck)
+	environment.fog_aerial_perspective = lerpf(environment.fog_aerial_perspective, .15, deck)
+	environment.adjustment_saturation = lerpf(environment.adjustment_saturation, .92, deck)
+	mist.material.albedo = mist.material.albedo.lerp(grey, deck)
 
 func _configure_indirect_light() -> void:
 	environment.sdfgi_enabled = true
@@ -153,7 +211,9 @@ func _configure_indirect_light() -> void:
 	environment.glow_bloom = 0.0
 
 func _configure_fog(warmth: float) -> void:
-	var tint := Color(0.60, 0.76, 0.95).lerp(Color(0.52, 0.68, 0.90), warmth)
+	# Stage 1: midday air is a cool blue-grey rather than sky blue; the low-sun
+	# end (golden hour, dawn) is unchanged.
+	var tint := Color(0.62, 0.70, 0.81).lerp(Color(0.52, 0.68, 0.90), warmth)
 	environment.volumetric_fog_enabled = true
 	environment.volumetric_fog_density = 0.004
 	environment.volumetric_fog_albedo = tint
@@ -165,15 +225,17 @@ func _configure_fog(warmth: float) -> void:
 	environment.volumetric_fog_ambient_inject = 0.3
 	environment.fog_enabled = true
 	environment.fog_mode = Environment.FOG_MODE_DEPTH
-	environment.fog_depth_begin = 140.0
-	environment.fog_depth_end = 900.0
+	# Haze down the canyon: depth fog from just beyond the claim, cooler and
+	# denser by day; the golden-hour end keeps its original reach.
+	environment.fog_depth_begin = lerpf(120.0, 140.0, warmth)
+	environment.fog_depth_end = lerpf(650.0, 900.0, warmth)
 	environment.fog_depth_curve = 1.0
 	# In depth mode density is maximum opacity, not extinction per meter.
 	environment.fog_density = 1.0
 	environment.fog_light_color = tint
 	environment.fog_light_energy = 0.85
 	environment.fog_sun_scatter = 0.4
-	environment.fog_aerial_perspective = 1.0
+	environment.fog_aerial_perspective = lerpf(0.6, 1.0, warmth)
 	environment.fog_sky_affect = 0.15
 	mist.material.density = lerpf(0.003, 0.006, warmth)
 	mist.material.albedo = tint

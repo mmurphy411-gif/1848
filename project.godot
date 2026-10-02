@@ -46,3 +46,10 @@ textures/default_filters/use_nearest_mipmap_filter=false
 anti_aliasing/quality/msaa_3d=1
 anti_aliasing/quality/use_taa=true
 environment/defaults/default_clear_color=Color(0.63,0.70,0.73,1)
+
+[shader_globals]
+
+rain_wetness={
+"type": "float",
+"value": 0.0
+}

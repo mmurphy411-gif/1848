@@ -210,6 +210,7 @@ func _build_river(level := 0.0) -> void:
 	var model = preload("res://scripts/river_model.gd")
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var broken := _broken_water_field(level)
 	var columns := _columns()
 	for column in columns.size() - 1:
 		var x: float = columns[column]
@@ -227,6 +228,7 @@ func _build_river(level := 0.0) -> void:
 				var flow := Vector2(1, 0.015 * clampf(point.x, -42, 42)).normalized()
 				var speed := 0.2 + 0.8 * sin(PI * clampf(across, 0, 1))
 				surface.set_color(Color(flow.x * 0.5 + 0.5, flow.y * 0.5 + 0.5, speed, clampf((level-Layout.height_at(point.x, point.z)) / 5.0, 0, 1)))
+				surface.set_uv(broken.call(point, across))
 				surface.add_vertex(point)
 		var volume := CollisionShape3D.new()
 		var shape := ConvexPolygonShape3D.new()
@@ -261,6 +263,53 @@ func _build_river(level := 0.0) -> void:
 	probe.cull_mask = 1
 	probe.max_distance = 250
 	add_child(probe)
+
+## Visual-only broken water, baked per vertex into the water mesh UV: x is riffle
+## strength, y the shear-line wake trailing a bar boulder or bedrock lip that stands
+## in the current at this level. Riffles sit beyond the claim, under the downstream
+## saddle and above the bar; the bed and every depth stay as Layout defines them.
+## Returns a cached lookup (point, across 0 near .. 1 far bank) -> Vector2.
+func _broken_water_field(level: float) -> Callable:
+	var model = preload("res://scripts/river_model.gd")
+	var noise := FastNoiseLite.new()
+	noise.seed = 184811
+	noise.frequency = 0.07
+	noise.fractal_octaves = 2
+	# x, z, footprint radius, strength; only obstacles reaching into the current.
+	var obstacles: Array[Vector4] = []
+	for b in Layout.BOULDERS:
+		if b.y - b.z < model.shore_z(b.x, level) - 0.3:
+			obstacles.append(Vector4(b.x, b.y, b.z, 1.0))
+	for slab in Layout.BEDROCK:
+		var top: float = Layout.height_at(slab.x, slab.y) + 0.01
+		if top < level and level - top < 0.6 and slab.y < model.shore_z(slab.x, level):
+			obstacles.append(Vector4(slab.x, slab.y, slab.z * 0.5, 0.45))
+	var cache := {}
+	return func(point: Vector3, across: float) -> Vector2:
+		var key := Vector2(point.x, point.z)
+		if cache.has(key): return cache[key]
+		var riffle := 0.0
+		# Two riffles, skewed across the channel and broken up along their crests.
+		for zone in [Vector3(66.0, 9.0, 0.11), Vector3(-55.0, 8.0, -0.09)]:
+			var centre: float = zone.x + 6.0 * sin(point.z * zone.z) + (point.z + 15.0) * 0.25
+			var band := 1.0 - smoothstep(zone.y * 0.4, zone.y, absf(point.x - centre))
+			if band <= 0.0: continue
+			var lanes := smoothstep(0.04, 0.3, across) * (1.0 - smoothstep(0.86, 0.99, across))
+			riffle = maxf(riffle, band * lanes * clampf(0.55 + 0.9 * noise.get_noise_2d(point.x, point.z * 1.7), 0.0, 1.0))
+		var wake := 0.0
+		for o in obstacles:
+			var downstream := point.x - o.x
+			if downstream < -o.z or downstream > o.z * 9.0: continue
+			var lateral := absf(point.z - o.y)
+			# Shear lines leave the rock's flanks and spread slowly downstream.
+			var edge := o.z * 0.82 + maxf(downstream, 0.0) * 0.08
+			var width := 0.45 + maxf(downstream, 0.0) * 0.06
+			var line := exp(-pow((lateral - edge) / width, 2.0))
+			var fade := exp(-maxf(downstream - o.z * 0.5, 0.0) / (o.z * 2.6))
+			wake = maxf(wake, o.w * line * fade * smoothstep(-o.z, -o.z * 0.4, downstream))
+		var value := Vector2(snappedf(riffle, 0.001), snappedf(clampf(wake, 0.0, 1.0), 0.001))
+		cache[key] = value
+		return value
 
 func _build_boulders() -> void:
 	# Normalised granite and quartz scans (tools/art/intake_rocks.py). Dimensions are

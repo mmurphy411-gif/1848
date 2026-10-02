@@ -3,7 +3,9 @@ float rand(float x){return fract(sin(x*127.1+.1848)*43758.5453);}
 void start(){
  TRANSFORM=EMISSION_TRANSFORM;
  TRANSFORM[3].xyz+=(vec3(rand(float(NUMBER)),0.0,rand(float(NUMBER)+9.0))-.5)*vec3(20.0,0.0,20.0);
- VELOCITY=vec3(1.1,-14.0-rand(float(NUMBER)+3.0)*3.0,.3);
+ // Terminal speed of large drops; slower than before so each 0.9 m streak overlaps
+ // itself frame to frame and survives temporal AA.
+ VELOCITY=vec3(.8,-9.5-rand(float(NUMBER)+3.0)*2.0,.22);
 }
 void process(){
  TRANSFORM[3].xyz+=VELOCITY*DELTA;

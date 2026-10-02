@@ -43,7 +43,13 @@ static func run(tree: SceneTree, claim: Node3D) -> bool:
 	var dry := _patch(top, camera, Vector3(-9, Layout.height_at(-9, -1), -1), 64)
 	var deep := _patch(top, camera, Vector3(0, 0, -10.666667))
 	ok = _check(shallow.y <= dry.y * 1.25, "Shallows green %.3f <= dry %.3f × 1.25" % [shallow.y, dry.y]) and ok
-	ok = _check(deep.y >= deep.x * 1.3 and _luma(deep) < _luma(shallow), "Channel RGB %s darker than shallows %s, G/R %.3f >= 1.3" % [deep, shallow, deep.y / maxf(deep.x, 0.001)]) and ok
+	# Visual upgrade Stage 1 amendment: the channel is clear green-brown, not
+	# emerald. At this 19:25 pose it measured G/R 1.010 / B/G 0.853 (--water-only)
+	# and 1.058 / 0.862 (full harness, warmer GI history); emerald was G/R 1.41
+	# against the old 1.3 floor. The bands keep a ~6-7 % margin around both runs.
+	var green_red := deep.y / maxf(deep.x, 0.001)
+	var blue_green := deep.z / maxf(deep.y, 0.001)
+	ok = _check(green_red >= 0.95 and green_red <= 1.12 and blue_green <= 0.92 and _luma(deep) < _luma(shallow), "Channel RGB %s darker than shallows %s, green-brown G/R %.3f in 0.95-1.12, B/G %.3f <= 0.92" % [deep, shallow, green_red, blue_green]) and ok
 	# Hold an actual knee-deep pose without the idle current moving the probe target.
 	walker.set_physics_process(false)
 	camera.fov = 65
