@@ -960,3 +960,851 @@ clouds, water, rocks and props measured at or near zero.
 **Wave C.** Six fix-up agents (ground, plants, sky, canyon, characters, props) take the review
 findings and the frame budget as the second and last attempt before anything goes to the
 owner. Their notes follow.
+
+### Wave C — C-ground (terrain shader, scan rocks, cobbles, clutter)
+
+Done October 2, 2026. Tour label `c_ground` (before/after sheets against `merge8` in
+`artifacts/visual-tour/c_ground/`; census, probe logs and debug scripts in its
+`cground_evidence/` folder).
+
+#### What changed
+
+**Boulder meshes (`tools/art/intake_rocks.py`, `blender/extract_piece.py`).** `extract_piece.py`
+gains `--cast F`: before the water-wear smoothing, each piece is normalised to its bounding box,
+pulled F of the way toward the box's ellipsoid (Blender Cast modifier) and scaled back. Smoothing
+alone turned fractured blocks into pillows with sheer sides and a flat top (the "quarry block");
+cast 0.4–0.5 gives the domed, egg-shaped section of a tumbled boulder and keeps the scan's lumps.
+All eight bar/ring boulders now come from **different** scans: 01 `rock_moss_set_02` rock11 (2k,
+8k source), 02 `stone_01` (quartz), 03 `namaqualand_boulders_01` rock a (2k, 4k source), 04/05/07
+`rock_moss_set_01` rock04/rock01/rock05 (new source, 4k), 06 `namaqualand_boulder_04`, 08
+`namaqualand_boulder_06`; margin rocks 09/10/12/13 re-cut (13 now `rock_moss_set_01` rock02), 11
+unchanged. New `clutter/driftwood_snag.glb` (`dead_tree_trunk_02`, 4 m split snag, 1,500 tris).
+Granite tint 0.62 → 0.575 grey (texture mean 0.27 linear before the shader's grain).
+
+**Fitting (`scripts/scan_rocks.gd`).** Rounded scans keep near their own proportions: narrow-side
+floor 0.78 → 0.62 of the radius, vertical stretch cap 1.35 → 1.12, visible height 1.35 → 1.1
+vertical radii. Footprints stay exact (milestone_5 radius checks 3.400/2.700/… all exact). The
+fitted mesh bakes the ground height under each vertex into UV2 (contact shading), and each
+boulder's ground outline (radius vs angle, 2 Fourier orders) goes to the terrain as
+`boulder_at[7]`/`boulder_shape[7]`. Yaw offsets for boulder_01 (3.2) and boulder_02 (0.3) were
+chosen so milestone_3's golden-hour waterline rays stay 5/5 clear (the new shapes blocked 2 of 5 at
+the old yaws). Far-bank margin rocks are placed along the reach the bar looks across
+(`FAR_BANK_X`, one of each margin scan, 1.6–2.6 m) instead of anywhere in |x| < 75; margin
+MultiMeshes carry a ground plane in custom data.
+
+**`shaders/scan_rock.gdshader`.** Granite rocks (per-file `granite`/`veins` table in
+`scan_rocks.gd`): baked moss/shadow blotches flattened toward the mean (they read as camouflage),
+object-space crystal grain (two octaves, faded before it aliases), quartz veins (seeded planes, some
+cells), rust spots in hollows and runs down steep faces, darker undersides/bleached tops, crustose
+dots; soft ceiling at 0.36 so pale crystals never blow out. All rocks: lichen only above the spring
+flood line, scoured/silt-filmed below it; wet band 0.32 m above the live river and soaked at the
+line; contact darkening and splashed sand at the foot (UV2 ground for bar boulders, instance
+ground plane for margin rocks); `rain_wetness` darkens (×0.5) and glosses (roughness 0.2).
+
+**`shaders/terrain.gdshader`.** Bar: anti-tiling patches now also vary texture scale 0.65–1.55
+(cobble-size zones); low swales tilt the shading normal and hold sand; sand ripples near the
+camera (fields, not everywhere); gravel toning pulls bright white/cream pebbles toward grey-tan and
+down 40 %, rust/ochre families browner; boulder contact shade, sand banked on the sides and a
+tapered lee drift (upstream faces stay coarse cobble); no sand pockets below the late-summer low
+water. Damp margin: soaked silt-skinned strip 0.3–0.6 m and a damp ragged band 1.2–2.6 m from the
+live waterline (horizontal distance from the slope, capped 0.5 m above it), darker (×0.42), satin
+rather than mirror (a glassy bank washed the darkening out); lighter hand under water. Oak duff:
+warped, noise-broken litter islands fading over 2–8 m (no disc). Plain-ground path (store
+clearing): redder/darker/trampled soil reaches, broken litter drifts, trodden stones. Walls: dry
+cliff rock is matte (roughness ≥ 0.62–0.9 by steepness, SPECULAR 0.28) — the night streak in
+`downstream_00h` was moonlight specular on a ledge (streak peak 196 → 93 on an 8-bit scale,
+surrounding cliff 48). Rain (`rain_wetness`): ×0.5 and glossy, hollows first. River bed below
+−0.3 m (greybox kind 4) now draws as river cobble, not wall talus (`greybox.gd` one line: it
+clamped kind 4 to 3, which painted grey slate slabs on the deer/fish views).
+
+**`shaders/rock.gdshader`.** `rain_wetness` darkens and glosses (bedrock slabs, wing dam, store ring).
+
+**Cobbles (`scripts/cobbles.gd`).** Kinds retoned: fewer and greyer whites (14 → 7 %), browner tan
+and rust, more slate (20 %) and greenstone (13 %). Placement draws unchanged.
+
+**Clutter (`scripts/ground_clutter.gd`).** Own second generator (seed 184852, Stage 3 draws
+unchanged): wrack logs 1.1–1.6× (3.4–5 m) lying along the flow, branches 1.2–1.9× on the wrack line
+and boulder jams, 9 stranded snags (rolled so the trunk lies on the ground and the fork sticks up)
+with logs jammed against them on the high-water line, and two snags against each boulder's inland
+and lee faces; both ends of every long piece are checked against the panning strip, camp and
+boulders. 99 pieces (was 81); snags cast shadows.
+
+#### Findings → status
+
+| # | Finding | Status | Evidence |
+| --- | --- | --- | --- |
+| 1 | ≥ 10 distinct silhouettes | fixed | Census (ID-coloured rocks over the tour cameras, ≥ 800 px): 13 meshes. 01 wildlife_bear, shoreline_close, valley_low, crew_work; 02 downstream_* (left), shoreline_close, wildlife_deer; 03 across_river, far_wall, quail, crew_work; 04 upstream (right), crew_work (centre), crew_lineup, quail; 05 camp_10h, camp_close, near_wall; 06 crew_supper, squirrel, near_wall, downstream_*; 07 valley_low, crew_work; 08 upstream_10h end; 09/10/12 far bank in across_river, far_wall, wildlife_deer/bear; 11 deer_close, jay; 13 downstream_* far end, deer, shoreline. No block shapes left (`boulder_meshes_new.jpg`). |
+| 2 | Boulder surfaces | fixed | Grain, veins, rust, flood-line scouring, wet band, contact/drift; no rock pixel > 0.85 in any view; across_river_10h boulder no longer smeared. |
+| 3 | River bar | fixed / partly | Damp margin visible in across_river, bear, deer views; pebbles toned; size zones, swales, lee drifts, ripples; much more driftwood (crew_work, downstream). Ripples read slightly regular close up. |
+| 4 | Camp/store ground | partly | Oak duff now irregular. Store yard: natural no-vertex-colour path, no uniforms needed from C-props. **C-props:** `camp.gd` still adds its own 2.5 m `Assets.rock("duff",2)` disc under the fire (hard edge, visible in camp_close_10h) — remove or fade it. |
+| 5 | Rain wetness | fixed | rain_downstream_10h lower-half 0.164 → 0.118; ground ≈ ×0.5 linear in rain (`cmp_rain.png`). |
+| 6 | White square | not mine | A `SeasonEnd` snow flake (2.5 cm untextured GPUParticles3D quad): `tests/visual_tour.gd::fixed_particles()` calls `restart()` on every GPUParticles3D, which restarts the season-end snow although it is not emitting. Reproduced with `look.gd restart=1`; flakes also in merge8/c_ground `near_wall_10h`/`far_wall_10h`. **C-sky:** skip particles with `emitting == false`. |
+| — | Night cliff streak (orchestrator) | fixed | `downstream_00h` (`night_a/b_crop.png`). |
+
+#### Gates
+
+| Gate | Target | Measured | Result |
+| --- | --- | --- | --- |
+| downstream_10h lower luminance / saturation | 0.38–0.50 / ≥ 0.20 | 0.421 / 0.262 | pass |
+| downstream_13h lower luminance / saturation | 0.38–0.50 / ≥ 0.20 | 0.442 / 0.254 | pass |
+| downstream_1925 mean / baseline | ≥ 0.90 | 0.890 (merge8 0.877) | fail (S-sky's; not worse) |
+| downstream_00h mean / baseline | ≥ 0.90 | 1.344 | pass |
+| Distinguishable boulder silhouettes | ≥ 10 | 13 | pass |
+| milestone_5 footprint/placement/collision, milestone_1 feet | pass | pass | pass |
+| milestone_3 golden-hour rays | ≥ 4/5 | 5/5 | pass |
+| Asset audit | exit 0 | 135 files, 0 failing | pass |
+
+#### GPU A/B (20th-pct GPU ms, 24 cycles, 1500-frame warm-up, quiet GPU)
+
+| Toggle | downstream | wade | overview |
+| --- | --- | --- | --- |
+| terrain shader new vs merge8 | +0.008 | −0.046 | −0.020 |
+| scan_rock shader new vs merge8 | +0.014 | +0.017 | +0.009 |
+| rock shader new vs merge8 | +0.003 | +0.005 | −0.001 |
+| new snags (added instances) | +0.016 | +0.008 | +0.017 |
+| all of the above together | **+0.038** | **−0.019** | **−0.011** |
+| all ground clutter (for scale) | +0.046 | +0.038 | +0.015 |
+
+The new terrain features first cost +0.06 ms downstream; paid for by sharing noise (swale, 1 m
+lumpiness, damp edge/reach, ripple fields, wander, soil, silt), gating the boulder loop to x −45..38
+and the oak litter to inland > 7 m, and single-octave noise for wall strata, rind and moss. Probe:
+`cground_evidence/probe_cg.gd --pass=cgfinal` (note: the attribution probe's `_terrain_swap` and
+any repeated override swap find no terrain surfaces after the first swap; `_terrain_ab` caches them).
+
+#### Shared files
+
+`scripts/greybox.gd` (one line in `_visual_triangle`: river-bed kind 4 no longer clamped to wall),
+`assets/CC0_MANIFEST.json` (rows for `rock_moss_set_01` 4k, `namaqualand_boulders_01` 4k,
+`dead_tree_trunk_02` 1k; outputs appended).
+
+#### Sizes
+
+Boulder GLBs 14.4 → 13.3 MB; new snag 0.46 MB: about −0.6 MB net.
+
+#### Regression amendments
+
+None. milestone_5 ranges unchanged (all boulders 2,000–3,000 tris; snag is clutter, not asserted).
+
+#### Still weak
+
+Close-up sand ripples are a little regular; margin rocks are small in most views (1–5k px); boulder_02
+(quartz) is the brightest object in the downstream series; the far bank's wet strip is narrow
+because the bank is steep; scan_rock costs +0.01–0.02 ms more than merge8.
+
+### Wave C — C-plants (vegetation)
+
+October 2, 2026. Tour label `c_plants` (`artifacts/visual-tour/c_plants/`, before/after sheets
+against `merge8`). Probe logs and the probe variant: `artifacts/perf_probe/c_plants/`.
+
+#### What changed
+
+**Performance (hard gate).**
+- `shaders/foliage.gdshader`: alpha-to-coverage replaced by alpha scissor on every foliage
+  material. A2C is not kept anywhere, not even on the bar oaks: with TAA the scissored
+  edges looked the same in `under_oak_10h`, `camp_close_10h` and `wildlife_jay`.
+- Understory shadows off (`UNDERSTORY` third field) for every plant except the new oak
+  saplings near the bar. Willow and alder within about 90 m of the bar cast their shadows
+  through opaque ellipsoids sized to the crown (`Understory/willow_shadow`, `alder_shadow`:
+  shadow pass only, 64 triangles each).
+- Conifers past 60 m (`*_distant`): `cast_shadow` off. Opaque 7-sided cones whose crown base
+  and width come from the species' distant mesh cast their shadows (`<species>_shadow`,
+  shadow pass only).
+- Bar black oaks: `gi_mode` disabled (see the bark finding). They still receive GI and cast
+  sun shadows.
+
+**Under the oak.**
+- *Near-black trunk.* Cause: SDFGI voxelises a crown's cards as a solid blob, so the trunk and
+  the crown's underside got almost no indirect light. The trunk's shaded side measured luma
+  4/255 in `merge8`. Bar oaks no longer occlude GI, which brings it to 31/255. The bark shader
+  also grades each layer (`Assets.BARK_LOOK`: gain, saturation, normal depth, and a cavity AO
+  taken from the scan's own furrows, so the plates read in shade). The oak layer is now
+  grey-brown: gain 1.3, saturation 0.4, normal depth 1.7, cavity 0.85.
+- *Stretched leaf strips.* These were cards seen nearly edge-on. The foliage shader now fades
+  any card whose face (taken from screen derivatives) is within about 17° of the view ray.
+  Leaf litter is exempt (`flat_cards`).
+- *Bare sand.* `_oak_floor()` (own RNG, seed 184827) adds ground life inside each bar oak's
+  4.6 m canopy circle, which keeps it inside C-ground's duff circle. Each oak gets about 12
+  leaf-litter patches, grass tufts at the trunk foot and the drip line, ferns on the inland
+  side, and 4 black-oak saplings (0.9–1.6 m). The river side of the crown edge carries the
+  taller plants, because that is where the bar's views meet the oak. Nothing is placed within
+  12 m of the water, in camp or on boulders, and nothing has collision. New assets, from
+  `tools/art/build_trees.mjs`: `assets/plants/oak_sapling.glb` (EZ-Tree, 648 tris, oak atlas
+  and oak season) and `leaf_litter.glb` (8 flat cards cut from the oak atlas, 16 tris, always
+  dry).
+
+**Treeline.** `_riparian()` (own RNG, seed 184831) replaces the single-row hedge:
+- Clumps 5–19 m long separated by 2.5–11 m gaps.
+- Three depths up the talus apron: sedge at the water; willow in front, a sixth of them young
+  (0.3–0.5×); white alder behind, 8–12 m tall.
+- Lone alders or young willows stand in some gaps, and plants lean out over the water.
+- Per-plant looks (`Assets.PLANT_LOOK`): alder is darker and bluer (`leaf_tint`) with a pale
+  stem; willow is lighter and grey-green.
+- The near-bank strip past the ends of the bar uses the same rules.
+- Instances: willow 286, alder 31, sedge 282 (before: about 187, 33, 310).
+
+**Rim conifers.** `_rim_trees()` (own RNG, seed 184837) adds 70 ponderosa, Douglas fir and
+incense cedar along the far rim and the first 22 m behind it. They are at least 4.5 m from
+any tree and use the distant meshes, with shadows from proxy cones. They live under
+`Understory/rim_*` as wall dressing, like the live oaks. The 600 Milestone 5 conifers in
+`placements` are unchanged.
+
+**Season.**
+- `timing_spread` (foliage uniform, set from `SEASON`) spreads the turn three ways: per
+  instance, per card, and toward the outer crown.
+- Bar oaks get a 2.2× wider per-tree timing and a warm or lemon autumn hue per tree. The black
+  oak window moves to 0.60–0.86 and leaf drop to 0.90.
+- Cards go green → yellow-green → autumn colour, and the browner cards appear only late.
+- A riparian clump shares part of its timing, so thickets turn one after another. Alder turns
+  later (0.70–0.98) and only to a dull yellow-brown at 0.7 strength.
+- Wall live oaks stay evergreen. None of the bar oaks is a live oak.
+
+**Dusk glow.** The lime clump in `crew_supper_1936` is lit by the 6° sun (19:36), not by the
+fires: the backlight-off and fire-light tests left it unchanged, while sun-off removed it. The
+foliage now has a `light()` that matches Godot's Lambert plus transmission exactly in daylight
+(`under_oak_10h` crown region is identical to the decimal). Below about 14° of sun it
+desaturates the sun's colour on leaves, keeping luminance, and dims it slightly below about
+11°. Effect on the clump: bright pixels down 29 %, saturation 0.72 → 0.62. `downstream_1925`
+mean luminance is unchanged (0.8774 of baseline; it was 0.877).
+
+**Floating grey square (not mine; root cause found).** It is a SeasonEnd snowflake: a
+`QuadMesh` 0.025 m billboard, unshaded `Color(.84,.88,.9)`, 420 flakes in a 30 × 18 × 30 m box.
+`tests/visual_tour.gd::fixed_particles()` calls `restart()` on every `GPUParticles3D`, and
+`restart()` also sets `emitting = true`, so snow falls through every claim view of a full
+tour. A flake that passes close to the lens reads as a big flat square. With `only=`, the
+skipped slots render with 3D off, so the GPU particles don't advance and no flake is near the
+lens. In `c_plants` the flakes land elsewhere (small squares on the boulder in `far_wall_10h`;
+`merge8` also has one in `gravel_close_10h`). Fix for C-sky's harness: in
+`fixed_particles()`, restart only particles whose `emitting` is already true. Not applied
+here because the file is C-sky's.
+
+#### Gates
+
+| Gate | Target | Measured | Result |
+| --- | --- | --- | --- |
+| Vegetation GPU over pre-upgrade (downstream / wade / overview) | ≤ +0.35 / +0.45 / +0.35 ms | −0.05 / −0.07 / −0.53 (quiet pair, below) | pass |
+| `under_oak_10h`, treeline views natural | blind check | grey-brown textured trunk; sapling, ferns and grass at the crown edge; no edge-on strips; clumped, three-depth riparian with distinct alders; denser rim | for review |
+| Day 10 vs day 100 differ | visibly | foliage pixels moved > 10° toward yellow: `under_oak` 85 %, `across_river` 91 %. Day-100 hue spread (p20–p80): 8.5° / 11.3° in `merge8` (uniform), 43.8° / 56.5° now (uneven) | pass |
+| Conifer count | 600 | 600 placed / 600 rendered (`milestone_6_notes`), plus 70 rim dressing trees outside `placements` | pass |
+| Stage 1 colour gates | 10:00 / 13:00 unchanged | lower-half luminance 0.431 / 0.456, saturation 0.28 / 0.28 (pass); `downstream_1925` 0.877 (S-sky's, unchanged) | pass |
+| Suite | all pass | 37 / 37 (`LABEL=c_plants`) | pass |
+| `audit_assets.py` | exit 0 | 136 files, 0 failing (`oak_sapling` 648 / 800, `leaf_litter` 16 / 60) | pass |
+
+#### GPU-time A/B (in-process toggle, `artifacts/perf_probe/c_plants/probe_veg.gd`)
+
+This is `probe.gd` plus `veg` and `vegparts` passes. The Vegetation node is hidden and shown
+16 times per item. The figures are the 20th-percentile estimator, in ms. Runs alternated
+between this worktree and `perf-baseline` (`310a9ae`). Other agents were rendering throughout;
+noisy runs are left out.
+
+| run | downstream | wade | overview |
+| --- | --- | --- | --- |
+| pre-upgrade (`base1`, `base4b`) | 0.64 / 0.64 | 0.57 / 0.57 | 1.31 / 1.29 |
+| merged `88ac33d` (`merged1`) | 1.67 | 1.66 | 1.87–2.70 |
+| this branch (`mine4b`) | 0.59 | 0.50 | 0.75 |
+| **over pre-upgrade** | **−0.05** | **−0.07** | **−0.53** |
+| saved vs merged | 1.08 | 1.16 | 1.1–1.9 |
+
+Parts (`mine3`, noisy). Understory 0.26 / 0.26 / 0.41, of which willow and alder 0.22 / 0.23 /
+0.12 and the oak floor about 0.02. Bar oaks 0.18 / 0.13 / 0.04. Distant trees 0.01 / 0.06 /
+0.16. All vegetation shadows 0.25 / 0.28 / 0.29.
+
+Supper: vegetation 0.47–0.49 vs pre-upgrade 0.68–0.84. Store: tree MultiMeshes 0.63–0.81,
+0.54 of it their double-sided shadows (`store.gd`, C-props); the store frame is 2.9 ms against
+4.5. The store trees could take the same cone shadow proxies if C-props wants 0.4–0.5 ms.
+
+#### Shared-file hunks
+
+`scripts/asset_library.gd` (all mine):
+- `SEASON` gets timing spreads and the `litter` key.
+- `UNDERSTORY` gets `oak_sapling` and `leaf_litter`.
+- New `UNDERSTORY_ATLAS`, `PLANT_LOOK` and `BARK_LOOK`.
+- `_bark_material` passes the bark grade.
+- `_leaf_material` passes `timing_spread`.
+- `understory()` applies `PLANT_LOOK`.
+- `STEM` gets alder and `oak_sapling`.
+
+`Assets.plant()` and `Assets.understory()` signatures are unchanged. No test, scene, project
+or budget file was edited.
+
+#### Regression amendments
+
+None. No test or threshold changed.
+
+#### Sizes
+
+`oak_sapling.glb` 41 KB and `leaf_litter.glb` 2.4 KB. No new textures.
+
+#### Still weak
+
+- The supper clump still reads warm yellow-green. It really is sunlit at 6°, and cutting more
+  would flatten golden hour.
+- Willow and alder are still EZ-Tree stand-ins with stamped sprays; up close (`downstream_10h`
+  far bank), alders read as small round trees, not true white alder.
+- The understory's 12 m shore rule leaves the bar between the oaks and the water bare by
+  design. In `under_oak_10h` the frame's foreground is that bar, so the oak floor shows only at
+  the crown edge.
+- Rim trees are seated on greybox's render mesh (`_wall`). Where C-canyon's cliff kit overhangs
+  the rim, a trunk foot can sit inside a kit piece.
+- The probe's A2C what-if rows in `artifacts/perf_probe/probe.gd` no longer find the
+  `alpha_to_coverage` line, because it is gone. They will print "shader edit not found".
+
+### Wave C — C-sky (daylight, clouds, fog, water, rain, tour harness)
+
+Done October 2, 2026. Tour `artifacts/visual-tour/c_sky/` (sheets `tour_compare_*` against
+`merge8`; gate run against `baseline`, kept as `tour_vs_baseline.json`).
+
+**Clouds (finding 1).** `shaders/sky_clouds.gdshader` now marches ten steps through a slab of
+heaped cumulus instead of shading one flat sheet: a heap stands tallest over the core of its
+cluster (the coarse octave of the shared field) and the fine octaves break its outline, so
+bases are flat and grey (darker under the thick cores) and tops rounded and sunlit. Near the
+horizon the march is capped at about one cloud's depth, and the step offset is jittered per
+pixel and per frame for TAA. A low sun lights the bases from below (`underlight`, warm cloud
+undersides at golden hour). `sky_clouds.gd`: the first heaps stand by mid-morning (build
+from 08:00 instead of 09:00, base cover 0.30 → 0.33). Daytime depth fog on the open sky
+`fog_sky_affect` 0.15 → 0.05, and the volumetric fog is three times thinner (below), so
+cumulus stand against blue. The drift phase was re-picked from 160 seeded candidates
+(`artifacts/csky/phase_search.gd`): score = cloud cover in the visible sky of eight views
+(downstream 06/10/13, upstream, far and near wall, under-oak 10/13), constraint = the
+downstream bar in the 10:00 and 13:00 gate views stays out of cloud shadow (lower-half
+luminance within 1 %). Cloud shadows now fade at 450–1000 m (was 180–650 m), so they also
+cross the near ridges.
+
+Root cause found while doing this: the downstream gate views contain almost no sky. C-canyon's
+bend ridge rises to about 29° elevation, the top edge of the frame, leaving ~1.3 % of the
+frame as sky (a sliver at top right). There the clouds now cover about half of that sliver;
+upstream, under-oak, near/far wall and the valley view show readable heaps. A bigger cloud
+presence downstream needs a lower ridge or a different camera, which are not mine.
+
+**Golden hour (finding 2).** `daylight.gd` splits the low-sun range in two: *golden*
+(sun above ~9.5°, e.g. 19:15 and 06:00) and *dusk* (below ~6.5°, e.g. the 19:36 supper).
+Golden: sun (1.0, 0.76, 0.50) at 2.8 (was (1.0, 0.82, 0.62) at 1.9), warm Mie glow,
+volumetric haze 0.004 → 0.0012 with near-neutral albedo (a blue veil lit amber was the milky
+cream), tighter forward lobe (anisotropy 0.6) so the glow sits round the sun, RiverMist
+0.006 → 0.0014. Dusk keeps the Stage 1 light and blue haze, so the fire-lit camp is
+unchanged (crew_supper_1936 mean 0.189 vs 0.183, lower half 0.256 vs 0.248, SSIM 0.93).
+The shade stays cool (shadow/sunlit B:R 1.88 in the water harness). downstream_1925 mean
+luminance 0.877 → **0.924 × baseline**.
+
+**Haze and aerial perspective (finding 3).** Volumetric fog 0.004 → 0.0012 by day (night
+0.0045, dusk 0.004); ClearRimAir now removes 80 % of whatever the global density is (it was a
+fixed −0.003). Depth fog begins at 120 m and ends at 1000 m (golden 1100), so with Godot's
+smoothstep ramp it is ~10 % at 300 m, a third at 450 m and over half only at the 600 m far
+clip: the bar, the walls and the 50–200 m middle distance keep contrast and colour, the far
+ridges fade. RiverMist shortened from ±500 m to **±170 m** (`claim.tscn`, size 1000 → 340), so
+it no longer runs through the bend walls; day density 0.003 → 0.0008.
+
+**Night (finding 4).** The bright vertical streak on the left cliff in `downstream_00h` is the
+canyon terrain wall itself (`Greybox/CanyonAndGravelBar`, terrain shader), exposed in a gap
+between cliff-kit pieces on the far wall at about x 95–115, z −60…−70, y 20–35 (150 m from the
+camera; picked with `artifacts/csky/pick.gd`), facing the low moon. Most of its brightness was
+moon specular at a grazing angle: `moon.light_specular` 1 → 0.05 takes its peak from ~150 to
+~90 against ~50 around it. The remaining diffuse contrast is the bare wall being lighter than
+the kit: **for C-canyon** (fill that kit gap) or C-ground (rock-layer albedo there). Night
+colour: moonlight (0.75, 0.83, 1.0), fog light and fog albedo blue-grey instead of saturated
+blue, and the moonlit haze now veils the night sky as it veils the ridges
+(`volumetric_fog_sky_affect` 0.04 → 1.0; it was why ridge-top trees hung as dark shapes
+against a brighter sky). Lower-half saturation 0.453 → 0.321.
+
+**Rain (finding 5).** New `shaders/rain_streak.gdshader` (spatial, per drop): a 0.55 m trail
+slanted along the drops' wind-blown fall (1.6, −10.5, 0.5 m/s), turned to face the lens about
+that axis, never narrower than 1.5 px (narrower streaks fade instead: soft depth falloff
+rather than shimmer), faded in from 3–7 m and out at 16–30 m. 20,000 drops in a 28 m box
+(was 5,000 in 20 m: twice the density). The particle shader's `sin()` hash lost precision at
+large drop numbers, so many drops fell on the same lines (the full-height "film scratches");
+it is now an integer hash of `RANDOM_SEED` and `NUMBER`. `rain_wetness` is driven during rain
+(1.0 in the tour's rain view; `current / 0.8` in play) as before.
+
+**Water (finding 6).** `shaders/water.gdshader`: (a) the absorption path is capped at twice
+the bed depth, so views steeper than 30° are unchanged while grazing views (where the straight
+ray ran six times the depth) see their shallows; (b) within ~25 m of a low viewer, over water
+shallower than ~2 m, reflection eases off (the bed shows through, as the eye adapts to it);
+(c) the bed sample uses an explicit mip level from depth (automatic selection blurred the bed
+into murk at grazing angles). Long reaches: beyond the reflection probe's box the engine could
+only reflect open sky, hence the flat milky pond; there the water now reflects an approximate
+canyon (walls below a rim, hazy sky above, lit for the hour by `daylight.gd`), and beyond
+~25 m current lines (long streaks of brighter, aerated water carried with the flow) replace the
+averaged-out ripples. `greybox.gd::_build_river` bakes the world flow direction into UV2, which
+turns with C-canyon's bend beyond |x| = 160 (COLOR keeps the analytical flow, so the M4 vertex
+checks hold); the shader scrolls normals and lines along it.
+
+**Floating grey square and tour timing (finding 7).** The square was a SeasonEnd snowflake:
+`fixed_particles()` called `restart()` on every GPUParticles3D, which also switches emission
+on, starting the first-snow emitter (found independently; C-plants reported the same). Fixed:
+only emitting systems restart. Slot overruns: `merge8` was captured without `--fixed-fps 60`;
+then physics ticks follow the wall clock, so `place()`'s 90 physics frames span hundreds of
+render frames and views overrun. The tour now re-runs itself in a child process with
+`--fixed-fps 60` when started without it (exit code and output passed through). Full runs:
+31 views, no overruns, no grey square.
+
+**Perf (finding 8).** `directional_shadow_blend_splits` off (no visible seam; A/B images
+identical to the eye, differences only in leaf-level shadow texels). GI at half resolution
+(`project.godot`): image differences mean ≤ 0.3/255, p99 ≤ 4.3/255 in downstream, under-oak,
+camp and the night camp — taken.
+
+GPU A/B in one process (`artifacts/csky/probe.gd`, pass `csky`: each feature toggled between
+this branch and its `merge8` state, 16–20 cycles; 20th-percentile estimator, ms; two runs):
+
+| | downstream | wade | overview |
+| --- | --- | --- | --- |
+| clouds + shadows + water + fog, wave C vs merge8 | +0.007 / −0.002 | −0.001 / −0.021 | +0.012 / +0.014 |
+| of which water shader | +0.001 / +0.000 | −0.006 / +0.082* | −0.003 / +0.003 |
+| sun blend_splits off (saving) | 0.28 (run 1) | 0.21 / 0.29 | 0.12 / 0.13 |
+| GI half resolution (saving, run 1; now baked in) | noisy | noisy | 0.12 |
+
+*noisy run (IQR 0.26). The first run predates the last water edits. Target ≤ +0.05 in every
+view: met. Rain in the store pose (full rain,
+20,000 drops): +0.009 ms. Rain is inactive in the miner_performance views.
+
+| Gate | Target | Measured | Result |
+| --- | --- | --- | --- |
+| downstream_10h lower-half luminance / saturation | 0.38–0.50 / ≥ 0.20 | 0.428 / 0.297 | pass |
+| downstream_13h lower-half luminance / saturation | 0.38–0.50 / ≥ 0.20 | 0.450 / 0.293 | pass |
+| downstream_1925 mean luminance / baseline | ≥ 0.90 | 0.924 (merge8 0.877) | pass |
+| downstream_00h mean luminance / baseline | ≥ 0.90 | 1.026 | pass |
+| crew_supper_1936 (protect) | unchanged | mean 0.189 vs 0.183, SSIM 0.93 | pass |
+| Tour determinism | no slot overrun | 31/31, none | pass |
+| Water probes `capture_greybox --water-only` | pass | all colour/glint/contact probes pass (see amendment); the wall-clock 1080p check passed at 3.92 ms p95 in one run and failed at 7.58 in another on the loaded machine | pass |
+
+`merge8` itself fails the `--water-only` "Shallows green" probe (0.310 > 0.289); this branch
+passes it (0.312 ≤ 0.323). In the full `capture_greybox` harness the water probes pass too
+(channel G/R 0.894 against a floor of 0.853). Its asset probes at 19:15 (gravel and granite
+luminance deviation, conifer canopy G/R ≥ 1.2) already fail on `merge8` lighting (0.017, 0.030,
+1.155 — measured with this branch and `merge8`'s `daylight.gd`); with the amber golden hour
+the canopy reads 1.010. They belong to the ground and plant probes and are left as they are.
+
+`miner_performance` wall clock at the end of the work (machine still shared): p95 downstream
+4.65, wade 5.31, overview 4.95 ms — all under 5.5.
+
+**Regression amendment (tests/water_capture.gd).** The channel probe's G/R floor of 0.95 was
+an absolute value measured under the Stage 1 golden-hour light (S1's own amendment). Finding 2
+asks for a deeper amber sun in clearer air at that same 19:25 pose, which warms everything the
+probe sees: the sunlit dry gravel now measures G/R 0.735 and the channel 0.834–0.843 (with
+`merge8`'s water shader and this light it is 0.851, so the water is not the cause). The floor
+is now relative to the sunlit dry gravel in the same frame: the channel must be at least 5 %
+greener than it (measured 14 % greener). The emerald ceiling (1.12), the blue limit
+(B/G ≤ 0.92) and "darker than the shallows" are unchanged and pass.
+
+**Shared files.** `scenes/claim.tscn` (RiverMist size), `project.godot` (one line:
+`global_illumination/gi/use_half_resolution=true`), `tests/water_capture.gd` (amendment
+above), `tests/visual_tour.gd` (harness: particle restart, fixed-fps relaunch).
+
+**Suite.** 37/37 (`LABEL=c_sky`). **Assets.** None added (one new shader file).
+
+**Still weak.** Downstream skies are a 1 % sliver (geometry). The night streak keeps a diffuse
+residue until the kit gap is filled. The reach reflection is an approximation (a lit band,
+not the real walls). Clouds are one heaped layer: no parallax between heaps, and seen from
+right under them they still read as a sheet. Rain has no splashes or ripples on the bar.
+
+### Wave C — C-canyon (canyon reach, ridge forest, cliff kit, talus)
+
+Second attempt on the Stage 2 gates. Tour `c_canyon` (`artifacts/visual-tour/c_canyon/`,
+before/after sheets against `merge8`). Render-only throughout: collision, river volumes,
+the 10 back-wall hulls, the claim reach's render surface and S4's wall-plant seating are
+unchanged.
+
+#### What changed
+
+**Ridge relief** (`scripts/canyon.gd`). The slopes above both rims of the bent reach now
+carry structure instead of a smooth sweep: cliff bands (7 m risers of 8-19 m on the far
+wall at about 74/128/196/262/335 m above the rim, 4 on the near wall, each wandering
+±18 m and dying out along the valley), draws (gullies 7-16 m deep that meander down the
+slope) and tors (low rock knobs seeded per 70 × 56 m cell, most on the crests). The crests
+are wider and less varied (half-widths 85/150/190 m, ±30 % height) so their faces lie at
+35-50 degrees and can hold timber between the bands. On stretches of the bent reach the
+three claim-style cliff bands below the rim merge into one face, and their faces stand
+out or fall back by up to 5 m (`rib()`), so the walls round the bend are not the claim's
+terraces repeated. The same functions return a ground cover per point (forest density,
+draw, rock, scree): timber is thick in the draws, open on spurs and crests, absent on
+rock and the scree fans below each band. Stage 2's three-octave noise on the bent reach
+was replaced by two longer octaves (its finest octave stood up as 60-degree spikes on
+the finer grid).
+
+**Render grid** (`greybox.gd::_visual_section/_visual_column/_visual_triangle`). The bent
+reach samples the far slopes every 5 m (near slopes 10 m) up to 300 m above the rim and
+splits the 20 m columns into 5 m (10 m beyond |x| 330, unchanged beyond 450). Claim-reach
+columns repeat their FINE rows to the same count, so their surface is identical (the
+repeats are skipped as zero-area). `wall_point()` gained an `eased` flag: more than 15 m
+into the bend its ledges and most of its noise fade out above the rim, leaving the forms
+to the relief. The vertex colour carries the ground cover and UV.x the height above the
+rim to the ridge shader. The ridge material now starts where the slopes do (8 m above
+the rim, meandering between |x| 175 and 205 m) and takes the cliff bands too beyond
+|x| 205-245 m. CanyonReach: 14.7 k → 48.6 k triangles (no shadow, no GI).
+
+**Ridge shader** (`shaders/ridge_forest.gdshader`, rewritten). Dry Sierra slope in late
+summer instead of pale soil: needle duff and red-brown soil under timber, olive chaparral
+and cured tan grass on sun-facing (-Z) slopes, pale scree fans, and slate/greenstone rock
+in dipping strata broken into jointed blocks that are lit block by block. Steep ground is
+rock whatever the cover says; the first 8-22 m above the rim are broken cliff top. Within
+~100 m of the bend start the rock continues the terrain shader's strata exactly (same
+integer hash and fbm), blocks fade and grass/chaparral give way to duff, so the material
+change at |x| ≈ 185 m no longer shows as a line from the high cameras. Canopy texture is
+clumped by the cover, with oak-coloured crowns in the lower sunny stands.
+
+**Treeline** (`canyon_dressing.gd::_treeline`). 2,600 trees per end (was 2,000) placed by
+the ground cover, not uniformly: spires 9-33 m tall (most young, a few big; draws grow
+them 30 % taller; below the rim only small ones on benches) and, on lower south faces,
+low six-sided oak domes (24 triangles). The seam trees at |x| 160-240 m are fir and cedar
+only: the distant ponderosa LOD is a long bare trunk under a small crown and read as a
+pole at 150-250 m.
+
+**Far wall** (`canyon_dressing.gd::_tall_cliffs/_toe`). Every 40-80 m along the claim
+reach a slate scan spans two cliff bands and the bench between (stretched up the face,
+out of GI), replacing the band pieces it covers, so the wall reads as one high broken face
+rather than a quarry ledge. At the waterline, rock fallen from the wall in runs with gaps:
+talus 0.9-3.6× scale, some standing in the shallows, and low bedrock bluffs (cliff_face
+scans) facing the river — the foot of the wall is no longer one straight line along the
+water. Seed 184828/184829; all MultiMesh, no shadow, no collision.
+
+**Kit colour** (`shaders/cliff_kit.gdshader`). `scan_mean` was the scans' sRGB mean (0.40)
+applied to linear texels (0.15), which left the kit at about two thirds of the albedo the
+shader intended; in merge8 the pieces' mean luma matched the wall's (0.27 vs 0.27 on the
+far wall) only because the scans' crevices ran near black, and they read as flat grey
+lumps without the wall's banding. Now 0.147, with the scan's light/dark eased (pow 0.75),
+slate/greenstone tints set against the terrain's bedrock set, the walls' strata (same
+hash) multiplied in so a piece's bands line up with the wall's, and pieces in the bend
+lifted to meet the paler ridge rock. Kit vs wall luma with the dressing shown/hidden:
+far wall 0.30 vs 0.28, bend at 300 m 0.22 vs 0.20, high camera 0.34 vs 0.30 — a touch
+proud, as sunlit outcrops are. SPECULAR 0.3 (rock is a poor mirror). LOD bias 0.45 → 0.25 for all kit groups.
+
+#### Findings
+
+| # | Finding | Result | Evidence |
+|---|---|---|---|
+| 1 | Distant slopes smooth, rockless, even same-size trees | fixed (own check) | `downstream_10h`, `upstream_10h`, `valley_low_10h` end on banded rock and timber in clumps with open ground; `look_k/high_dn` shows bands, tors, draws, scree |
+| 2 | Snowfield in `downstream_06h` | fixed | top centre is now duff/olive/tan with rock bands; no pale ground left |
+| 3 | Far wall base straight, wall low | partly | `far_wall_10h`: rocks and bluffs break the toe, tall faces span two bands; the water strip itself (C-sky) is unchanged and short stretches of plain toe remain |
+| 4 | Seating; seam at |x| ≈ 185; seam poles | fixed / fixed / fixed | talus sunk 20-40 % of height; seam strata continuous (`look_l/seam_hi_dn`); seam trees fir/cedar |
+| 5 | Night streak `downstream_00h` | not mine | it is the terrain material's specular on the far wall (gone with the terrain swapped to a SPECULAR 0 flat material; unchanged with the dressing hidden) — `terrain.gdshader` (C-ground) |
+| 6 | Kit vs terrain colour | fixed | see Kit colour |
+
+#### Performance
+
+GPU ms of my nodes (CanyonDressing + CanyonReach) shown vs hidden, same probe and
+protocol as `perf_probe/attribution.md` (20th-percentile of 12-frame windows, 16 cycles),
+before (HEAD files) and after alternated in the same session:
+
+| view | HEAD (merge8 files) | Wave C | Δ | rounds (quiet windows) |
+|---|---:|---:|---:|---|
+| downstream | 0.20 | 0.18 | −0.02 (rounds: +0.00, −0.02, +0.01, −0.02) | 4 rounds, 2-3 launches each |
+| wade | 0.27 | 0.28 | +0.01 (rounds: −0.00, −0.01, +0.03, +0.02) | 4 rounds |
+| overview | 0.23 | 0.16 | −0.08 (rounds: −0.06, −0.11, −0.07, −0.08) | 4 rounds |
+
+Logs: `artifacts/c_canyon/ab_r1..r4.log` in the worktree (r1 was taken while the hung
+processes were still loading the GPU; r2-r4 after they were stopped). Inside the total:
+the kit LOD bias 0.45 → 0.25 saves 0.03 (bar) / 0.07 (overview); the new ridge shader
+costs ~0.03 more than Stage 2's at the bar, less in the overview; toe rock and tall faces
+0.01-0.02 together. All three views stay at or under +0.3 ms; the wade view is flat
+within the noise floor (null-toggle IQR ±0.01-0.02).
+
+Claim build (headless instantiate + ready, alternated): 2.9-3.0 → 3.7-4.0 s (+0.8 s: the
+finer bent-reach grid and its ground cover ~0.6 s, the cover-driven treeline ~0.3 s; first
+cut from +2.6 s by caching per-column relief and coarser near-slope rows). Not a gate.
+
+#### Gates and checks
+
+| Gate | Target | Measured | Result |
+|---|---|---|---|
+| Stage 1 colour gates (10:00/13:00) | lower-half luma 0.38-0.50, sat ≥ 0.20 | downstream_10h 0.430 / 0.281, downstream_13h 0.456 / 0.276 | pass |
+| Golden hour | ≥ 0.90 × baseline | 0.877 (merge8 0.877) — S-sky's | unchanged |
+| My GPU cost | ≤ +0.3 ms any view, not risen | see table | pass |
+| Collision | unchanged | ground trimesh from unchanged sections; hulls untouched; river volumes untouched | pass |
+| Suite | all pass | 37/37 (`LABEL=c_canyon`) | pass |
+| Asset audit | exit 0 | 134 files, 0 failing (no assets added) | pass |
+
+No regression amendments. No assets added or changed (0 MB).
+
+#### Still weak
+
+- The ridge rock is procedural blocks on a 5 m mesh: right at 200-600 m, flat if a free
+  camera flies close. No kit pieces stand on the ridge tors.
+- Spires and domes stay low-poly cones and domes; fine at 300 m+, toy-like up close.
+- The far waterline is still a clean edge where there is no toe rock; the near-black
+  water strip under the far wall is C-sky's.
+- The night streak is in `terrain.gdshader` (C-ground): its specular on the moonlit far
+  wall.
+
+### Wave C — characters (crew, wildlife, fish)
+
+Done October 2, 2026 (C-characters). Tour `c_characters` (31 views, before/after against
+`merge8`) in `artifacts/visual-tour/c_characters/`, with close evidence in its `extra/`
+(plain-light lineup, deer sheet, sleeves and hands, supper crop, fish crop, perf logs and
+the probe scripts). No views added; `wildlife_jay` and `wildlife_squirrel` re-framed as asked.
+
+**1. Crew period dress.** Doyle's sky-blue army trousers (the "stonewash jeans") are now
+dark blue kersey with a forage cap, and no hired hand wears the miner's open knee tear any
+more (four patched in paler cloth, the rest mended: the knee skin under the tear is drawn
+as cloth). The crossed fold ridges on every pair of trousers ("cross-gartering") are
+modelled and painted into the miner's atlas: `blender/build_crew_kit.py::flatten_trousers`
+relaxes the kit's own shin and boot-top geometry (radius about each leg's axis, 20
+umbrella passes on the welded surface, open edges and garment seams held; 3,372 vertices,
+mean 3.2 mm; the hero is untouched), and `crew.gdshader` flattens the painted fold lines on
+the legs and on pale cloth. Sleeves: the miner's sleeve puffs to 7.4 cm round the upper arm,
+and `sleeves_down` billowed it further ("leg-of-mutton"). The key is replaced by
+`sleeves_slim`, a plain shirt-sleeve profile (5.0–5.3 cm, never inside the forearm skin + 7
+mm), used by every man not in rolled sleeves (`sleeves_rolled` slimmed the same way); sleeves
+to the wrist (Soto, Ruiz, Fisk) are a 9 mm cloth layer drawn on the forearm skin in the vertex
+shader in the shirt's own weave, with a darker cuff. New instance uniforms `boots` and `belt`
+(belt.a carries the wrist sleeves).
+
+**2. Near-duplicates.** Re-cast in `crew_look.gd`: Soto indigo shirt under his black vest;
+Freeman brown felt hat, hickory-striped shirt on braces, navy trousers, no vest; Fisk
+pinstriped shirt; Price buff shirt on black braces, black trousers, no vest; Roux madder-red
+toque, green-grey shirt, grey trousers, no canteen (Pike keeps the navy cap and canteen);
+Lacy butternut, Brandt grey-drill trousers; boot and belt leather varied on nine men. A
+pairwise check of all 91 pairs against the rule (hat or headwear AND shirt colour or pattern
+AND one of vest, trousers, beard; colours apart by > 0.12 sRGB) passes with 0 failures;
+the closest pair (Boyle, Price) differs in 8 of 18 cast attributes.
+
+**3. Supper posing.** New `scripts/crew_pose.gd`, a SkeletonModifier3D on each figure
+(before the build modifier), computed from the rig's bone rests: standing men's arms hang
+close with palms in and fingers loosely curled (the clip's A-pose and splayed claw go);
+seated men have the hips at the seat (two-bone IK for legs and arms), forearms on the knees
+or hands clasped, a tin cup in hand, per-man lean and head turn from a seeded RNG. `crew.gd`
+gives the ring a `SUPPER` table; `crew_hand.gd` brings a seat (chopping round, crate or
+stool, existing props) and tinware (cup, plate). Work clips are untouched. Supper now shows
+a harmonica player and a man eating on the ground, two seated with a cup or forearms on
+knees on a round and a crate, one leaning forward on a stool, one standing with a cup, one
+stretched out. No sit clip exists; the eat and lie_down clips are the miner's.
+
+**4. Wildlife framing.** In `tests/visual_tour.gd::wildlife()` the jay and squirrel are moved
+to the nearest open ground in direct sun (sun ray clear of tree crowns and of the physics
+world) and seen at 9 m with an 18° lens on a crown-free sightline (`sunlit_spot`,
+`open_eye`). Deer, bear and quail views keep their framing. Bear, jay, quail unchanged.
+
+**5. Deer.** `wildlife.gdshader` lays out a black-tailed coat from rest-pose landmarks
+(per model in `wildlife_actor.gd::DEER`): grey-brown saddle over a paler flank, cream belly
+and inner legs, dark lower legs, white rump patch, tail black on top, grey face with a pale
+muzzle band, white chin and throat, darker crown; the doe's dark eye-patch surface is now
+coat (eyes small and dark, no ring); the body normal is bent toward an elliptical cross-
+section (85 %), which removes the flank blotches. Buck: back grey-brown, rack at 82 % with
+dark beams and paler tips. A `HeadShape` modifier lifts the doe's ears 0.42 rad about their
+root bones and narrows both skulls (Head bone width 0.90 / 0.84). No sculpting.
+
+**6. Fish.** Darker backs (`fish.gd::LOOKS`), a pale lateral line with a soft flank sheen,
+and a matte back (specular and clear coat drop on the dorsal: the sky sheen hid the fish),
+no emission. Each school fish casts a soft decal shadow on the bed along the sun (radial
+fall-off, occlusion 0 / roughness 1 so the wet stones' glints go too; none at night).
+
+| Gate / finding | Target | Measured | Result |
+| --- | --- | --- | --- |
+| Crew period dress | no denim, plain sleeves, no garters | Doyle navy kersey; slim sleeves; legs flattened (`crew_lineup`, `extra/lineup_plain_light.png`) | fixed (for blind review) |
+| Near-duplicates | rule above, every pair | 91/91 pairs pass | fixed |
+| Supper posing | varied, seated, holding things | 7 men: 4 seated (3 on props), 2 with cups, 1 eating, 1 lying (`crew_supper_1936`) | fixed |
+| Squirrel / jay readable | in light, 8–12 m, in frame | both sunlit at 9 m, centred | fixed |
+| Deer | coat, eye, antlers, ears | as above; buck ears unchanged (rig has no ear bones) | partly |
+| Fish readability | visible, no glow | dark spindle with lateral line and bed shadow (`fish_underwater_10h`, `extra/fish_before_after_crop.png`) | fixed (modest) |
+| Stage 1 colour gates | 10:00/13:00 pass | pass (golden hour 0.877, S-sky's, unchanged) | pass |
+| Suite | 37/37 | 37/37 (161 s); crew_models, v2_flow, wildlife, milestone_9 re-run on the final cast | pass |
+| `audit_assets.py` | exit 0 | 134 files, 0 failing | pass |
+
+**GPU-time A/B** (in-process toggles, 16 cycles, 1080p, after the hung processes were
+stopped; median Δ, [IQR]): supper (`crew_performance` view) whole crew 0.30 ms [0.19..0.35]
+(attribution on `merge8`: 0.44); seats + tinware +0.04 [−0.04..+0.11] (low quantile +0.003);
+pose modifiers +0.006 GPU, +0.016 CPU; crew `lod_bias` 0.25 (hands only, Lambert keeps 1.0)
+−0.18 [−0.38..+0.09], primitives 4.84 M → 3.33 M, no visible change at 2.5 m. Wildlife view:
+deer coat branch +0.006, antler +0.000, head modifiers +0.015 (deer at 3 m: 0.000 / +0.009 /
+0.000). Fish: shadows (13 decals) +0.001 low-quantile at the fish view, −0.01 across the river.
+Net for my features: about −0.14 ms at supper, ±0.02 ms elsewhere.
+
+**Back-to-back p95/median** (HEAD files vs mine swapped in this worktree, two rounds,
+GPU shared with other agents): `crew_performance` supper median 5.14/4.91 → 4.88/4.79 ms,
+p95 6.35/5.61 → 5.94/5.64; work 5.60/5.54 → 5.59/5.17; dam 5.78/5.54 → 5.72/5.45.
+`wildlife_performance` p95 6.96/6.48 → 6.88/6.49 (median 5.82/5.52 → 6.02/5.56, noise).
+`miner_performance` p95 downstream 5.59/5.42 → 5.43/5.50, wade 6.31/6.10 → 6.07/5.89,
+overview 5.85/5.47 → 5.70/5.22.
+
+**Shared files.** `tests/visual_tour.gd`: one hunk in `wildlife()` (two views re-framed) and
+four helper functions after it (`crowns`, `clear_of_crowns`, `sunlit_spot`, `open_eye`). No
+other shared file. **Regression amendments:** none; no assertion changed.
+
+**Assets.** `assets/crew/crew_kit.glb` 7.74 → 7.91 MB (`sleeves_slim` replaces
+`sleeves_down`; flattened legs). Nothing else added.
+
+**Still weak.** The buck's ears still jut sideways (no ear bones on the Stag rig; a fix
+needs a vertex deformation or new bones) and its head stays blocky; both deer remain low-poly
+Quaternius bodies, smooth but simple, and the coat is uniform at close range. The hands at
+the sides read as loose fists rather than open relaxed hands in close-ups; seated men are
+posed by IK, so knees and hips are plausible but not cloth-accurate, and the seat props
+cast shadow. Fish are still tube meshes; from 3 m above the water the trout reads as a dark
+spindle with a pale line, not as a trout. Every man still has the miner's face.
+
+### Wave C — C-props (camp, store and props)
+
+Done October 2, 2026 (agent C-props, tour label `c_props`, compared against `merge8`).
+Final tour: `artifacts/visual-tour/c_props/` (before/after sheets against merge8);
+close-ups, A/B probes and logs: `artifacts/visual-upgrade/c_props_closeups/`.
+
+#### What changed, by reviewer finding
+
+1. **Detail parity (store goods).** Sacks are rebuilt as sewn sacks rather than lathes: two
+   panels with proud side seams (a pillow section), bottom ears, slight belly, slump and
+   seeded creases; flour and salt in coarse osnaburg (new `kit_osnaburg`, from the hessian
+   scan, so the weave reads), beans and coffee in burlap with rolled mouths; tied necks with
+   a cord end and a flared tuft. Every sack carries a painted shipping mark (SUPERFINE
+   FLOUR, SALT, RIO COFFEE, BEANS) as a decal patch on its own surface (`shaders/stencil.gdshader`,
+   `assets/props/stencil_mask.png`). New salt-glazed stoneware (`kit_crock`: buff orange-peel
+   body, Albany-slip shoulder with drips) jugs and crocks; nailed crates with corner battens
+   and a stencilled "J. L. FRENCH CAMP" mark; a nail keg; paper-labelled boxes and tins
+   (`kit_labels`: 16 printed 1840s labels, serif type, foxed paper). Stall at distance:
+   lighter split-board counter front, canvas backlight raised so the roof underside glows.
+2. **Period.** Price board: six butted planks in worn oxblood paint (`kit_paint`) on two
+   peeled poles with rope lashings and a two-board roof; the lettering is ochre-cream
+   PatrickHand (gameplay text unchanged). The "LAMBERT / FRENCH CAMP" Label3D is gone: the
+   name is brush-painted in serif capitals into the canvas sign (`kit_sign`, with rules and
+   lozenges). The church-pew bench is replaced by a puncheon bench (split half-log on four
+   splayed pegs, `assets/props/bench.glb`, parametric). Counter slate carries wiped chalk ghosts.
+3. **Shelves.** Middle shelf: soap and candle boxes, tea canisters, pepper and mustard
+   tins, five bolts of cloth, stacked sardine tins and oyster cans, candle and match and
+   saleratus boxes, pickle jars, three hanging candle bundles, folded striped trade blankets
+   (`kit_blanket`), a lard crock and a jug. Bottom-shelf ends: nail keg, two jugs and a
+   crock. Top-shelf ends: tin plates and cups, tin coffee pot, flints and percussion caps.
+   Outside the east wall (facing the trail): rope coil, frying pan, tin kettle on pegs.
+   All stock items, names, positions and shelves.gd mappings are untouched.
+4. **Camp.** Lean-to canvas re-modelled as cloth: catenary sag down the slope, troughs
+   between the four hem stakes, tension wrinkles from each stake to the forks, scalloped
+   hem, a folded front flap, side wings brought down to staked feet, a bowed ridge pole;
+   stakes are pale whittled wood and ropes 7-8 mm so they read. The bought tent and the
+   crew bunk tents are a new canvas A-tent (`assets/camp/tent.glb`: sagging slopes, rolled
+   door flaps, hem ties, stakes, guy lines) over the expedition tent kept as hidden
+   collision (`camp.gd tent_instance()`). Bedroll: red wool roll with striped inner layers
+   and leather straps at the shelter mouth, coat pillow, ground cloth. New cook gear
+   (tin coffee pot, Dutch oven with flanged lid, legs and bail, tin plates, cups); woodpile
+   doubled with stakes, rounds and kindling. Layout and collision frozen (camp tests pass;
+   shelter front bound still 3.29 m).
+5. **Fire.** Ring of ten separate river cobbles (Poly Haven `stone_01`, normalised to 240
+   tris, packed end to end, sunk a third, soot and per-stone tone in vertex colour) round a
+   sooty ash bed. When lit: nine crossed flame ribbons (`fire.gdshader` mode 1: noise-torn
+   tongues, yellow root, red tips), coals glowing in cracks (mode 2), a thin smoke column;
+   the old flame particles re-shaded into stretched, soft licks (mode 0). Intensities are
+   kept low so night exposure and AgX keep them orange. The crew's supper light and its
+   omni (crew.gd) are untouched, so the fire-lit crew and ground look is preserved.
+6. **Ground.** Store clearing: the bar's gravel now in the gravel slot (was duff), litter
+   patches kept; the trail's gravel slot no longer takes sand (the near-white strip) and
+   its litter slot takes soil. 70 pieces of litter (cobbles, bark) scattered over the yard
+   off the trail, apron and props (own seed 184821).
+7. **Notice.** The board right of the crew fire is the claim notice (crew.gd text
+   "NOTICE / <bar> claimed and worked by the undersigned & Co."). It is now a torn,
+   nailed paper on a weathered board under two shakes on a peeled post (`notice.glb`).
+
+#### Gates
+
+| Gate | Target | Measured | Result |
+| --- | --- | --- | --- |
+| Blind check (store, store_shelves, camp_10h, camp_close_10h, crew_supper_1936) | pass | orchestrator | pending |
+| GPU A/B vs merge8 meshes, camp_10h framing | ≤ +0.1 ms | +0.015 median / −0.001 low-quantile | pass |
+| GPU A/B, camp_close framing | ≤ +0.1 ms | +0.018 / −0.002 | pass |
+| GPU A/B, supper framing, all camp+crew changes | ≤ +0.1 ms | −0.009 / +0.008 (null ±0.01) | pass |
+| GPU A/B, store_performance framing (stall, goods, bench, freight, litter) | inside 4.5 ms | +0.027 / +0.024; store total 3.33 ms GPU | pass |
+| Full suite | 37/37 | 37/37 (re-run of camp/store suites after last tweak 8/8) | pass |
+| `store_capture` probes | board ≥22 px, contrast ≥4; slate ≥20 | board 34 px, 8.55; slate 29 px; Lambert 0.0665 (now passes) | pass (stock-thinning probe fails as on base) |
+| `audit_assets.py` | exit 0 | 137 files, 0 failing | pass |
+| Stage 1 colour gates | 10:00/13:00 unchanged | pass; golden hour 0.877 (S-sky's, as merge8) | unchanged |
+
+A/B method: `artifacts/visual-upgrade/c_props_closeups/ab.gd` and `ab_store.gd` swap the
+merge8 GLBs (extracted from HEAD) for the new ones in place, 30 (camp) / 24 (store) cycles
+alternating order, GPU time per half from `viewport_get_measured_render_time_gpu`; "low" is
+the per-half 20th percentile, robust to the other agents' load. Draws: camp +5 (+11
+shadow), supper +2, store +37 (more materials on the shelf stock). Wall-clock
+`store_performance` p95 was 7.1-13.4 ms on the contended machine (not a valid absolute).
+
+#### Regression amendments
+
+Art budgets only (`tools/art/budgets.json`); no rules assertion changed. New `camp_kit`
+category (2,600 tris) for `lean_to.glb` (2,312: a 24 x 18 cloth grid plus wings) and
+`fire_ring.glb` (2,540: ten scanned stones plus the ash bed) — each one draw, measured
+above. `building_kit` 12,000 → 17,000 (store.glb 16,786: shelf stock and wall goods) and
+`goods_kit` 18,000 → 20,000 (18,996: seamed sacks with marks, freight). The store has
+1.2 ms of GPU headroom under its 4.5 ms budget and the A/B cost is +0.02 ms.
+
+#### Shared files touched (small hunks)
+
+- `scripts/crew.gd` (C-characters): `_build_notice` uses `notice.glb` (same node chain:
+  stake → paper → Label3D, same text); bunk-tent creation calls `camp.tent_instance()`
+  instead of loading `tent.glb` and building trimesh collision itself (same collision).
+- `tools/art/budgets.json`, `assets/CC0_MANIFEST.json` (fire_ring.glb now an output of
+  `stone_01`; removed from `stone_fire_pit` and `painted_wooden_bench`, no longer used).
+
+#### Assets
+
+Added/changed: kit 3.01 → 4.36 MB (osnaburg, blanket, paint, sign, tin, crock, ash, labels),
+camp −0.22 MB (lean-to, bedroll, coffee, woodpile up 0.22 MB; fire ring 1.04 → 0.46 MB;
+new flames, tent, notice 0.15 MB), store/goods +0.88 MB, bench 0.74 → 0.02 MB, stencil
+mask 0.13 MB. Net about +1.4 MB. Lettered sources come from `tools/art/build_prop_labels.py` (system Python
++ Pillow; written to the cache, not committed; uses a local KaTeX_Main serif, SIL OFL,
+falling back to PatrickHand). Rebuild: `python tools/art/build_prop_labels.py`, then
+`blender/prop_kit.py`, `blender/build_store.py`, `blender/build_camp_kit.py` (fire_ring
+needs the normalised stone first; command in its docstring).
+
+#### Still weak
+
+- The fire is modest at supper distance: the tongues are small next to the omni light's
+  pool, and their cores still go pale yellow under AgX; ash bed looks a little glossy.
+- The lean-to reads as cloth close up; from camp_10h it is still a cream flap over a
+  shaded underside. Tents sag only gently. No cloth simulation was used.
+- The store clearing's large tan soil areas depend on C-ground's plain-ground path; my
+  part is the texture slots and the scattered litter.
+- Ring stones are one scan copied ten times; up close a few show sharp scan edges.
+- The outfitting sign is still a paper on a box post.
+
+### Final verification (after Wave C)
+
+Head of `2.0` after all merges; tour `final` (31 views, deterministic again: the tour now
+relaunches itself with `--fixed-fps 60`, no slot overruns, and the stray first-snow
+particle is no longer restarted by the harness).
+
+**Numeric gates.**
+
+| Gate | Target | Final | Result |
+| --- | --- | --- | --- |
+| `downstream_10h` lower-half luminance / saturation | 0.38–0.50 / ≥ 0.20 | 0.420 / 0.280 | pass |
+| `downstream_13h` lower-half luminance / saturation | 0.38–0.50 / ≥ 0.20 | 0.437 / 0.274 | pass |
+| Golden hour (`downstream_1925`) vs baseline | ≥ 0.90× | 0.941× | pass |
+| Night (`downstream_00h`) vs baseline | ≥ 0.90× | 0.997× | pass |
+| Distinct boulder silhouettes | ≥ 10 | 13 by ID census; 11 by blind count | pass |
+| Conifer count | 600 | 600 placed and rendered (+70 rim dressing outside `placements`) | pass |
+| Suite | all pass | 37/37 | pass |
+| Asset audit | 0 failing | 140 files: 126 ok, 14 allow-listed | pass |
+| Committed `assets/` | ~200 MB | 199.7 MB | pass |
+
+**Frame budget, quiet machine** (hung processes stopped; same-session A/B against the
+pre-upgrade commit, 3 alternating rounds, `miner_performance` p95 at 1080p):
+
+| View | Pre-upgrade | Final | Budget |
+| --- | --- | --- | --- |
+| Downstream | 3.45–3.68 ms | 3.66–3.98 ms | 5.5 |
+| Wade | 3.83–4.14 ms | 4.05–4.35 ms | 5.5 |
+| Overview | 4.51–4.56 ms | 3.82–4.05 ms | 5.5 |
+| Store (`store_performance`) | 2.57 ms | 2.96 ms | 4.5 |
+| Crew supper (`crew_performance`) | 4.57 ms | 4.48 ms | — |
+| Wildlife (`wildlife_performance`) | 4.86 ms | 4.16 ms | — |
+
+**Blind reviews, round 2** (fresh reviewers, same questions, final frames):
+
+| Stage | Round 1 | Round 2 | Still failing |
+| --- | --- | --- | --- |
+| 1 light | 3/5 | 2/5 (golden hour and rain now pass) | midday reads cool/flat to the reviewer; clouds mostly hidden by the bend ridge (downstream views are ~1.3 % sky); water still reads opaque from the gameplay camera |
+| 2 canyon | 2/4 | 2/4 (rock canyon, no flat horizon) | far bend wall's horizontal terraces read as tiled/quarry; skyline conifers an even comb; boulders not bedded |
+| 3 rocks | 2/5 | 3/5 (≥ 10 silhouettes, no tiling, river-rounded) | sand reads pinkish and blotchy; damp margin not read as a wet band; contact sand not read |
+| 4 plants | 1/4 | 1/4 (season) | crown reads as cards from directly below; bark now reads too red; understory not visible in the under-oak camera; riparian clumps still read as a row |
+| 5 animals / crew | deer pass; crew identical pass | deer, squirrel, crew distinct pass | bear, jay, quail are primitives (no CC0 base); puffed shoulder caps from the shared miner body |
+| 6 props | 0/5 | 2/5 (period fit, stocked shelves) | camp below character detail from the review camera; canvas sag/ropes not read; fire ring reads square; hard-edged path to the store; pale ground behind the store |
+
+The reviewers are not always consistent with each other (round 1 called the oak bark black,
+round 2 too red; round 1 passed midday colour, round 2 failed it), but every remaining item
+above is visible in the frames. Per the plan, gates that failed twice go to the owner rather
+than to a third automatic round.
+
+**For the owner.**
+
+1. Bear, Steller's jay and California quail: no rigged CC0 base exists, so they remain the
+   legacy primitives. Options: fetch a model manually, try the deferred image-to-3D route
+   (ComfyUI + TRELLIS, ~30–40 GB), or accept them.
+2. Whether to run a third round on the twice-failed blind checks above (plants, props and
+   rocks have the most concrete, fixable findings), or accept the current state.
+3. The 70 rim conifers added as wall dressing sit outside the 600 counted placements.
+4. `tools/art/build_prop_labels.py` renders sign lettering from a KaTeX serif font (SIL OFL)
+   found in the local Python site-packages; only the rendered pixels ship. Vendoring the font
+   under `tools/art/` would make the rebuild self-contained.
+5. Non-suite capture probes in `tests/water_capture.gd` / `capture_greybox.gd` that check
+   gravel, granite and canopy colours against the old art fail under the new art and light;
+   they need re-baselining (they are not in `tools/run_suite.sh`).
