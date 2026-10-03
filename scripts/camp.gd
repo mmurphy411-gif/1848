@@ -109,15 +109,8 @@ func _ready() -> void:
 	cooking_food.scale=Vector3(.65,.35,.65);cooking_food.position=Vector3(0,.085,0)
 	props.Skillet.add_child(cooking_food)
 	process_physics_priority=20 # After the miner's hand pose.
-	var duff := MeshInstance3D.new()
-	var surface := SurfaceTool.new();surface.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for i in 64:
-		for p in [Vector3.ZERO,Vector3(cos((i+1)*TAU/64)*2.5,0,sin((i+1)*TAU/64)*2.5),Vector3(cos(i*TAU/64)*2.5,0,sin(i*TAU/64)*2.5)]:
-			p.y=Layout.height_at(global_position.x+p.x,global_position.z+p.z)-global_position.y+.008
-			surface.set_uv(Vector2(p.x,p.z));surface.add_vertex(p)
-	surface.generate_normals();duff.mesh=surface.commit()
-	duff.material_override=preload("res://scripts/asset_library.gd").rock("duff",2)
-	add_child(duff)
+	# The camp sits in an oak's litter on the terrain shader; a separate duff disc
+	# drew a hard-edged circle against the cobble.
 	light.position=Vector3(0,.55,0);light.light_color=Color(1,.48,.15);light.omni_range=9;light.shadow_enabled=true
 	add_child(light)
 	_particles(flame,60,Color(1,.36,.055),.45,.13,Vector3(0,.8,0))
