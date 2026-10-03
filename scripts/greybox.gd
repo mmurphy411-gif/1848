@@ -472,6 +472,13 @@ func _build_river(level := 0.0) -> void:
 				var speed := 0.2 + 0.8 * sin(PI * clampf(across, 0, 1))
 				surface.set_color(Color(flow.x * 0.5 + 0.5, flow.y * 0.5 + 0.5, speed, clampf((level-Layout.height_at(point.x, point.z)) / 5.0, 0, 1)))
 				surface.set_uv(broken.call(point, across))
+				# UV2: the current's direction in the world, which turns with the
+				# render-only bend beyond |x| = 160 (COLOR keeps the analytical flow).
+				var world_flow := flow
+				if Canyon.reach(point.x) > 0.0:
+					var ahead := visual_bend(point + Vector3(flow.x, 0, flow.y)) - visual_bend(point)
+					world_flow = Vector2(ahead.x, ahead.z).normalized()
+				surface.set_uv2(world_flow)
 				surface.add_vertex(visual_bend(point)) # S2-canyon hook: render-only bend beyond |x| = 160
 		var volume := CollisionShape3D.new()
 		var shape := ConvexPolygonShape3D.new()

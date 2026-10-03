@@ -45,6 +45,7 @@ renderer/rendering_method="forward_plus"
 textures/default_filters/use_nearest_mipmap_filter=false
 anti_aliasing/quality/msaa_3d=1
 anti_aliasing/quality/use_taa=true
+global_illumination/gi/use_half_resolution=true
 environment/defaults/default_clear_color=Color(0.63,0.70,0.73,1)
 
 [shader_globals]

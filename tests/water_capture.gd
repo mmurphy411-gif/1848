@@ -47,9 +47,15 @@ static func run(tree: SceneTree, claim: Node3D) -> bool:
 	# emerald. At this 19:25 pose it measured G/R 1.010 / B/G 0.853 (--water-only)
 	# and 1.058 / 0.862 (full harness, warmer GI history); emerald was G/R 1.41
 	# against the old 1.3 floor. The bands keep a ~6-7 % margin around both runs.
+	# Wave C amendment: the golden hour is now a deeper amber sun in clear air, so
+	# everything at this pose is warmer: the sunlit dry gravel measured G/R 0.735 and
+	# the channel 0.834. Its floor is now relative to the dry bar in the same light
+	# (water adds green: at least 5 % greener than the sunlit gravel); the emerald
+	# ceiling, the blue limit and the depth darkening are unchanged.
 	var green_red := deep.y / maxf(deep.x, 0.001)
 	var blue_green := deep.z / maxf(deep.y, 0.001)
-	ok = _check(green_red >= 0.95 and green_red <= 1.12 and blue_green <= 0.92 and _luma(deep) < _luma(shallow), "Channel RGB %s darker than shallows %s, green-brown G/R %.3f in 0.95-1.12, B/G %.3f <= 0.92" % [deep, shallow, green_red, blue_green]) and ok
+	var dry_green_red := dry.y / maxf(dry.x, 0.001)
+	ok = _check(green_red >= dry_green_red * 1.05 and green_red <= 1.12 and blue_green <= 0.92 and _luma(deep) < _luma(shallow), "Channel RGB %s darker than shallows %s, green-brown G/R %.3f in %.3f (dry gravel %.3f × 1.05)-1.12, B/G %.3f <= 0.92" % [deep, shallow, green_red, dry_green_red * 1.05, dry_green_red, blue_green]) and ok
 	# Hold an actual knee-deep pose without the idle current moving the probe target.
 	walker.set_physics_process(false)
 	camera.fov = 65

@@ -15,7 +15,9 @@ const DRIFT := Vector2(0.11, 0.05)
 ## Where the drifting field starts. Picked from 64 seeded candidates so the Stage 1
 ## gate views (downstream, day 10, 10:00 and 13:00) are not under a cloud shadow and
 ## the 10:00 overview is (~18 %): exposure is tuned on sunlit ground.
-const PHASE := Vector2(0.090, 0.040)
+const PHASE := Vector2(0.005, 0.110)
+## The phase in use (tools may try others).
+var phase := PHASE
 ## Cloud shadows at full sun: the fraction of light a thick cloud takes away.
 const SHADOW_STRENGTH := 0.35
 var material := ShaderMaterial.new()
@@ -102,9 +104,10 @@ func configure(sky: Dictionary) -> void:
 	var elevation: float = sky.sun_elevation
 	var day: int = sky.day
 	# Fair-weather cumulus build through the afternoon and thin out after dusk.
-	var build := smoothstep(9.0, 15.0, hour) * (1.0 - smoothstep(16.5, 20.5, hour))
+	# Wave C: the first heaps stand by mid-morning (the 10:00 sky was all but empty).
+	var build := smoothstep(8.0, 14.0, hour) * (1.0 - smoothstep(16.5, 20.5, hour))
 	var variation := Weather.noise(int(sky.seed), day, 23) - 0.5
-	var cover := 0.30 + 0.16 * build + 0.12 * variation
+	var cover := 0.33 + 0.15 * build + 0.12 * variation
 	var haze := 0.06
 	var scale := 0.06
 	match weather:
@@ -120,15 +123,15 @@ func configure(sky: Dictionary) -> void:
 	scale = lerpf(scale, 0.035, deck)
 	var hours := float(day) * 24.0 + hour
 	var shared := {"coverage": cover, "softness": lerpf(0.1, 0.3, deck), "layer_scale": scale,
-		"shape_offset": _wrap(DRIFT * hours + PHASE),
-		"billow_offset": _wrap((DRIFT * hours + PHASE) * 2.3 + Vector2(0.0, 0.013) * hours)}
+		"shape_offset": _wrap(DRIFT * hours + phase),
+		"billow_offset": _wrap((DRIFT * hours + phase) * 2.3 + Vector2(0.0, 0.013) * hours)}
 	for key in shared:
 		material.set_shader_parameter(key, shared[key])
 		shadow_material.set_shader_parameter(key, shared[key])
 	material.set_shader_parameter("opacity", lerpf(0.93, 1.0, deck))
 	material.set_shader_parameter("overcast", deck)
 	material.set_shader_parameter("haze", haze)
-	material.set_shader_parameter("haze_offset", _wrap((DRIFT * hours + PHASE) * 0.4))
+	material.set_shader_parameter("haze_offset", _wrap((DRIFT * hours + phase) * 0.4))
 	# Clouds high above the canyon catch the sun before the floor does.
 	var sunlit := smoothstep(-6.0, 3.0, elevation)
 	var moonlit := 1.0 - smoothstep(-8.0, -2.0, elevation)
@@ -141,6 +144,8 @@ func configure(sky: Dictionary) -> void:
 	material.set_shader_parameter("light_direction", direction.normalized())
 	material.set_shader_parameter("light_color", light_color)
 	material.set_shader_parameter("light_energy", energy)
+	# A sun just above the horizon lights the heaps' flat bases from below.
+	material.set_shader_parameter("underlight", 0.35 * warm * sunlit * (1.0 - deck))
 	var ambient := Color(0.46, 0.54, 0.66).lerp(Color(0.56, 0.5, 0.52), warm * sunlit)
 	material.set_shader_parameter("ambient_color", ambient)
 	material.set_shader_parameter("ambient_energy", lerpf(0.01, 0.7, sunlit) * lerpf(1.0, 0.75, deck))

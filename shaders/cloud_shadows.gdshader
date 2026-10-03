@@ -11,7 +11,7 @@ uniform sampler2D depth_texture : hint_depth_texture, repeat_disable, filter_nea
 uniform vec3 light_direction = vec3(0.0, 1.0, 0.0);
 uniform float strength : hint_range(0.0, 1.0) = 0.0;
 // Aerial perspective: distant shadows fade into the haze.
-uniform vec2 fade_distance = vec2(180.0, 650.0);
+uniform vec2 fade_distance = vec2(450.0, 1000.0);
 
 void vertex() {
 	POSITION = vec4(VERTEX.xy, 0.5, 1.0);

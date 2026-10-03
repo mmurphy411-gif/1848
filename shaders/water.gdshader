@@ -27,9 +27,26 @@ uniform float dam_reach = 9.0;
 uniform float dam_margin = 0.25;
 // Project-wide rain state (0 dry .. 1 downpour), set by rain.gd; see project.godot.
 global uniform float rain_wetness;
+// Wave C: beyond the river reflection probe's box (x min, x max, z min, z max) the
+// engine can only reflect the open sky, which the canyon walls hide from the water:
+// the long reaches read as a flat milky pond. There the water reflects an
+// approximate canyon instead, walls below and a strip of sky above, coloured by
+// daylight.gd for the hour.
+uniform vec4 probe_box = vec4(-55.0, 55.0, -37.0, 13.0);
+uniform vec3 reach_wall : source_color = vec3(0.05, 0.06, 0.05);
+uniform vec3 reach_sky : source_color = vec3(0.35, 0.45, 0.6);
+// Elevation (sine) of the canyon rim seen in a reach's reflection.
+uniform vec2 reach_rim = vec2(0.5, 0.85);
+// Wave C: shallow margins show their bed even at a grazing angle (the eye adapts to
+// the bright bed; ripples there are small): reflection eases off over shallow water
+// seen from low down.
+uniform float shallow_clarity : hint_range(0.0, 1.0) = 1.0;
+uniform vec2 shallow_depth = vec2(0.4, 2.2);
 varying vec3 world_position;
 varying vec4 flow_data;
 varying vec2 broken;
+// The current's direction in the world (UV2, turned with the canyon bend).
+varying vec2 world_flow;
 
 vec3 view_position(vec2 uv, float depth, mat4 inverse_projection) {
 	// Forward+ uses reverse Z, with NDC depth already in [0, 1].
@@ -40,7 +57,8 @@ vec3 view_position(vec2 uv, float depth, mat4 inverse_projection) {
 void vertex() {
 	flow_data = COLOR;
 	broken = UV;
-	vec2 flow = normalize(COLOR.rg * 2.0 - 1.0);
+	vec2 flow = dot(UV2, UV2) > 0.25 ? normalize(UV2) : normalize(COLOR.rg * 2.0 - 1.0);
+	world_flow = flow;
 	vec2 world_xz = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xz;
 	float along = dot(world_xz, flow);
 	float across = dot(world_xz, vec2(-flow.y, flow.x));
@@ -53,7 +71,7 @@ void vertex() {
 
 void fragment() {
 	if (dam_on > 0.5 && world_position.x > dam_x.x + dam_margin && world_position.x < dam_x.y - dam_margin && world_position.z > -6.0 + 0.0075 * world_position.x * world_position.x - dam_reach + dam_margin) { discard; }
-	vec2 flow = normalize(flow_data.rg * 2.0 - 1.0);
+	vec2 flow = normalize(world_flow);
 	vec2 side = vec2(-flow.y, flow.x);
 	float t = TIME * flow_speed_multiplier * flow_data.b;
 	vec2 n1 = texture(normal_large, (world_position.xz - flow * t * 0.35) / 6.0).xy * 2.0 - 1.0;
@@ -95,8 +113,19 @@ void fragment() {
 		refracted_view = bed_view;
 	}
 	float ray_distance = max(length(refracted_view) - length(VERTEX), 0.0);
+	// Wave C: light from the bed reaches the surface along the refracted ray, which
+	// Snell's law keeps within 49 degrees of the vertical. The absorption above was
+	// tuned on the straight view ray, which is fine from above but at a grazing
+	// angle ran six times the depth and turned clear shallows opaque: cap it at
+	// twice the depth (views steeper than 30 degrees are unchanged).
+	vec3 to_eye_world = normalize(CAMERA_POSITION_WORLD - world_position);
+	float bed_depth = max(world_position.y - refracted_world.y, 0.0);
+	ray_distance = min(ray_distance, 2.0 * bed_depth);
 	vec3 transmission = exp(-absorption * min(ray_distance, 40.0));
-	vec3 bed = texture(screen_texture, refracted_uv).rgb;
+	// Explicit level of detail: at a grazing angle the screen derivatives are steep,
+	// and automatic mip selection blurred even a shallow bed into a murky smear.
+	// The bed blurs only with depth, as light scattered in the water would blur it.
+	vec3 bed = textureLod(screen_texture, refracted_uv, clamp(bed_depth * 1.2, 0.0, 3.0)).rgb;
 	vec3 through_water = bed * transmission + scatter * (vec3(1.0) - transmission);
 	vec2 moving = world_position.xz - flow * t * 0.35;
 	vec2 streak_uv = vec2(dot(moving, flow) / 3.5, dot(moving, side));
@@ -139,14 +168,42 @@ void fragment() {
 		}
 	}
 	foam=max(foam,shin_foam);
+	// Wave C: seen from afar, ripple detail averages away and a long reach reads as a
+	// still pond. Current lines take over there: long streaks of rougher, aerated
+	// water and smoother slicks, drawn out along the flow and carried with it.
+	float far = smoothstep(25.0, 90.0, length(VERTEX)) * (0.35 + 0.65 * flow_data.b);
+	float lines = 0.5;
+	if (far > 0.0) {
+		vec2 drift = world_position.xz - flow * TIME * flow_speed_multiplier * 0.8;
+		vec2 line_uv = vec2(dot(drift, flow) / 70.0, dot(drift, side) / 7.0);
+		lines = texture(foam_noise, line_uv).r * 0.65 + texture(foam_noise, line_uv * vec2(2.3, 0.45) + vec2(0.31, 0.57)).r * 0.35;
+		lines = mix(0.5, smoothstep(0.3, 0.7, lines), far);
+		through_water *= mix(0.82, 1.18, lines);
+		through_water += vec3(0.05, 0.055, 0.052) * smoothstep(0.65, 0.95, lines) * far;
+	}
 	float fresnel = 0.064 + 0.936 * pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 5.0);
+	// Only near the viewer and at a grazing angle: seen from higher up the margins
+	// already show their bed, and the sun's glint further out stays whole.
+	float clear = (1.0 - smoothstep(shallow_depth.x, shallow_depth.y, vertical_depth)) * (1.0 - smoothstep(0.3, 0.5, to_eye_world.y)) * (1.0 - smoothstep(18.0, 35.0, length(VERTEX)));
+	fresnel *= 1.0 - shallow_clarity * clear;
+	vec2 outside_xz = max(vec2(probe_box.x - world_position.x, probe_box.z - world_position.z), vec2(world_position.x - probe_box.y, world_position.z - probe_box.w));
+	float reach = smoothstep(0.0, 14.0, max(outside_xz.x, outside_xz.y));
 	// White foam stays readable around the miner's much narrower shins.
 	ALBEDO = vec3(0.95, 0.98, 0.96) * foam;
 	// The screen sample is already lit. Emission here transports bed light;
 	// foam uses ordinary diffuse lighting and has no emissive contribution.
 	EMISSION = through_water * (1.0 - fresnel) * (1.0 - foam);
+	if (reach > 0.0) {
+		vec3 mirrored = reflect(-to_eye_world, normal_world);
+		vec3 canyon = mix(reach_wall, reach_sky, smoothstep(reach_rim.x, reach_rim.y, mirrored.y));
+		// Mottled like the forest and rock bands it mirrors, shivered by the ripples.
+		canyon *= (0.7 + 0.6 * texture(foam_noise, world_position.xz / 45.0 + ripple * 0.35).r) * mix(1.25, 0.75, lines);
+		EMISSION += canyon * fresnel * reach * (1.0 - foam);
+	}
 	ROUGHNESS = mix(mix(0.06, 0.14, rain_wetness), 0.85, foam);
 	METALLIC = 0.0;
-	SPECULAR = mix(0.8, 0.25, foam);
+	// The engine's reflection follows SPECULAR: eased in the shallows, and in the
+	// reaches cut to a trace (the sun's glint) in favour of the canyon above.
+	SPECULAR = mix(0.8, 0.25, foam) * (1.0 - 0.8 * shallow_clarity * clear) * (1.0 - 0.7 * reach);
 	ALPHA = max(shin_foam,smoothstep(0.0, 0.05, min(vertical_depth, flow_data.a * 5.0)));
 }

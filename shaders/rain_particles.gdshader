@@ -1,11 +1,22 @@
 shader_type particles;
-float rand(float x){return fract(sin(x*127.1+.1848)*43758.5453);}
+// Integer hash: the former sin() hash lost precision at large drop numbers, so many
+// drops shared one x and fell along the same lines, reading as film scratches.
+// RANDOM_SEED changes every respawn (fixed by the tour), so drops do not repeat paths.
+float hash(uint n) {
+	n = (n ^ 61u) ^ (n >> 16u);
+	n *= 9u;
+	n = n ^ (n >> 4u);
+	n *= 0x27d4eb2du;
+	n = n ^ (n >> 15u);
+	return float(n & 0x00ffffffu) / 16777216.0;
+}
 void start(){
+ uint seed = RANDOM_SEED * 747796405u + NUMBER * 2891336453u;
  TRANSFORM=EMISSION_TRANSFORM;
- TRANSFORM[3].xyz+=(vec3(rand(float(NUMBER)),0.0,rand(float(NUMBER)+9.0))-.5)*vec3(20.0,0.0,20.0);
- // Terminal speed of large drops; slower than before so each 0.9 m streak overlaps
- // itself frame to frame and survives temporal AA.
- VELOCITY=vec3(.8,-9.5-rand(float(NUMBER)+3.0)*2.0,.22);
+ TRANSFORM[3].xyz+=(vec3(hash(seed),0.0,hash(seed+1u))-.5)*vec3(28.0,0.0,28.0);
+ // Terminal speed of large drops, slanted by a light down-canyon wind (matches
+ // `fall` in rain_streak.gdshader); each 0.45 m streak overlaps itself frame to frame.
+ VELOCITY=vec3(1.6,-9.5-hash(seed+2u)*2.0,.5);
 }
 void process(){
  TRANSFORM[3].xyz+=VELOCITY*DELTA;

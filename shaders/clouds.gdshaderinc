@@ -26,6 +26,14 @@ float cloud_field(vec2 p) {
 	return macro * 0.6 + detail * 0.24 + puffs * 0.16;
 }
 
+// The field's three octaves (cluster, cauliflower detail, puffs), for the heaped
+// dome: clusters set how tall a heap stands, the finer octaves its outline.
+vec3 cloud_parts(vec2 p) {
+	return vec3(texture(cloud_shape, p + shape_offset).r,
+		texture(cloud_shape, p * 3.7 + billow_offset).r,
+		texture(cloud_billow, p * 7.0 + billow_offset * 1.9).r);
+}
+
 // The same field without the small puffs, for soft-edged ground shadows.
 float cloud_field_soft(vec2 p) {
 	float macro = texture(cloud_shape, p + shape_offset).r;

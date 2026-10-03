@@ -57,7 +57,7 @@ camera_attributes = SubResource("CameraAttributes")
 
 [node name="RiverMist" type="FogVolume" parent="Daylight"]
 position = Vector3(0, 2, -8)
-size = Vector3(1000, 18, 55)
+size = Vector3(340, 18, 55)
 
 [node name="ClearRimAir" type="FogVolume" parent="Daylight"]
 position = Vector3(0, 360, 0)

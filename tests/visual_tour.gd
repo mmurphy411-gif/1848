@@ -16,9 +16,9 @@ extends SceneTree
 ## downstream_* series, across_river_10h/_d100, under_oak_10h/_d100) share a camera.
 ##
 ## Determinism: --fixed-fps 60 makes every frame step, animation and shader TIME
-## identical between runs; wildlife and fish are posed and frozen, GPU particles use a
-## fixed seed, the crew fire flicker (wall-clock driven) is pinned, and nothing waits on
-## real time. Each view owns a fixed slot of frames from the start of the tour, so a
+## identical between runs (started without it, the tour re-runs itself with it);
+## wildlife and fish are posed and frozen, running GPU particles use a fixed seed, the
+## crew fire flicker (wall-clock driven) is pinned, and nothing waits on real time. Each view owns a fixed slot of frames from the start of the tour, so a
 ## view is captured on the same frame (same water, wind and idle phase) whether the run
 ## is full or only= a subset; skipped slots pass with 3D rendering off. Rain is set to
 ## its full scenario strength directly: in play it ramps over ~24 s, and the posed
@@ -211,11 +211,14 @@ func freeze_actor(actor: Node3D) -> void:
 	actor.set_physics_process(false)
 	for i in 40: actor.animate(1.0 / 60)
 
+## Reseed and restart the systems that are running; restart() also switches emission
+## on, so idle ones (the first-snow emitter, rain on a dry day) are left alone. A
+## restarted SeasonEnd snow put light-grey flakes in every claim view of a full run.
 func fixed_particles(scene: Node) -> void:
 	for particles in scene.find_children("*", "GPUParticles3D", true, false):
 		if "use_fixed_seed" in particles:
 			particles.use_fixed_seed = true; particles.seed = 1848
-		particles.restart()
+		if particles.emitting: particles.restart()
 
 func open_claim(args: Dictionary, hour: float, population_hour := -1.0) -> void:
 	scenario = args.duplicate(); scenario.seed = SEED
@@ -579,8 +582,13 @@ func run() -> void:
 		push_error("visual_tour renders; run it without --headless"); quit(2); return
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	await frames(3)
-	# --fixed-fps is consumed by the engine; detect it by its exact frame step.
+	# --fixed-fps is consumed by the engine; detect it by its exact frame step. Without
+	# it physics ticks follow the wall clock, so place()'s 90-tick settle spans several
+	# hundred render frames, views overrun their slots and captures stop repeating
+	# (merge8). Run the tour again with it in a child process and pass on its result.
 	if not is_equal_approx(root.get_process_delta_time(), 1.0 / 60.0):
+		if not "relaunched=1" in OS.get_cmdline_user_args():
+			quit(await relaunch_fixed()); return
 		push_warning("visual_tour: run with --fixed-fps 60 or captures will not repeat between runs")
 	game = root.get_node("GameState")
 	out_dir = ProjectSettings.globalize_path("res://").path_join("artifacts/visual-tour").path_join(label)
@@ -604,6 +612,32 @@ func run() -> void:
 	print("VISUAL TOUR %s: %d views in %.1f s -> %s%s%s" % [label, captured, seconds, out_dir,
 		"" if missing.is_empty() else "; MISSING " + str(missing), "" if overruns.is_empty() else "; SLOT OVERRUN " + str(overruns)])
 	quit(0 if missing.is_empty() and overruns.is_empty() else 1)
+
+## Re-run this tour with --fixed-fps 60, forwarding its output; returns its exit code.
+func relaunch_fixed() -> int:
+	push_warning("visual_tour: no --fixed-fps 60; re-running the tour with it")
+	var args := PackedStringArray(["--path", ProjectSettings.globalize_path("res://"),
+		"--resolution", "%dx%d" % [SIZE.x, SIZE.y], "--fixed-fps", "60",
+		"--script", get_script().resource_path, "--"])
+	args.append_array(OS.get_cmdline_user_args())
+	args.append("relaunched=1")
+	var child := OS.execute_with_pipe(OS.get_executable_path(), args, false)
+	if child.is_empty():
+		push_error("visual_tour: could not start the fixed-fps run"); return 2
+	root.disable_3d = true
+	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_MINIMIZED)
+	var pipes: Array = [child.stdio]
+	if child.has("stderr") and child.stderr: pipes.append(child.stderr)
+	while true:
+		var running := OS.is_process_running(child.pid)
+		for pipe: FileAccess in pipes:
+			var chunk := pipe.get_buffer(65536)
+			while chunk.size() > 0:
+				printraw(chunk.get_string_from_utf8())
+				chunk = pipe.get_buffer(65536)
+		if not running: break
+		await process_frame
+	return OS.get_process_exit_code(child.pid)
 
 func write_manifest() -> void:
 	var path := out_dir.path_join("views.json")

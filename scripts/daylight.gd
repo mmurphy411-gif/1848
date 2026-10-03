@@ -21,8 +21,28 @@ var sun_elevation := 0.0
 var overcast := 0.0
 var current_hour := 19.25
 var sun_azimuth := 0.0
+## 0 .. 1: how far the light is in golden hour proper (see _update_light).
+var golden := 0.0
 var _reflection_elapsed := 0.0
 var stars = preload("res://scripts/night_sky.gd").new()
+## Sun energy as it nears the horizon (1.45 under a high sun).
+const GOLDEN_SUN_ENERGY := 2.8
+## Sun elevations (degrees) over which dusk gives way to golden hour.
+const DUSK_ELEVATION := Vector2(6.5, 9.5)
+## Volumetric fog density (1/m) everywhere and in the RiverMist box over the channel,
+## by day, at golden hour and at night. Beyond the 96 m froxel range every surface
+## carries the haze accumulated up to it, so these set the mid-distance veil. Dusk
+## is the sun's last few degrees above the horizon.
+const DAY_FOG := 0.0012
+const GOLDEN_FOG := 0.0012
+const DUSK_FOG := 0.004
+const NIGHT_FOG := 0.0045
+const DAY_MIST := 0.0008
+const GOLDEN_MIST := 0.0014
+const DUSK_MIST := 0.006
+const NIGHT_MIST := 0.004
+## Share of the global volumetric fog that ClearRimAir removes above 10 m.
+const RIM_CLEARING := 0.8
 ## Stage 1: cloud dome over the physical sky (scripts/sky_clouds.gd).
 var clouds: MeshInstance3D = preload("res://scripts/sky_clouds.gd").new()
 
@@ -79,27 +99,40 @@ func _update_light(time: float) -> void:
 	var daylight := smoothstep(-3.0, 5.0, sun_elevation)
 	stars.fade(1.0-smoothstep(-10.0,-3.0,sun_elevation))
 	var warmth := 1.0 - smoothstep(10.0, 40.0, sun_elevation)
+	# Wave C: golden hour proper (the sun 9-15 degrees up, on the bar) gets a deeper
+	# amber sun and clear air; dusk (the sun's last few degrees, the supper camp in
+	# the canyon's shade) keeps the Stage 1 light and its cool blue haze.
+	golden = warmth * smoothstep(DUSK_ELEVATION.x, DUSK_ELEVATION.y, sun_elevation)
 	moon.basis = Basis.looking_at(-Vector3(1,.28,-.15).normalized(),Vector3.UP)
-	moon.light_color = Color(.72,.82,1.0)
+	# Wave C: moonlight a little less saturated, so night is blue-grey, not all blue.
+	moon.light_color = Color(.75,.83,1.0)
 	moon.light_energy = .26*(1.0-daylight)
 	moon.light_angular_distance = .5
+	# A dim, broad source: full specular put a bright 'waterfall' sheen on the steep
+	# far-wall rock bands that face the low moon downstream.
+	moon.light_specular = .05
 	moon.shadow_enabled = true
 	moon.directional_shadow_max_distance = 100.0
 	moon.sky_mode = DirectionalLight3D.SKY_MODE_LIGHT_ONLY
-	sun.light_color = Color(1.0, 0.96, 0.88).lerp(Color(1.0, 0.82, 0.62), warmth)
-	sun.light_energy = lerpf(1.45, 1.9, warmth) * daylight
+	# Wave C: the low sun is a deeper amber, so golden hour reads warm through AgX
+	# instead of cream.
+	sun.light_color = Color(1.0, 0.96, 0.88).lerp(Color(1.0, 0.82, 0.62), warmth).lerp(Color(1.0, 0.76, 0.50), golden)
+	sun.light_energy = (lerpf(1.45, 1.9, warmth) + (GOLDEN_SUN_ENERGY - 1.9) * golden) * daylight
 	sun.light_angular_distance = 0.6
 	sun.shadow_enabled = true
 	sun.shadow_bias = .12
 	sun.shadow_normal_bias = 1.2
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
 	sun.directional_shadow_max_distance = 200.0
-	sun.directional_shadow_blend_splits = true
+	# Wave C perf: hard cascade seams are invisible at this map resolution and range;
+	# blending them cost ~0.18 ms a frame (artifacts/perf_probe/attribution.md).
+	sun.directional_shadow_blend_splits = false
 	sun.light_volumetric_fog_energy = 1.0
 	sky_material.rayleigh_coefficient = 2.2
 	sky_material.rayleigh_color = Color(0.25, 0.42, 0.70)
 	sky_material.mie_coefficient = lerpf(0.003, 0.004, warmth)
-	sky_material.mie_color = Color(0.96, 0.98, 1.0)
+	# Warm forward glow around a low sun; neutral by day.
+	sky_material.mie_color = Color(0.96, 0.98, 1.0).lerp(Color(1.0, 0.86, 0.68), golden)
 	sky_material.mie_eccentricity = 0.8
 	sky_material.turbidity = lerpf(2.0, 3.0, warmth)
 	sky_material.energy_multiplier = lerpf(0.18, 2.5, daylight)
@@ -122,11 +155,15 @@ func _update_light(time: float) -> void:
 	_configure_fog(warmth)
 	if daylight < 1.0:
 		var night := 1.0-daylight
-		environment.fog_light_color = environment.fog_light_color.lerp(Color(.055,.085,.16),night)
+		# Wave C: blue-grey rather than saturated blue.
+		environment.fog_light_color = environment.fog_light_color.lerp(Color(.065,.088,.14),night)
 		environment.fog_light_energy = lerpf(.85,.2,night)
-		environment.volumetric_fog_density = lerpf(.004,.006,night)
-		mist.material.density = lerpf(mist.material.density,.008,night)
-		mist.material.albedo = mist.material.albedo.lerp(Color(.25,.35,.55),night)
+		environment.volumetric_fog_density = lerpf(environment.volumetric_fog_density,NIGHT_FOG,night)
+		environment.volumetric_fog_albedo = environment.volumetric_fog_albedo.lerp(Color(.58,.66,.80),night)
+		mist.material.density = lerpf(mist.material.density,NIGHT_MIST,night)
+		mist.material.albedo = mist.material.albedo.lerp(Color(.32,.39,.54),night)
+		# Moonlit haze veils the night sky as it veils the far ridges.
+		environment.fog_sky_affect = lerpf(environment.fog_sky_affect,.6,night)
 	var weather := "clear"
 	var day := 0
 	var game_seed := 1848
@@ -138,11 +175,25 @@ func _update_light(time: float) -> void:
 			game_seed = state.seed
 	_configure_grade()
 	_configure_weather(weather, h)
+	# Clear most of the air above the channel, whatever its density now.
+	rim_air.material.density = -RIM_CLEARING * environment.volumetric_fog_density
+	_configure_reach_reflection()
 	clouds.configure({"hour": h, "day": day, "seed": game_seed, "weather": weather, "overcast": overcast,
 		"sun_direction": direction, "sun_elevation": sun_elevation, "sun_color": sun.light_color,
 		"sun_energy": sun.light_energy, "moon_direction": Vector3(1, .28, -.15).normalized(),
 		"moon_color": moon.light_color, "moon_energy": moon.light_energy})
 	time_changed.emit(h,daylight)
+
+## Wave C: what the river reflects beyond its reflection probe (shaders/water.gdshader):
+## canyon walls lit like the hour, and above them the hazy sky.
+func _configure_reach_reflection() -> void:
+	var water := get_node_or_null("../Greybox/River/WaterSurface") as GeometryInstance3D
+	if water == null or not water.material_override is ShaderMaterial: return
+	var lit := clampf(sun.light_energy / 1.45, 0.0, 1.4) + 0.5 * moon.light_energy
+	var sky := environment.fog_light_color * environment.fog_light_energy
+	sky = sky.lerp(sun.light_color * environment.fog_light_energy, 0.35 * (1.0 - smoothstep(10.0, 30.0, sun_elevation)) * float(sun_elevation > 0.0))
+	water.material_override.set_shader_parameter("reach_sky", sky)
+	water.material_override.set_shader_parameter("reach_wall", Color(0.25, 0.29, 0.25) * clampf(lit, 0.0, 1.4))
 
 ## Restrained grade over AgX: a little contrast and colour under a high sun, none
 ## at golden hour or night, so the low-sun look and the fire-lit camp are untouched.
@@ -212,41 +263,54 @@ func _configure_indirect_light() -> void:
 	environment.glow_intensity = 0.25
 	environment.glow_bloom = 0.0
 
+## Wave C: air thin enough that the bar, the near walls and the middle distance
+## (50-200 m) keep their contrast and colour; depth haze builds only toward the far
+## ridges (about 10 % at 300 m, a third at 450 m, half at 600 m by day).
 func _configure_fog(warmth: float) -> void:
-	# Stage 1: midday air is a cool blue-grey rather than sky blue; the low-sun
-	# end (golden hour, dawn) is unchanged.
-	var tint := Color(0.62, 0.70, 0.81).lerp(Color(0.52, 0.68, 0.90), warmth)
+	var tint := Color(0.58, 0.68, 0.82).lerp(Color(0.52, 0.68, 0.90), warmth)
+	# Golden hour has clear air lit amber; as the sun sinks toward the rim the canyon
+	# fills with the cool blue dusk haze of Stage 1 (the supper camp).
+	var dusk := warmth - golden
 	environment.volumetric_fog_enabled = true
-	environment.volumetric_fog_density = 0.004
-	environment.volumetric_fog_albedo = tint
+	environment.volumetric_fog_density = lerpf(lerpf(DAY_FOG, GOLDEN_FOG, warmth), DUSK_FOG, dusk)
+	# Haze takes its colour from the light, so it scatters near-neutrally; the former
+	# dense blue veil lit by the amber sun turned golden hour a milky cream. At dusk
+	# the sky's blue fills the shade (ambient inject) as the sun leaves the floor.
+	environment.volumetric_fog_albedo = Color(0.78, 0.84, 0.92).lerp(Color(0.95, 0.93, 0.90), warmth).lerp(Color(0.52, 0.68, 0.90), dusk)
 	environment.volumetric_fog_emission = Color.BLACK
-	# Godot 4.7 calls volumetric sun scattering 'anisotropy'.
-	environment.volumetric_fog_anisotropy = 0.4
+	# Godot 4.7 calls volumetric sun scattering 'anisotropy'. A low sun gets a
+	# tighter forward lobe: a glow around the sun rather than a veil over the view.
+	environment.volumetric_fog_anisotropy = lerpf(0.4, 0.6, golden)
 	environment.volumetric_fog_length = 96.0
-	environment.volumetric_fog_sky_affect = 0.04
+	# The sky behind the far ridges takes the same veil as they do; at 0.04 the hazed
+	# ridge tops outshone the sky at dusk and night and their trees read as dark shapes
+	# hanging from the top of the frame. By day the clear rim air makes this ~0.
+	environment.volumetric_fog_sky_affect = 1.0
 	environment.volumetric_fog_ambient_inject = 0.3
 	environment.fog_enabled = true
 	environment.fog_mode = Environment.FOG_MODE_DEPTH
-	# Haze down the canyon: depth fog from just beyond the claim, cooler and
-	# denser by day; the golden-hour end keeps its original reach.
-	environment.fog_depth_begin = lerpf(120.0, 140.0, warmth)
-	environment.fog_depth_end = lerpf(650.0, 900.0, warmth)
+	# Haze down the canyon from just beyond the claim (smoothstep ramp, so the first
+	# 150 m beyond the begin distance stay nearly clear).
+	environment.fog_depth_begin = 120.0
+	environment.fog_depth_end = lerpf(1000.0, 1100.0, warmth)
 	environment.fog_depth_curve = 1.0
 	# In depth mode density is maximum opacity, not extinction per meter.
 	environment.fog_density = 1.0
 	environment.fog_light_color = tint
 	environment.fog_light_energy = 0.85
-	environment.fog_sun_scatter = 0.4
+	environment.fog_sun_scatter = lerpf(0.3, 0.4, warmth)
 	environment.fog_aerial_perspective = lerpf(0.6, 1.0, warmth)
-	environment.fog_sky_affect = 0.15
-	mist.material.density = lerpf(0.003, 0.006, warmth)
+	# Little depth haze on the open sky by day, so cumulus above the ridges stand
+	# against blue; the low sun keeps a hazier horizon.
+	environment.fog_sky_affect = lerpf(0.05, 0.15, warmth)
+	mist.material.density = lerpf(lerpf(DAY_MIST, GOLDEN_MIST, warmth), DUSK_MIST, dusk)
 	mist.material.albedo = tint
 	mist.material.emission = Color.BLACK
 	mist.material.height_falloff = 0.3
 	mist.material.edge_fade = 0.5
-	# Subtract most global fog above 10 m, with a soft transition. Dense air
-	# stays in the channel; the higher cliff bands retain contrast against the sky.
-	rim_air.material.density = -0.003
+	# Most global fog is subtracted above 10 m (density set in _update_light), with a
+	# soft transition. Dense air stays in the channel; the higher cliff bands retain
+	# contrast against the sky.
 	rim_air.material.albedo = tint
 	rim_air.material.emission = Color.BLACK
 	rim_air.material.edge_fade = 0.02
