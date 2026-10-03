@@ -8,13 +8,16 @@ const YARD := [
 	["res://assets/props/barrel.glb",Vector3(3.25,0,-1.75),.3,1.0],
 	["res://assets/props/barrel.glb",Vector3(3.3,0,-.95),1.9,.92],
 	["res://assets/props/crate.glb",Vector3(3.35,0,-2.7),.1,1.0],
-	["res://assets/props/crate.glb",Vector3(3.3,.346,-2.65),.25,.9],
+	["crate_mark",Vector3(3.32,.346,-2.68),-1.45,.9],
 	["res://assets/props/lantern.glb",Vector3(3.3,.88,-1.75),.6,1.0],
 	["res://assets/props/tub.glb",Vector3(3.35,0,.05),.0,1.0],
 	["res://assets/props/bucket.glb",Vector3(2.95,0,1.35),.9,1.0],
+	# Wave C: a puncheon bench (split log on pegs), a nail keg and a jug beside it.
 	["res://assets/props/bench.glb",Vector3(3.9,0,2.3),-.75,1.0],
+	["keg_nails",Vector3(3.15,0,2.95),-2.2,1.0],["jug",Vector3(4.55,0,1.75),.4,1.0],
 	["flour_3",Vector3(-3.05,0,-1.55),.4,1.0],["flour_2",Vector3(-3.45,0,-1.85),1.1,1.0],
 	["beans_3",Vector3(-3.1,0,-2.25),2.0,1.0],["coffee_3",Vector3(-3.55,0,-2.5),.7,1.0],
+	["salt_3",Vector3(-2.95,0,-2.6),-.4,1.0],["crate_mark",Vector3(-3.4,0,-.85),1.75,1.0],
 ]
 ## Black oak canopies over the clearing for the terrain shader's duff (store frame).
 var oaks: Array[Vector3]=[]
@@ -71,6 +74,7 @@ func _ready() -> void:
 		if str(mesh.name).begins_with("Weight"): weights.append(mesh);weight_rest.append(mesh.position)
 	var barrel:=Kit.instance("res://assets/props/barrel.glb");barrel.name="Fish barrel";add_child(barrel);barrel.position=Vector3(Layout.BARREL.x,0,Layout.BARREL.z);barrel.rotation.y=.6
 	dress_yard()
+	scatter_litter()
 	var sound: Node=named("soundscape","Soundscape");sound.store_bed=true;sound.start()
 	named("store_rain","Rain")
 	counter=named("counter","Counter")
@@ -81,7 +85,7 @@ func _ready() -> void:
 	keeper=named("shopkeeper","Lambert");keeper.position=Vector3(.15,0,-.7)
 	targets={"scale":Layout.SCALE,"slate":Layout.SLATE,"pile":Layout.PILE,"barrel":Layout.BARREL,"board":Layout.BOARD,"home":Layout.TRAIL[0]}
 	for good in counter.Stock.catalogue(): item_entries[good.item]=good;targets[good.item]=Layout.item_position(good.item)
-	label(KEEPER.to_upper()+"\nFRENCH CAMP",Vector3(0,2.97,1.09),.0017)
+	# The stall's name is painted on its canvas sign (kit_sign, blender/build_store.py).
 	for good in counter.Stock.catalogue():
 		if not good.for_sale: label("%s $%.2f" % [good.item.capitalize(),counter.Prices.price(good.item,game.day,game.seed)],Layout.item_position(good.item)+Vector3(0,.45,.05),.0009)
 	build_outfitting(game)
@@ -150,11 +154,9 @@ func build_ground() -> void:
 	for species in far: _trees(Library.plant(species,bark[species],true,true),far[species],false)
 	var ground:=Library.terrain().duplicate() as ShaderMaterial
 	ground.set_shader_parameter("water_level",-100.0)
-	# Away from the river the bar's gravel layer is forest litter and its sand patches
-	# are trampled bare earth: same shader, the clearing's own texture sets.
-	for suffix in ["albedo","normal","orm"]:
-		var litter=ground.get_shader_parameter("duff_"+suffix)
-		if litter: ground.set_shader_parameter("gravel_"+suffix,litter)
+	# Away from the river the clearing is trodden red-brown soil (the shader's plain-ground
+	# path) with the bar's gravel worked into it and oak and needle litter in patches:
+	# the shared sets as Assets.terrain() loads them.
 	var canopies:=PackedVector4Array()
 	for p in oaks: canopies.append(Vector4(p.x,p.z,0,0))
 	ground.set_shader_parameter("oak_canopies",canopies)
@@ -172,11 +174,12 @@ func build_ground() -> void:
 				var point:=Vector3(cos(angle)*radius,corner.y*(11+3*sin(angle*3)+1.5*cos(angle*7)),sin(angle)*radius+1)
 				hill.set_color(Color(.75,0,0));hill.set_uv(Vector2(point.x,point.z));hill.add_vertex(point)
 	hill.generate_normals();var slope:=MeshInstance3D.new();slope.mesh=hill.commit();slope.material_override=ground;add_child(slope)
-	# The trail home, worn to bare sand with a ragged edge (seeded).
+	# The trail home, trodden through the litter to soil and gravel, with a ragged edge
+	# (seeded): the litter slot carries soil, so nothing pale or leafy shows on it.
 	var worn:=ground.duplicate() as ShaderMaterial
 	for suffix in ["albedo","normal","orm"]:
-		var bare=worn.get_shader_parameter("sand_"+suffix)
-		if bare: worn.set_shader_parameter("gravel_"+suffix,bare)
+		var bare=worn.get_shader_parameter("soil_"+suffix)
+		if bare: worn.set_shader_parameter("duff_"+suffix,bare)
 	worn.set_shader_parameter("oak_canopies",PackedVector4Array())
 	var edge:=FastNoiseLite.new();edge.seed=184814;edge.frequency=.55
 	var path:=SurfaceTool.new();path.begin(Mesh.PRIMITIVE_TRIANGLE_STRIP)
@@ -211,6 +214,43 @@ func dress_yard() -> void:
 		var node:=MeshInstance3D.new()
 		node.mesh=Kit.mesh(item[0]) if item[0].begins_with("res://") else goods[item[0]]
 		add_child(node);node.position=item[1];node.rotation.y=item[2];node.scale=Vector3.ONE*item[3]
+## Wave C: river cobbles carried up from the bar and bark and chips from the firewood,
+## scattered over the trodden yard (not the trail, the counter apron or the yard goods)
+## so the clearing is not one flat patch. Own seed; one MultiMesh per piece, no shadows.
+func scatter_litter() -> void:
+	var rng:=RandomNumberGenerator.new();rng.seed=184821
+	var pieces:=["res://assets/boulders/cobble_04.glb","res://assets/boulders/cobble_06.glb","res://assets/boulders/cobble_08.glb",
+		"res://assets/boulders/cobble_10.glb","res://assets/clutter/bark_01.glb","res://assets/clutter/bark_02.glb"]
+	var placed: Dictionary={}
+	for path in pieces: placed[path]=[]
+	var tries:=0;var made:=0
+	while made<70 and tries<2000:
+		tries+=1
+		var angle:=rng.randf()*TAU;var radius:=rng.randf_range(3.2,13.0)
+		var p:=Vector3(cos(angle)*radius,0,sin(angle)*radius+1)
+		if absf(p.x)<2.4 and p.z>-.5 and p.z<3.4: continue # the customers' apron at the counter
+		if p.x>2.6 and p.x<5.0 and p.z>-3.2 and p.z<3.6: continue # barrels, tub, bench
+		if p.x<-2.6 and p.x>-7.0 and p.z>-3.2 and p.z<4.8: continue # sacks, outfitting corner
+		var on_trail:=false
+		for i in range(1,Layout.TRAIL.size()):
+			var a: Vector3=Layout.TRAIL[i-1];var b: Vector3=Layout.TRAIL[i]
+			var t:=clampf((p-a).dot(b-a)/maxf((b-a).length_squared(),.0001),0,1)
+			if p.distance_to(a.lerp(b,t))<.75: on_trail=true;break
+		if on_trail: continue
+		var bark:=rng.randf()<.4
+		var path: String=pieces[4+rng.randi_range(0,1)] if bark else pieces[rng.randi_range(0,3)]
+		# Cobble scans are unit-sized (scripts/cobbles.gd scales them 2.5-12.5 cm).
+		var size:=rng.randf_range(.8,1.4) if bark else .04+.09*pow(rng.randf(),1.6)
+		var basis:=Basis(Vector3.UP,rng.randf()*TAU).scaled(Vector3.ONE*size)
+		placed[path].append(Transform3D(basis,p+Vector3(0,-.015 if bark else -.35*size,0)))
+		made+=1
+	for path in pieces:
+		if placed[path].is_empty() or not ResourceLoader.exists(path): continue
+		var group:=MultiMeshInstance3D.new();var multi:=MultiMesh.new();multi.transform_format=MultiMesh.TRANSFORM_3D
+		multi.mesh=Library.mesh(path);multi.instance_count=placed[path].size()
+		for i in placed[path].size(): multi.set_instance_transform(i,placed[path][i])
+		group.multimesh=multi;group.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		group.visibility_range_end=45;add_child(group)
 func refresh() -> void:
 	shelves.refresh();slate.refresh()
 	for node in pile_visual.get_children(): pile_visual.remove_child(node);node.queue_free()

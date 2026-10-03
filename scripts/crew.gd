@@ -88,16 +88,16 @@ func _build_fire() -> void:
 	fire.visible=false
 
 func _build_notice() -> void:
-	var stake:=MeshInstance3D.new();var pole:=BoxMesh.new();pole.size=Vector3(.09,1.3,.09);stake.mesh=pole
-	var wood:=StandardMaterial3D.new();wood.albedo_color=Color(.38,.27,.16);wood.roughness=.9;stake.material_override=wood
+	# Wave C (C-props): the claim notice is a paper nailed to a weathered board on a peeled
+	# post under two shakes (assets/camp/notice.glb); the hand-written text is unchanged.
+	var parts: Dictionary=preload("res://scripts/prop_kit.gd").named("res://assets/camp/notice.glb")
+	var stake:=MeshInstance3D.new();stake.mesh=parts.Post
 	var p:=camp.global_position+Vector3(2.1,0,4.6);p.y=Layout.height_at(p.x,p.z)
-	add_child(stake);stake.global_position=p+Vector3(0,.65,0)
-	var paper:=MeshInstance3D.new();var sheet:=BoxMesh.new();sheet.size=Vector3(.62,.5,.012);paper.mesh=sheet
-	var mat:=StandardMaterial3D.new();mat.albedo_color=Color(.88,.83,.68);mat.roughness=.95;paper.material_override=mat
-	stake.add_child(paper);paper.position=Vector3(0,.42,-.055)
+	add_child(stake);stake.global_position=p
+	var paper:=MeshInstance3D.new();paper.mesh=parts.Paper;stake.add_child(paper)
 	notice=Label3D.new();notice.font=preload("res://assets/fonts/Cedarville-Cursive.ttf");notice.font_size=40;notice.pixel_size=.0011
 	notice.modulate=Color(.15,.11,.07);notice.outline_size=0;notice.shaded=true;notice.rotation.y=PI
-	paper.add_child(notice);notice.position=Vector3(0,0,-.008)
+	paper.add_child(notice);notice.position=Vector3(0,1.13,-.0875)
 	stake.visible=false
 
 ## Each man's fixed casting (hat, hair, beard, garments, skin and build): crew_look.gd.
@@ -137,10 +137,10 @@ func sync() -> void:
 		waiting[id].place(spot,PI*.85,"idle")
 	var count: int=game.inventory.get("bunks",0)
 	while bunks.size()<mini(count,BUNK_SPOTS.size()):
-		var tent: Node3D=load("res://assets/expedition/tent.glb").instantiate();add_child(tent)
+		# Canvas tent seen, expedition tent's meshes as hidden collision (camp.gd, C-props).
+		var tent: Node3D=camp.tent_instance();add_child(tent)
 		var p: Vector3=camp.global_position+BUNK_SPOTS[bunks.size()];p.y=Layout.height_at(p.x,p.z)
 		tent.global_position=p;tent.rotation.y=PI+(bunks.size()%2)*.18-.09
-		for model in tent.find_children("*","MeshInstance3D",true,false): model.create_trimesh_collision()
 		bunks.append(tent)
 	while bunks.size()>count: bunks.pop_back().queue_free()
 	var stake: Node3D=notice.get_parent().get_parent()

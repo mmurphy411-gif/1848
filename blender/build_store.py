@@ -139,7 +139,9 @@ def plank(b, kit, center, size, axis, seed, mat=None, tile=1.6):
 
 def stall():
     kit = Kit(["kit_bark", "kit_endgrain", "kit_wood", "kit_daub", "kit_canvas", "kit_rope", "kit_iron", "kit_brass",
-               "kit_slate", "kit_leather", "kit_paper", "kit_wool", "kit_cotton"])
+               "kit_slate", "kit_leather", "kit_paper", "kit_wool", "kit_cotton", "kit_split", "kit_paint", "kit_sign",
+               "kit_labels", "kit_stencil", "kit_tin", "kit_crock", "kit_blanket", "kit_osnaburg", "kit_glass", "kit_flour",
+               "kit_pork", "kit_beans"])
     objs = legacy_proxies()
 
     # Log walls: overhanging saddle-notched corners; side logs ride half a log higher.
@@ -224,7 +226,8 @@ def stall():
         top.append(b.vert(gd(x, 3.12 - sag, 1.06 + .004 * math.sin(i * 1.7)), 1))
         bot.append(b.vert(gd(x, 2.80 - sag * 1.6, 1.065 + .004 * math.sin(i * 2.3)), .9))
     for i in range(nu):
-        b.face([bot[i], bot[i + 1], top[i + 1], top[i]], [(3.5 * i / nu, 0), (3.5 * (i + 1) / nu, 0), (3.5 * (i + 1) / nu, .32), (3.5 * i / nu, .32)], kit.canvas)
+        # The painted lettering spans the sheet once (kit_sign, tools/art/build_prop_labels.py).
+        b.face([bot[i], bot[i + 1], top[i + 1], top[i]], [(i / nu, 0), ((i + 1) / nu, 0), ((i + 1) / nu, 1), (i / nu, 1)], kit.sign)
     for s in (-1, 1):
         for y in (3.1, 2.82):
             K.rope(b, gd(s * 1.75, y, 1.06), gd(s * 2.55, y + .04, 1.0), kit.rope, radius=.006, sag=.02, n=5, sides=4)
@@ -244,7 +247,7 @@ def stall():
     b = K.MeshBuilder()
     for k in range(11):
         x = -1.5 + .3 * k
-        plank(b, kit, gd(x, .5, .405), (.28, .03, .9), 2, 540 + k)
+        plank(b, kit, gd(x, .5, .405), (.28, .03, .9), 2, 540 + k, mat=kit.split)  # newer boards: the counter reads from the trail
     objs.append(obj(b, "Front boards", kit))
 
     # Shelves: three deep tiers on posts, a peg rail for the middle goods.
@@ -263,39 +266,114 @@ def stall():
         plank(b, kit, gd(x, 1.19, z), (sx, sz, .03), 0 if sx > sz else 1, 641 + int(x * 10 + z * 10))
     objs.append(obj(b, "Shelf", kit))
 
-    # Stock that is not for sale on the slate: folded blankets, bolts of cloth, candle boxes
-    # and a soap crate on the middle shelf, clear of the hook tray, coils and rod.
+    # Stock that is not for sale on the slate, stocked like a trading post: tinned goods
+    # and canisters with paper labels, bolts of cloth and folded trade blankets, candles,
+    # jars, stoneware, a nail keg; clear of the hook tray, coils and rod (shelves.gd).
     b = K.MeshBuilder()
     rng = random.Random(650)
+    mid, low, top = 1.17, .46, 1.92  # shelf top surfaces (Godot y)
+    # Middle shelf, left: soap and candle boxes at the back, tea canisters and pepper in front.
+    paper_box(b, kit, gd(-1.88, mid, -1.92), (.38, .24, .16), .05, LABEL["soap"], 651)
+    paper_box(b, kit, gd(-1.86, mid + .16, -1.9), (.34, .2, .12), -.06, LABEL["candles"], 652)
+    for k, x in enumerate((-2.07, -1.95, -1.83)):
+        tin(b, kit, gd(x, mid, -1.55 + .02 * k), .046, .15, LABEL["tea"])
+    tin(b, kit, gd(-1.68, mid, -1.52), .035, .1, LABEL["pepper"])
+    tin(b, kit, gd(-1.6, mid, -1.62), .035, .1, LABEL["mustard"])
+    # Middle, between hooks and line: bolts of cloth at the back, sardines and oysters in front.
+    for k, (x, mat) in enumerate(((-.96, kit.wool), (-.85, kit.osnaburg), (-.74, kit.canvas), (-.63, kit.cotton), (-.52, kit.wool))):
+        bolt(b, kit, gd(x, mid, -1.86), .085, .4, .32 - .02 * (k % 2), rng.uniform(-.06, .06), mat)
+    for k in range(4):
+        y = mid + .026 * k
+        c = gd(-.82 + .01 * (k % 2), y, -1.5)
+        K.box(b, c + Vector((0, 0, .013)), (.16, .1, .026), kit.tin, tile=.2, rot=Matrix.Rotation(rng.uniform(-.1, .1), 3, "Z"))
+        label_quad(b, c + Vector((0, -.0505, .013)), (1, 0, 0), (0, 0, 1), .15, .024, LABEL["sardines"], kit.labels)
+    for k, x in enumerate((-.6, -.49)):
+        tin(b, kit, gd(x, mid, -1.5), .05, .12, LABEL["oysters"], lid=False)
+    tin(b, kit, gd(-.545, mid + .12, -1.5), .05, .12, LABEL["oysters"], lid=False)
+    # Middle, between line and rod: candle and match boxes, jars of pickles, candles on the rail.
+    paper_box(b, kit, gd(.32, mid, -1.9), (.32, .22, .14), .04, LABEL["candles"], 653)
+    paper_box(b, kit, gd(.3, mid + .14, -1.92), (.26, .18, .1), -.08, LABEL["matches"], 654)
+    paper_box(b, kit, gd(.62, mid, -1.88), (.24, .2, .12), .1, LABEL["saleratus"], 655)
+    for k, x in enumerate((.18, .3, .42)):
+        c = gd(x, mid, -1.5)
+        K.lathe(b, [(0, 0), (.042, 0), (.045, .01), (.045, .15), (.035, .17), (.03, .19)], kit.glass, sides=12, tile=.2, center=tuple(c))
+        K.lathe(b, [(.03, .185), (.032, .205), (0, .21)], kit.endgrain, sides=8, tile=.1, center=tuple(c))
+        K.lathe(b, [(.028, .03), (.038, .05), (.04, .1), (.03, .14), (0, .14)], kit.beans if k == 1 else kit.pork, sides=8, tile=.2, center=tuple(c))
+        label_band(b, c, .045, .05, .11, -math.pi / 2 - 1.1, -math.pi / 2 + 1.1, LABEL["onions"], kit.labels, sides=6)
+    for k, x in enumerate((.62, .72, .82)):
+        candles(b, kit, gd(x, 1.5, -1.53), count=5 + k % 2, seed=656 + k)
+    # Middle, right: folded trade blankets and stoneware.
     for k in range(3):
-        c = gd(1.62 + rng.uniform(-.02, .02), 1.205 + .075 * k, -1.62)
-        rot = Matrix.Rotation(rng.uniform(-.08, .08), 3, "Z")
-        K.box(b, c, (.5, .42, .07), kit.wool, tile=.5, rot=rot)
-        K.tube(b, [c + rot @ Vector((-.25, -.21, 0)), c + rot @ Vector((.25, -.21, 0))], .035, kit.wool, sides=6, tile=.5)
-    # Bolts of cloth standing on edge, wound on their boards.
-    for k, (x, mat) in enumerate(((-.82, kit.wool), (-.7, kit.cotton), (-.58, kit.canvas))):
-        c = gd(x, 1.17, -1.64)
-        rot = Matrix.Rotation(rng.uniform(-.05, .05), 3, "Z")
-        K.box(b, c + Vector((0, 0, .17)), (.085, .4, .32), mat, tile=.3, rot=rot)
-        K.box(b, c + Vector((0, 0, .17)), (.02, .42, .34), kit.wood, tile=.4, rot=rot)
-    for k, x in enumerate((.42, .62)):
-        plank(b, kit, gd(x, 1.245, -1.66), (.18, .3, .15), 0, 660 + k)
-        K.box(b, gd(x, 1.322, -1.62), (.16, .002, .07), kit.paper, tile=.2)
-    plank(b, kit, gd(-1.86, 1.25, -1.7), (.36, .4, .16), 0, 670)
+        folded_blanket(b, kit, gd(1.78 + rng.uniform(-.02, .02), mid + .085 * k, -1.72), .56, .34, .08,
+                       rng.uniform(-.06, .06), kit.blanket if k != 1 else kit.wool, 660 + k)
+    crock(b, kit, gd(1.38, mid, -1.5), .085, .2, jug=False)
+    label_band(b, gd(1.38, mid, -1.5), .088, .07, .13, -math.pi / 2 - .9, -math.pi / 2 + .9, LABEL["lard"], kit.labels, sides=6)
+    crock(b, kit, gd(2.06, mid, -1.52), .08, .3, jug=True)
+    # Bottom shelf ends: a nail keg and stoneware jugs either side of the bulk sacks.
+    keg(b, kit, gd(-2.0, low, -1.62), .15, .34, cell=STENCIL["nails"])
+    crock(b, kit, gd(1.96, low, -1.55), .1, .36, jug=True)
+    crock(b, kit, gd(2.12, low, -1.85), .09, .3, jug=True)
+    crock(b, kit, gd(1.9, low, -1.9), .11, .24, jug=False)
+    # Top shelf ends: stacked tin plates and cups, a tin coffee pot, boxes of flints and caps.
+    for k in range(6):
+        K.lathe(b, [(0, 0), (.1, 0), (.125, .018), (.122, .02), (.097, .003), (0, .003)], kit.tin, sides=10, tile=.2,
+                center=tuple(gd(-2.05 + .003 * k, top + .008 * k, -1.6)))
+    for k, (x, z) in enumerate(((-1.95, -1.88), (-2.1, -1.86))):
+        K.lathe(b, [(0, 0), (.04, 0), (.044, .09), (.04, .09), (.036, .005), (0, .005)], kit.tin, sides=10, tile=.2, center=tuple(gd(x, top, z)))
+    c = gd(2.05, top, -1.75)
+    K.lathe(b, [(0, 0), (.08, 0), (.085, .01), (.07, .16), (.05, .2), (.055, .21), (.03, .23), (0, .235)], kit.tin, sides=12, tile=.3, center=tuple(c))
+    K.tube(b, [c + Vector((.07, 0, .04)), c + Vector((.12, 0, .12)), c + Vector((.15, 0, .17))], [.014, .01, .007], kit.tin, sides=5, tile=.2)
+    paper_box(b, kit, gd(1.98, top, -1.52), (.14, .1, .06), .1, LABEL["flints"], 657)
+    paper_box(b, kit, gd(-1.98, top + .05, -1.5), (.14, .1, .06), -.1, LABEL["caps"], 658)
     objs.append(obj(b, "Shelf stock", kit))
 
-    # Price board on two legs beside the stall; slate on an easel at the counter.
+    # Goods hung on pegs on the outside of the east wall, facing the trail: a coil of
+    # rope, a frying pan, a tin kettle and a bundle of candles.
     b = K.MeshBuilder()
-    K.box(b, gd(-3.25, 1.78, 1.1), (1.05, .055, 1.85), kit.slate, tile=1.2)
+    wall = 2.76
+    for z, y in ((-2.25, 1.62), (-1.72, 1.62), (-1.3, 1.5)):
+        K.tube(b, [gd(wall - .06, y, z), gd(wall + .1, y + .02, z)], .014, kit.split, sides=5, tile=.2, cap_mat=kit.endgrain)
+    coil = []
+    for i in range(25):
+        a = math.tau * i / 24
+        coil.append(gd(wall + .05, 1.42 + .19 * math.sin(a) - .02 * (1 - math.cos(a)) ** 2, -2.25 + .17 * math.cos(a)))
+    for k in range(2):
+        K.tube(b, [p + Vector((.022 * k, 0, 0)) for p in coil], .022, kit.rope, sides=5, tile=.05, twist=30)
+    K.wraps(b, gd(wall + .05, 1.6, -2.25), (1, 0, 0), .03, kit.rope, turns=3, width=.03, thickness=.006, sides=4, seg=6)
+    # Frying pan hung by its handle, the bottom toward the trail: built flat, then stood up.
+    first = len(b.v)
+    K.lathe(b, [(0, .0), (.14, 0), (.165, .01), (.178, .045), (.172, .05), (.16, .02), (0, .012)], kit.iron, sides=16, tile=.3)
+    K.tube(b, [Vector((0, .17, .03)), Vector((0, .3, .036)), Vector((0, .42, .04))], [.014, .012, .014], kit.iron, sides=5, tile=.3)
+    pan_c = gd(wall + .02, 1.18, -1.72)
+    stand = Matrix.Rotation(math.pi / 2, 3, "X")  # handle (+Y) up, bowl toward +X after the yaw
+    yaw = Matrix.Rotation(math.pi / 2, 3, "Z")
+    for i in range(first, len(b.v)):
+        b.v[i] = pan_c + yaw @ (stand @ b.v[i])
+    # Tin kettle on the third peg.
+    kc = gd(wall + .07, 1.12, -1.3)
+    K.lathe(b, [(0, 0), (.09, 0), (.1, .02), (.1, .16), (.08, .2), (.04, .22), (0, .225)], kit.tin, sides=12, tile=.3, center=tuple(kc))
+    K.tube(b, [kc + Vector((0, -.1, .17)), kc + Vector((0, -.06, .36)), kc + Vector((0, .06, .36)), kc + Vector((0, .1, .17))], .004, kit.iron, sides=4, tile=.1)
+    objs.append(obj(b, "Wall goods", kit))
+
+    # Price board: dark-painted planks (prices hand-lettered by price_board.gd), on two
+    # peeled poles set in the ground with rails and a little board roof over it.
+    b = K.MeshBuilder()
+    for k in range(6):
+        y = 1.78 - .925 + (k + .5) * 1.85 / 6
+        # Butted boards (no see-through gaps: the background must not read as lettering).
+        plank(b, kit, gd(-3.25, y, 1.1 - .004 * (k % 2)), (1.05, .047, 1.85 / 6), 0, 690 + k, mat=kit.paint, tile=1.0)
     objs.append(obj(b, "Board", kit))
     b = K.MeshBuilder()
-    for x in (-3.84, -2.66):
-        plank(b, kit, gd(x, 1.36, 1.08), (.07, .07, 2.72), 2, 700 + int(x * 10))
-    for y in (.82, 2.74):
-        plank(b, kit, gd(-3.25, y, 1.1), (1.2, .08, .06), 0, 710 + int(y * 10))
+    for k, x in enumerate((-3.86, -2.64)):
+        pole(b, kit, gd(x, -.1, 1.06), gd(x + .01, 2.95, 1.06), .055, .045, 700 + k, segs=6, crook=.015)
+    for y in (.8, 2.76):
+        plank(b, kit, gd(-3.25, y, 1.06), (1.3, .07, .08), 0, 710 + int(y * 10))
+    for s in (-1, 1):  # board roof: two boards meeting over the top rail
+        K.box(b, gd(-3.25, 2.86, 1.06 + s * .1), (1.42, .2, .025), kit.wood, tile=1.0, grain=0,
+              rot=Matrix.Rotation(s * .55, 3, "X"))
     for x in (-3.8, -2.7):
-        plank(b, kit, gd(x, 1.78, 1.1), (.05, .08, 1.9), 2, 720 + int(x * 10))
-    plank(b, kit, gd(-2.95, 1.12, 1.06), (.7, .07, .05), 0, 730)
+        for y in (.95, 2.6):
+            K.wraps(b, gd(x + (-.06 if x < -3.25 else .06), y, 1.06), (0, 0, 1), .05, kit.rope, turns=3, width=.05, thickness=.006, sides=4, seg=6)
     objs.append(obj(b, "Board frame", kit))
     b = K.MeshBuilder()
     K.box(b, gd(1.2, 1.38, .22), (.98, .055, .68), kit.slate, tile=1.0)
@@ -365,7 +443,351 @@ def stall():
     K.export_glb(objs, OUT / "store.glb")
 
 
+# ------------------------------------------------------------------ lettering helpers
+
+# Cells of the kit's lettered atlases (tools/art/build_prop_labels.py).
+STENCIL = {"flour": 0, "salt": 1, "coffee": 2, "beans": 3, "nails": 4, "powder": 5, "mark": 6, "pork": 7}
+LABEL = {"tea": 0, "candles": 1, "soap": 2, "tobacco": 3, "sardines": 4, "oysters": 5, "matches": 6, "pepper": 7,
+         "saleratus": 8, "caps": 9, "mustard": 10, "chocolate": 11, "lard": 12, "onions": 13, "snaps": 14, "flints": 15}
+
+
+def stencil_uv(cell, s, t):
+    """Atlas UV for (s, t) in [0,1]^2 of stencil cell `cell` (2 columns x 4 rows)."""
+    return ((cell % 2 + s) / 2, 1 - (cell // 2 + 1 - t) / 4)
+
+
+def label_uv(cell, s, t):
+    """Atlas UV for (s, t) in [0,1]^2 of label cell `cell` (4 x 4)."""
+    return ((cell % 4 + s) / 4, 1 - (cell // 4 + 1 - t) / 4)
+
+
+def label_quad(b, center, right, up, w, h, cell, mat, atlas=label_uv, out=None):
+    """A flat lettered patch (paper label or painted mark) facing right x up."""
+    c, r, u = Vector(center), Vector(right).normalized(), Vector(up).normalized()
+    if out is not None:
+        c = c + Vector(out).normalized() * .0015
+    q = [c - r * w / 2 - u * h / 2, c + r * w / 2 - u * h / 2, c + r * w / 2 + u * h / 2, c - r * w / 2 + u * h / 2]
+    ids = [b.vert(p) for p in q]
+    b.face(ids, [atlas(cell, 0, 0), atlas(cell, 1, 0), atlas(cell, 1, 1), atlas(cell, 0, 1)], mat, True)
+
+
+def label_band(b, center, radius, z0, z1, a0, a1, cell, mat, sides=10):
+    """A paper label wrapped round a tin or jar from angle a0 to a1 (radians, about +Z)."""
+    c = Vector(center)
+    ids = []
+    for k in range(sides + 1):
+        a = a0 + (a1 - a0) * k / sides
+        d = Vector((math.cos(a), math.sin(a), 0))
+        ids.append((b.vert(c + d * (radius + .0012) + Vector((0, 0, z0))), b.vert(c + d * (radius + .0012) + Vector((0, 0, z1)))))
+    for k in range(sides):
+        s0, s1 = k / sides, (k + 1) / sides
+        b.face([ids[k][0], ids[k + 1][0], ids[k + 1][1], ids[k][1]],
+               [label_uv(cell, s0, 0), label_uv(cell, s1, 0), label_uv(cell, s1, 1), label_uv(cell, s0, 1)], mat, False)
+
+
+# ------------------------------------------------------------------ period stock
+
+def tin(b, kit, center, radius, height, cell=None, lid=True, seed=0):
+    """A soldered tinplate canister or can, optionally with a paper label."""
+    c = Vector(center)
+    K.lathe(b, [(0, 0), (radius * .97, 0), (radius, .004), (radius, height - .006), (radius * .97, height)] +
+            ([(radius * 1.02, height), (radius * 1.02, height + .012), (0, height + .014)] if lid else [(0, height)]),
+            kit.tin, sides=10, tile=.2, center=tuple(c))
+    if cell is not None:
+        label_band(b, c, radius, height * .18, height * .82, -math.pi * .5 - 1.3, -math.pi * .5 + 1.3, cell, kit.labels)
+
+
+def crock(b, kit, center, radius, height, jug=False, seed=0):
+    """Salt-glazed stoneware: a jug (narrow neck, strap handle, cork) or a crock."""
+    c = Vector(center)
+    if jug:
+        prof = [(0, 0), (radius * .82, 0), (radius * .96, .02), (radius, height * .3), (radius * .97, height * .52),
+                (radius * .78, height * .68), (radius * .38, height * .8), (radius * .27, height * .86),
+                (radius * .27, height * .95), (radius * .31, height * .97), (radius * .3, height)]
+    else:
+        prof = [(0, 0), (radius * .9, 0), (radius, .02), (radius * 1.02, height * .5), (radius * .95, height * .9),
+                (radius * 1.0, height * .94), (radius * .98, height), (radius * .9, height * .99), (0, height * .97)]
+    arc = sum(math.hypot(prof[j][0] - prof[j - 1][0], prof[j][1] - prof[j - 1][1]) for j in range(1, len(prof)))
+    K.lathe(b, prof, kit.crock, sides=14, tile=arc, center=tuple(c))
+    if jug:
+        K.lathe(b, [(radius * .2, height * .98), (radius * .24, height * 1.06), (radius * .2, height * 1.1), (0, height * 1.1)],
+                kit.endgrain, sides=8, tile=.1, center=tuple(c))
+        h = [c + Vector((radius * .3, 0, height * .9)), c + Vector((radius * .75, 0, height * .92)),
+             c + Vector((radius * .98, 0, height * .78)), c + Vector((radius * .9, 0, height * .62))]
+        K.tube(b, h, .011, kit.crock, sides=5, tile=arc)
+
+
+def candles(b, kit, center, count=6, seed=0):
+    """A bundle of dipped candles hung by their joined wicks."""
+    c = Vector(center)
+    rng = random.Random(seed)
+    for k in range(count):
+        a = math.tau * k / count + rng.uniform(-.2, .2)
+        top = c + Vector((math.cos(a) * .018, math.sin(a) * .018, 0))
+        bot = top + Vector((math.cos(a) * .012, math.sin(a) * .012, -.24 - rng.uniform(0, .03)))
+        K.tube(b, [top, bot], [.009, .012], kit.flour, sides=6, tile=.3)
+    K.tube(b, [c + Vector((0, 0, -.004)), c + Vector((0, 0, .05))], .003, kit.rope, sides=3, tile=.05)
+
+
+def folded_blanket(b, kit, center, w, d, h, yaw, mat, seed):
+    """A folded blanket: a soft slab with rounded fold edges front and back."""
+    rot = Matrix.Rotation(yaw, 3, "Z")
+    c = Vector(center)
+    nx, nz = 8, 4
+    rows = []
+    for j in range(nz + 1):
+        t = j / nz
+        row = []
+        for i in range(nx + 1):
+            s = i / nx
+            x = -w / 2 + w * s
+            bulge = .006 * math.sin(math.pi * s) * math.sin(math.pi * t)
+            z = h * t + .003 * K.vnoise((x, t, seed), 9, seed)
+            row.append((x, z, bulge))
+        rows.append(row)
+    # Front fold: a half round across the front edge, so the layers read.
+    for side in (-1, 1):
+        ring = []
+        for i in range(nx + 1):
+            col = []
+            for k in range(7):
+                a = math.pi * k / 6
+                x, z, bulge = rows[0][i][0], h / 2 - math.cos(a) * h / 2, 0
+                y = side * (d / 2 + math.sin(a) * h / 2 * .8 + bulge)
+                col.append(b.vert(c + rot @ Vector((x, y, z))))
+            ring.append(col)
+        for i in range(nx):
+            for k in range(6):
+                q = [ring[i][k], ring[i + 1][k], ring[i + 1][k + 1], ring[i][k + 1]]
+                if side < 0:
+                    q = q[::-1]
+                uv = [(w * i / nx, .02 + .5 * k / 6 * h), (w * (i + 1) / nx, .02 + .5 * k / 6 * h),
+                      (w * (i + 1) / nx, .02 + .5 * (k + 1) / 6 * h), (w * i / nx, .02 + .5 * (k + 1) / 6 * h)]
+                b.face(q, uv, mat)
+    # Top and bottom sheets between the folds (the top shows the stripe bands near the fold).
+    for z, flip in ((h, False), (0, True)):
+        ids = [b.vert(c + rot @ Vector((x, y, z))) for y in (-d / 2, d / 2) for x in (-w / 2, w / 2)]
+        q = [ids[0], ids[1], ids[3], ids[2]]
+        uv = [(0, .02), (w, .02), (w, .02 + d), (0, .02 + d)]
+        if flip:
+            q, uv = q[::-1], uv[::-1]
+        b.face(q, uv, mat)
+    # Raw ends (folded layers seen edge-on).
+    for x in (-w / 2, w / 2):
+        ids = [b.vert(c + rot @ Vector((x, y, z))) for z in (0, h) for y in (-d / 2 - h * .4, d / 2 + h * .4)]
+        q = [ids[0], ids[1], ids[3], ids[2]] if x > 0 else [ids[1], ids[0], ids[2], ids[3]]
+        b.face(q, [(0, 0), (d, 0), (d, h), (0, h)], mat)
+
+
+def bolt(b, kit, center, w, d, h, yaw, mat):
+    """A bolt of cloth wound flat on its board, standing on edge."""
+    rot = Matrix.Rotation(yaw, 3, "Z")
+    c = Vector(center)
+    pts = []
+    for k in range(17):
+        a = math.tau * k / 16
+        # Rounded rectangle section in the x-z plane (bolt stands on its long edge).
+        x, z = math.cos(a), math.sin(a)
+        r = 1 / max(abs(x) ** 4 + abs(z) ** 4, 1e-6) ** .25
+        pts.append((x * r * w / 2, z * r * h / 2 + h / 2))
+    rings = []
+    for y in (-d / 2, d / 2):
+        rings.append([b.vert(c + rot @ Vector((x, y, z))) for x, z in pts])
+    per = 0.0
+    us = [0.0]
+    for k in range(1, 17):
+        per += math.hypot(pts[k][0] - pts[k - 1][0], pts[k][1] - pts[k - 1][1])
+        us.append(per)
+    for k in range(16):
+        b.face([rings[0][k], rings[0][k + 1], rings[1][k + 1], rings[1][k]], [(us[k], 0), (us[k + 1], 0), (us[k + 1], d), (us[k], d)], mat)
+    # End faces: the wound layers (rough board in the middle).
+    for e, ring in enumerate(rings):
+        ids = ring[:16]
+        uv = [(.5 + .5 * pts[k][0] / (w / 2), .5 + .5 * (pts[k][1] - h / 2) / (h / 2)) for k in range(16)]
+        if e == 0:
+            ids, uv = ids[::-1], uv[::-1]
+        b.face(ids, uv, mat, True)
+    K.box(b, c + rot @ Vector((0, 0, h / 2)), (w * .25, d + .012, h * 1.04), kit.wood, tile=.4, rot=rot)
+
+
+def keg(b, kit, center, radius, height, seed=0, cell=None):
+    """A small coopered keg (nails, powder) with iron hoops and a painted mark."""
+    c = Vector(center)
+    prof = [(0, 0), (radius * .86, 0)] + [(radius * (.88 + .12 * math.sin(math.pi * t / 8)), height * t / 8) for t in range(1, 8)] + [(radius * .86, height), (0, height)]
+    K.lathe(b, prof, kit.wood, sides=16, tile=.25, center=tuple(c))
+    for z in (.06, .22, .78, .94):
+        rr = radius * (.88 + .12 * math.sin(math.pi * z)) + .003
+        K.lathe(b, [(rr, height * z - .012), (rr + .004, height * z), (rr, height * z + .012)], kit.iron, sides=16, tile=.3, center=tuple(c))
+    if cell is not None:
+        rr = radius * .99 + .004
+        n = 6
+        ids = []
+        for k in range(n + 1):
+            a = -math.pi / 2 - .75 + 1.5 * k / n
+            d = Vector((math.cos(a), math.sin(a), 0))
+            ids.append((b.vert(c + d * rr + Vector((0, 0, height * .32))), b.vert(c + d * rr + Vector((0, 0, height * .68)))))
+        for k in range(n):
+            b.face([ids[k][0], ids[k + 1][0], ids[k + 1][1], ids[k][1]],
+                   [stencil_uv(cell, k / n, 0), stencil_uv(cell, (k + 1) / n, 0), stencil_uv(cell, (k + 1) / n, 1), stencil_uv(cell, k / n, 1)], kit.stencil)
+
+
+def crate(b, kit, center, size, yaw, seed, cell=None, lid=True):
+    """A nailed crate of sawn boards with corner battens and a painted mark on its face."""
+    rot = Matrix.Rotation(yaw, 3, "Z")
+    c = Vector(center)
+    sx, sy, sz = size
+    rng = random.Random(seed)
+    boards = max(2, round(sz / .11))
+    for side in (-1, 1):  # long faces: horizontal boards with gaps
+        for k in range(boards):
+            z = sz * (k + .5) / boards
+            K.box(b, c + rot @ Vector((0, side * (sy / 2 - .008), z)), (sx, .016, sz / boards - .006), kit.wood, tile=.9,
+                  rot=rot, grain=0, uv_offset=(rng.random() * 5, rng.random() * 5))
+    for side in (-1, 1):  # ends
+        K.box(b, c + rot @ Vector((side * (sx / 2 - .008), 0, sz / 2)), (.016, sy - .032, sz - .004), kit.wood, tile=.9,
+              rot=rot, grain=1, uv_offset=(rng.random() * 5, rng.random() * 5))
+        for s2 in (-1, 1):  # corner battens
+            K.box(b, c + rot @ Vector((side * (sx / 2 - .022), s2 * (sy / 2 + .004), sz / 2)), (.03, .012, sz), kit.wood, tile=.9, rot=rot, grain=2)
+    if lid:
+        for k in range(3):
+            y = sy * ((k + .5) / 3 - .5)
+            K.box(b, c + rot @ Vector((0, y, sz + .008)), (sx + .01, sy / 3 - .006, .016), kit.wood, tile=.9, rot=rot, grain=0,
+                  uv_offset=(rng.random() * 5, rng.random() * 5))
+    K.box(b, c + rot @ Vector((0, 0, .008)), (sx - .03, sy - .03, .016), kit.wood, tile=.9, rot=rot)
+    if cell is not None:
+        face = c + rot @ Vector((0, -sy / 2 - .0005, sz * .5))
+        label_quad(b, face, rot @ Vector((1, 0, 0)), Vector((0, 0, 1)), min(sx * .8, sz * 3.2), min(sx * .8, sz * 3.2) / 4,
+                   cell, kit.stencil, atlas=stencil_uv, out=rot @ Vector((0, -1, 0)))
+
+
+def paper_box(b, kit, center, size, yaw, cell, seed):
+    """A small dovetailed box (candles, soap, matches) with a pasted paper label."""
+    rot = Matrix.Rotation(yaw, 3, "Z")
+    c = Vector(center)
+    sx, sy, sz = size
+    K.box(b, c + rot @ Vector((0, 0, sz / 2)), size, kit.split, tile=.6, rot=rot, grain=0,
+          uv_offset=(random.Random(seed).random() * 4, 0))
+    w = sx * .82
+    label_quad(b, c + rot @ Vector((0, -sy / 2, sz * .5)), rot @ Vector((1, 0, 0)), Vector((0, 0, 1)), w, min(sz * .8, w / 2), cell,
+               kit.labels, out=rot @ Vector((0, -1, 0)))
+
+
 # ------------------------------------------------------------------ goods
+
+def sack_body(b, kit, height, radius, fill, mat, seed, tied=True, content=None, slump=0.0, mark=None):
+    """A sewn sack: two panels with side seams (an elliptic, pillow-like section),
+    bottom ears, a slight belly, then either a gathered neck tied with cord and a
+    flared tuft above the tie, or a rolled-down mouth over its contents. Slumped,
+    leaned and creased with seeded noise; gathers fold toward the tie. `mark` is a
+    stencil cell painted on the front panel (decal on the same surface)."""
+    def smooth(t):
+        t = max(0.0, min(1.0, t))
+        return t * t * (3 - 2 * t)
+    rng = random.Random(seed)
+    lean = Vector((rng.uniform(-1, 1), rng.uniform(-1, 1), 0)) * .035
+    flat = rng.uniform(.80, .88)
+    ph = rng.uniform(0, 6)
+    ax, ay = radius * 1.1, radius * .88
+
+    def profile(t):
+        """Radius multiplier and height fraction along the sack (t = 0 base, 1 top)."""
+        if tied:
+            if t < .08:
+                m = .74 + .26 * smooth(t / .08)
+            elif t < .6:
+                m = 1 + .05 * math.sin(math.pi * (t - .08) / .52)
+            elif t < .84:
+                m = 1 - .8 * smooth((t - .6) / .24)
+            elif t < .88:
+                m = .2
+            else:
+                m = .2 + .26 * smooth((t - .88) / .12)
+            zf = t if t < .88 else .88 + (t - .88) * .75
+        else:
+            m = (.76 + .24 * smooth(t / .08)) if t < .08 else 1 + .05 * math.sin(math.pi * t)
+            zf = t
+        return m, zf
+
+    def point(a, t, extra=0.0):
+        m, zf = profile(t)
+        ca, sa = math.cos(a), math.sin(a)
+        r = m
+        # Side seams at a = 0 and pi stand proud a little; bottom corners make ears.
+        seam = math.exp(-((math.sin(a)) / .09) ** 2)
+        r += .05 * seam * (1 - smooth((t - .7) / .15))
+        ear = (1 - smooth(t / .14)) * .12 * abs(ca) ** 10
+        x, y = ax * r * ca * (1 + ear), ay * r * sa
+        z = height * zf + (.03 * radius * abs(ca) ** 10 * (1 - smooth(t / .1)) if t < .1 else 0)
+        p = Vector((x, y, z))
+        crease = .028 * radius / .2 * K.fbm((p.x * 1.3, p.y * 1.3, p.z), 6, seed)
+        crease += .01 * K.vnoise((p.x, p.y, p.z), 18, seed + 1)
+        gather = smooth((t - .45) / .38) if tied else smooth((t - .75) / .2)
+        if tied and t > .88:
+            gather = 1.0 - smooth((t - .92) / .08) * .3
+        crease += .03 * radius / .2 * gather * math.sin(8 * a + ph + 2.5 * K.vnoise((p.x, p.y, p.z), 5, seed + 2)) * (1 if t < .88 else 1.6)
+        if tied and t >= .999:  # a ragged, flared rim of cloth above the tie
+            p.z += .018 * math.sin(5 * a + ph)
+        radial = Vector((ca, sa * flat, 0))
+        spread = 1 + slump * (1 - min(t, 1.0)) ** 2 * 1.3
+        q = Vector((p.x * spread, p.y * spread * flat, p.z * (1 - .3 * slump)))
+        q += radial * (crease * min(1.0, t * 8) + extra)
+        q += lean * min(zf, 1.0) * height / .5
+        return q
+
+    sides, rows = 20, 14
+    ts = [j / rows for j in range(rows + 1)]
+    grid = []
+    perim = math.pi * (ax + ay)
+    arcs = [0.0]
+    for j, t in enumerate(ts):
+        grid.append([point(math.tau * k / sides, t) for k in range(sides + 1)])
+        if j:
+            arcs.append(arcs[-1] + (grid[j][0] - grid[j - 1][0]).length * .5 + (grid[j][sides // 4] - grid[j - 1][sides // 4]).length * .5)
+    tile = .35
+    ids = [[b.vert(p, .66 + .34 * min(1.0, p.z / .3)) for p in row] for row in grid]
+    for j in range(rows):
+        for k in range(sides):
+            u0, u1 = k / sides * perim * profile(ts[j])[0] / tile, (k + 1) / sides * perim * profile(ts[j])[0] / tile
+            b.face([ids[j][k], ids[j][k + 1], ids[j + 1][k + 1], ids[j + 1][k]],
+                   [(u0, arcs[j] / tile), (u1, arcs[j] / tile), (u1, arcs[j + 1] / tile), (u0, arcs[j + 1] / tile)], mat)
+    centre = b.vert(Vector((0, 0, 0)) + lean * 0, .6)
+    for k in range(sides):
+        b.face([centre, ids[0][k + 1], ids[0][k]], [(.5, .5), (.5 + .5 * math.cos(math.tau * (k + 1) / sides), .5), (.5, .5 + .5 * math.sin(math.tau * k / sides))], mat)
+    top_z = height * profile(1.0)[1] * (1 - .3 * slump)
+    if tied:
+        neck = point(0, .86)
+        tie_c = Vector((0, 0, neck.z)) + lean * (neck.z / max(height, 1e-6)) * height / .5
+        K.wraps(b, tie_c, (0, 0, 1), .2 * radius * .95, kit.rope, turns=3, width=.024, thickness=.005, sides=4, seg=8)
+        # A loose cord end.
+        K.tube(b, [tie_c + Vector((.2 * radius, 0, 0)), tie_c + Vector((.2 * radius + .03, -.01, -.05)), tie_c + Vector((.2 * radius + .035, -.02, -.1))], .004, kit.rope, sides=3, tile=.05)
+    elif content is not None:
+        # Rolled-down mouth and the contents heaped inside it.
+        lip = []
+        for k in range(sides + 1):
+            a = math.tau * k / sides
+            p = point(a, 1.0)
+            out = Vector((math.cos(a), math.sin(a) * flat, 0))
+            lip.append([p, p + out * .02 + Vector((0, 0, .018)), p + out * .035, p + out * .03 + Vector((0, 0, -.025)), p + out * .012 + Vector((0, 0, -.03))])
+        lid = [[b.vert(q, .9) for q in col] for col in lip]
+        for k in range(sides):
+            for s in range(4):
+                b.face([lid[k][s], lid[k + 1][s], lid[k + 1][s + 1], lid[k][s + 1]], [(k * .05, s * .02), ((k + 1) * .05, s * .02), ((k + 1) * .05, (s + 1) * .02), (k * .05, (s + 1) * .02)], mat)
+        hz = top_z * (.5 + .42 * fill)
+        c = lean * (hz / max(top_z, 1e-6)) * height / .5
+        K.lathe(b, [(ax * .98, hz - .02), (ax * .75, hz + .012), (ax * .4, hz + .028), (0, hz + .034)], content, sides=16, tile=.25,
+                center=(c.x, c.y, 0), squash=(1.0, ay / ax * flat))
+    if mark is not None:
+        # Painted mark on the front panel (Blender -Y faces the customer), lifted 2 mm.
+        n_a, n_t = 6, 3
+        a0, a1 = -math.pi / 2 - .62, -math.pi / 2 + .62
+        t0, t1 = (.2, .52) if tied else (.2, .62)
+        patch = [[b.vert(point(a0 + (a1 - a0) * i / n_a, t0 + (t1 - t0) * j / n_t, .003)) for i in range(n_a + 1)] for j in range(n_t + 1)]
+        for j in range(n_t):
+            for i in range(n_a):
+                b.face([patch[j][i], patch[j][i + 1], patch[j + 1][i + 1], patch[j + 1][i]],
+                       [stencil_uv(mark, i / n_a, j / n_t), stencil_uv(mark, (i + 1) / n_a, j / n_t),
+                        stencil_uv(mark, (i + 1) / n_a, (j + 1) / n_t), stencil_uv(mark, i / n_a, (j + 1) / n_t)], kit.stencil)
+
 
 def sack(b, kit, height, radius, fill, mat, seed, tied=True, content=None, slump=0.0):
     """A sack: a lathe profile (rounded base, body, gathered neck and tuft for a tied
@@ -430,21 +852,22 @@ def sack(b, kit, height, radius, fill, mat, seed, tied=True, content=None, slump
 
 
 def goods():
-    kit = Kit(["kit_burlap", "kit_cotton", "kit_rope", "kit_beans", "kit_coffee", "kit_flour", "kit_salt", "kit_pork",
+    kit = Kit(["kit_burlap", "kit_osnaburg", "kit_rope", "kit_beans", "kit_coffee", "kit_flour", "kit_salt", "kit_pork",
                "kit_paper", "kit_iron", "kit_wood", "kit_split", "kit_bark", "kit_endgrain", "kit_leather", "kit_canvas",
-               "kit_glass"])
+               "kit_glass", "kit_stencil", "kit_labels", "kit_tin", "kit_crock"])
     objs = []
     spec = {  # item: (material, height at full, radius, tied, content)
-        "flour": (kit.cotton, .62, .2, True, None),
+        "flour": (kit.osnaburg, .62, .2, True, None),
         "beans": (kit.burlap, .5, .19, False, kit.beans),
         "coffee": (kit.burlap, .42, .16, False, kit.coffee),
-        "salt": (kit.cotton, .36, .15, True, None),
+        "salt": (kit.osnaburg, .36, .15, True, None),
     }
     for item, (mat, h, r, tied, content) in spec.items():
         for fill in range(4):
             b = K.MeshBuilder()
             f = (fill + 1) / 4
-            sack(b, kit, h * (.55 + .45 * f), r * (.9 + .1 * f), f, mat, 900 + fill * 7 + len(item), tied, content, slump=.45 * (1 - f))
+            sack_body(b, kit, h * (.55 + .45 * f), r * (.9 + .1 * f), f, mat, 900 + fill * 7 + len(item), tied, content,
+                      slump=.45 * (1 - f), mark=STENCIL[item])
             objs.append(obj(b, "%s_%d" % (item, fill), kit))
     # Salt pork in brine: slabs inside the tub (assets/props/tub.glb, added by shelves.gd).
     for fill in range(4):
@@ -511,11 +934,9 @@ def goods():
     for y in (-.22, .22):
         K.wraps(b, (0, y, .08), (0, 1, 0), .2, kit.rope, turns=1, width=.01, thickness=.006, sides=4, seg=10)
     objs.append(obj(b, "rocker", kit))
-    # Powder: a small keg with iron hoops.
+    # Powder: a small keg with iron hoops and its painted mark.
     b = K.MeshBuilder()
-    K.lathe(b, [(0, 0), (.1, 0), (.115, .06), (.12, .12), (.115, .18), (.1, .24), (0, .24)], kit.wood, sides=14, tile=.3)
-    for z in (.03, .21, .09, .15):
-        K.lathe(b, [(.112 + .006 * (1 - abs(z - .12) / .12), z - .008), (.118 + .006 * (1 - abs(z - .12) / .12), z), (.112 + .006 * (1 - abs(z - .12) / .12), z + .008)], kit.iron, sides=14, tile=.3)
+    keg(b, kit, (0, 0, 0), .12, .25, cell=STENCIL["powder"])
     objs.append(obj(b, "powder", kit))
     # Tent: rolled canvas with its poles, tied twice.
     b = K.MeshBuilder()
@@ -563,12 +984,66 @@ def goods():
     K.box(b, (0, 0, 0), (.075, .002, .05), kit.paper, tile=.1)
     K.tube(b, [Vector((0, .0, .02)), Vector((0, -.006, .02))], .0025, kit.iron, sides=4, tile=.1)
     objs.append(obj(b, "tag", kit))
+    # Yard and camp freight (Wave C): a marked crate, a nail keg, a stoneware jug.
+    b = K.MeshBuilder()
+    crate(b, kit, (0, 0, 0), (.62, .42, .4), 0, 1100, cell=STENCIL["mark"])
+    objs.append(obj(b, "crate_mark", kit))
+    b = K.MeshBuilder()
+    keg(b, kit, (0, 0, 0), .16, .4, cell=STENCIL["nails"])
+    objs.append(obj(b, "keg_nails", kit))
+    b = K.MeshBuilder()
+    crock(b, kit, (0, 0, 0), .1, .34, jug=True)
+    objs.append(obj(b, "jug", kit))
     K.export_glb(objs, OUT / "goods.glb")
+
+
+def bench():
+    """A puncheon bench for the yard: a split half-log, flat face up, on four splayed
+    round legs driven through auger holes (assets/props/bench.glb)."""
+    kit = Kit(["kit_split", "kit_bark", "kit_endgrain"])
+    b = K.MeshBuilder()
+    length, r, seat = 1.6, .17, .46
+    n = 10
+    rng = random.Random(1201)
+    rings = []
+    for j in range(n + 1):
+        x = -length / 2 + length * j / n
+        ring = []
+        wob = .006 * K.vnoise((x, 0, 0), 4, 1202)
+        # Section: the flat split face on top, the rounded bark underside below it.
+        for k in range(9):
+            a = math.pi + math.pi * k / 8
+            ring.append(Vector((x, math.cos(a) * r * (1 + wob), seat + math.sin(a) * r * .55)))
+        rings.append(ring)
+    ids = [[b.vert(p, .7 + .3 * min(1.0, p.z / seat)) for p in ring] for ring in rings]
+    for j in range(n):
+        for k in range(8):
+            b.face([ids[j][k], ids[j][k + 1], ids[j + 1][k + 1], ids[j + 1][k]],
+                   [(k * .06, j * length / n), ((k + 1) * .06, j * length / n), ((k + 1) * .06, (j + 1) * length / n), (k * .06, (j + 1) * length / n)], kit.bark)
+        b.face([ids[j][8], ids[j][0], ids[j + 1][0], ids[j + 1][8]],
+               [(.0, j * length / n), (2 * r, j * length / n), (2 * r, (j + 1) * length / n), (.0, (j + 1) * length / n)], kit.split, True)
+    for e, ring in ((0, ids[0]), (1, ids[n])):
+        uv = [(.5 + .5 * math.cos(math.pi + math.pi * k / 8), .5 + .5 * math.sin(math.pi + math.pi * k / 8)) for k in range(9)]
+        face, fuv = list(ring), uv
+        if e == 0:
+            face, fuv = face[::-1], fuv[::-1]
+        b.face(face, fuv, kit.endgrain, True)
+    for sx in (-1, 1):
+        for sy in (-1, 1):
+            top = Vector((sx * (length / 2 - .2), sy * .07, seat + .02))
+            foot = Vector((sx * (length / 2 - .07), sy * .2, 0))
+            K.tube(b, [foot + Vector((0, 0, -.03)), top], [.032, .028], kit.split, sides=6, tile=.4, cap_mat=kit.endgrain,
+                   wobble=.06, seed=1210 + sx * 2 + sy)
+    o = b.build("bench", kit.mats)
+    K.export_glb([o], K.ASSETS / "props" / "bench.glb")
 
 
 if __name__ == "__main__":
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     bpy.ops.wm.read_factory_settings(use_empty=True)
+    if not argv or "bench" in argv:
+        bench()
+        bpy.ops.wm.read_factory_settings(use_empty=True)
     if not argv or "stall" in argv:
         stall()
     if not argv or "goods" in argv:

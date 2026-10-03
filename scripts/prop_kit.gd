@@ -20,12 +20,21 @@ static func materials() -> Dictionary:
 			m.vertex_color_is_srgb = false # glTF COLOR_0 is linear
 			if m.resource_name == "kit_glass":
 				m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_DEPTH_PRE_PASS
-			if m.resource_name == "kit_canvas":
-				# Sun through the cloth: the lit underside of a lean-to or store roof.
+			if m.resource_name in ["kit_canvas", "kit_sign"]:
+				# Sun through the cloth: the lit underside of a lean-to or store roof
+				# glows warm, so the stall reads from the trail instead of a dark mass.
 				m.backlight_enabled = true
-				m.backlight = Color(.42, .39, .33)
+				m.backlight = Color(.5, .46, .38)
+			if m.resource_name in ["kit_tin", "kit_crock"]:
+				m.metallic_specular = .6
 			kit[source.resource_name] = m
 	scene.free()
+	# Painted marks: a decal shader over the stencil atlas's mask (JPEG keeps no alpha).
+	var stencil := ShaderMaterial.new()
+	stencil.shader = preload("res://shaders/stencil.gdshader")
+	stencil.set_shader_parameter("mask", load("res://assets/props/stencil_mask.png"))
+	stencil.resource_name = "kit_stencil"
+	kit["kit_stencil"] = stencil
 	return kit
 
 static func dress(mesh: Mesh) -> Mesh:

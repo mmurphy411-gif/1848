@@ -4,7 +4,7 @@ const Stock=preload("res://scripts/store_stock.gd")
 const Calendar=preload("res://scripts/calendar.gd")
 func _ready() -> void:
 	font=preload("res://assets/fonts/PatrickHand-Regular.ttf");font_size=52;pixel_size=.0018;outline_size=0
-	modulate=Color(.94,.90,.74);shaded=false;no_depth_test=false
+	modulate=Color(.95,.86,.62);shaded=false;no_depth_test=false # ochre-cream paint on the oxblood board
 	refresh()
 func refresh() -> void:
 	var game: Node=get_node("/root/GameState")

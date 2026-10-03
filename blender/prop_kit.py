@@ -193,6 +193,45 @@ def _proc(name, n, seed):
         alb = np.array([.82, .72, .60]) * (1 - lean)[..., None] + np.array([.62, .34, .27]) * lean[..., None]
         alb *= (.9 + .1 * hi)[..., None]
         return alb, .55, metal, band * .3, 1.0
+    if name == "tin":  # tinplate: bright, mottled where the tin coat is thin, a few rust pits
+        mottle = smooth_noise(n, 14, seed + 20, 3)
+        rust = np.clip((smooth_noise(n, 9, seed + 21, 2) - .78) * 6, 0, 1)
+        alb = np.array([.66, .66, .64]) * (.78 + .3 * mottle)[..., None]
+        alb = alb * (1 - rust[..., None]) + np.array([.36, .19, .09]) * rust[..., None]
+        rough = .28 + .22 * mottle + .4 * rust
+        metal = .9 * (1 - rust)
+        return alb, rough, metal, hi * .15 + rust * .4, 1.0
+    if name == "crock":
+        # Salt-glazed stoneware: buff body with orange-peel glaze below, dark brown
+        # Albany slip on the shoulder running down in drips. v = 1 - y is up the pot.
+        v = 1 - y
+        peel = smooth_noise(n, 70, seed + 22)
+        body = np.array([.66, .58, .44]) * (.82 + .2 * mid + .08 * peel)[..., None]
+        flash = np.clip((smooth_noise(n, 4, seed + 23, 2) - .45) * 2, 0, 1)  # kiln flashing
+        body = body * (1 - .25 * flash[..., None]) + np.array([.55, .36, .20]) * (.25 * flash[..., None])
+        drips = np.zeros(n)
+        rng = np.random.default_rng(seed + 24)
+        for _ in range(16):
+            c, w, d = rng.random(), rng.uniform(.008, .025), rng.uniform(.04, .2)
+            dx = np.minimum(np.abs(x[0] - c), 1 - np.abs(x[0] - c))
+            drips = np.maximum(drips, d * np.clip(1 - (dx / w) ** 2, 0, 1) ** .5)
+        edge = .6 - .02 * np.sin(x * 2 * math.pi * 3) - drips[None, :] - .02 * mid
+        slip = np.clip((v - edge) / .012, 0, 1)
+        brown = np.array([.20, .11, .055]) * (.8 + .4 * hi)[..., None]
+        alb = body * (1 - slip[..., None]) + brown * slip[..., None]
+        rough = .42 - .2 * slip + .06 * peel
+        return alb, rough, metal, peel * .25 + slip * .2, 1.5
+    if name == "ash":  # a sooty, charcoal-black pit floor with pale ash drifts and burnt bits
+        blot = smooth_noise(n, 9, seed + 25, 3)
+        fine = smooth_noise(n, 40, seed + 26, 2)
+        pale = np.clip((blot * .6 + fine * .4 - .55) * 4, 0, 1)
+        soot = np.array([.075, .07, .065]) * (.75 + .5 * fine + .3 * hi)[..., None]
+        ash = np.array([.42, .41, .39]) * (.75 + .3 * mid)[..., None]
+        brown = np.clip((smooth_noise(n, 14, seed + 27) - .6) * 4, 0, 1)
+        alb = soot * (1 - pale[..., None]) + ash * pale[..., None]
+        alb = alb * (1 - .4 * brown[..., None]) + np.array([.22, .15, .1]) * (.4 * brown[..., None])
+        h = .3 * mid + .2 * hi + .3 * (1 - pale)
+        return alb, .95 - .15 * (1 - pale), metal, h, 2.0
     raise KeyError(name)
 
 
@@ -205,14 +244,22 @@ PHOTO = {
     "kit_cotton": ("cotton_jersey", 1.0, 1.0, (.66, .62, .53), 1.0, 512, False),
     "kit_burlap": ("hessian_230", 1.0, .95, None, 0, 1024, False),
     "kit_wool": ("poly_wool_herringbone", 1.0, 1.0, (.40, .14, .10), 1.0, 512, False),
+    # Wave C: osnaburg (coarse unbleached cotton) for flour and salt sacks, a striped trade
+    # blanket, the price board's dark paint over weathered planks, and the painted sign.
+    "kit_osnaburg": ("hessian_230", .8, 1.0, (.74, .68, .55), 1.0, 1024, False),
+    "kit_blanket": ("poly_wool_herringbone", 1.0, 1.0, (.76, .72, .62), 1.0, 512, False),
+    "kit_paint": ("weathered_planks", 1.0, 1.0, (.30, .085, .06), .9, 512, False),
+    "kit_sign": ("cotton_jersey", 1.0, 1.0, (.80, .76, .64), 1.0, 1024, True),
 }
 PROC = {
     "kit_endgrain": ("endgrain", 512), "kit_rope": ("rope", 256), "kit_iron": ("iron", 512),
     "kit_brass": ("brass", 256), "kit_slate": ("slate", 512), "kit_leather": ("leather", 256),
     "kit_paper": ("paper", 256), "kit_daub": ("daub", 512), "kit_beans": ("beans", 256),
     "kit_coffee": ("coffee", 256), "kit_flour": ("flour", 256), "kit_salt": ("salt", 256),
-    "kit_pork": ("pork", 256),
+    "kit_pork": ("pork", 256), "kit_tin": ("tin", 256), "kit_crock": ("crock", 512), "kit_ash": ("ash", 256),
 }
+# Lettered sources from tools/art/build_prop_labels.py (in the cache's generated/ folder).
+LABELS = "generated/prop_labels"
 # Placeholder base colours (sRGB), close to each texture's mean, for the props' own GLBs.
 BASE = {
     "kit_bark": (.33, .29, .22), "kit_wood": (.40, .34, .29), "kit_split": (.62, .50, .36),
@@ -222,8 +269,11 @@ BASE = {
     "kit_leather": (.28, .16, .09), "kit_paper": (.80, .74, .60), "kit_daub": (.44, .35, .26),
     "kit_beans": (.42, .30, .20), "kit_coffee": (.38, .37, .26), "kit_flour": (.88, .86, .80),
     "kit_salt": (.85, .86, .86), "kit_pork": (.74, .58, .48), "kit_glass": (.33, .19, .07),
+    "kit_osnaburg": (.74, .68, .55), "kit_blanket": (.76, .72, .62), "kit_paint": (.30, .085, .06),
+    "kit_sign": (.80, .76, .64), "kit_tin": (.62, .62, .60), "kit_crock": (.50, .40, .28),
+    "kit_ash": (.40, .38, .36), "kit_labels": (.80, .74, .62), "kit_stencil": (.09, .07, .05),
 }
-DOUBLE = {"kit_canvas", "kit_glass"}
+DOUBLE = {"kit_canvas", "kit_glass", "kit_sign"}
 
 
 def _image(name, rgb, colour, tmp):
@@ -251,6 +301,30 @@ def _read_jpg(path: Path, size):
     arr = px.reshape(h, w, 4)[::-1, :, :3].copy()
     bpy.data.images.remove(img)
     return arr
+
+
+def _load_png(path: Path):
+    """Any image as an HxWx4 float array, rows top to bottom (stored values / 255)."""
+    img = bpy.data.images.load(str(path))
+    w, h = img.size
+    px = np.empty(w * h * 4, dtype=np.float32)
+    img.pixels.foreach_get(px)
+    arr = px.reshape(h, w, 4)[::-1].copy()
+    bpy.data.images.remove(img)
+    return arr
+
+
+def _save_grey(a, path: Path):
+    h, w = a.shape
+    img = bpy.data.images.new(path.stem, w, h, alpha=False)
+    px = np.ones((h, w, 4), dtype=np.float32)
+    px[..., :3] = np.clip(a[::-1], 0, 1)[..., None]
+    img.pixels.foreach_set(px.ravel())
+    img.filepath_raw = str(path)
+    img.file_format = "PNG"
+    img.save()
+    bpy.data.images.remove(img)
+    print("WROTE", path)
 
 
 def grade(rgb, sat, val, tint, strength):
@@ -303,19 +377,63 @@ def build_kit(out=ASSETS / "props" / "kit_materials.glb"):
     cache = cache_root() / "polyhaven"
     mats = []
     with tempfile.TemporaryDirectory(prefix="kit_") as tmp:
+        labels_dir = cache.parent / LABELS
+        if not (labels_dir / "labels.png").exists():
+            raise SystemExit("run tools/art/build_prop_labels.py first (system Python with Pillow)")
         for name, (src, sat, val, tint, strength, size, double) in PHOTO.items():
             d = cache / src / "1k"
-            alb = grade(_read_jpg(d / f"{src}_diff_1k.jpg", size), sat, val, tint, strength)
-            if name == "kit_canvas":  # weathering: soft water stains and grime
-                stain = smooth_noise(size, 5, 61, 3)
-                alb = alb * (.86 + .14 * stain)[..., None]
+            raw = _read_jpg(d / f"{src}_diff_1k.jpg", size)
+            alb = grade(raw, sat, val, tint, strength)
             arm = _read_jpg(d / f"{src}_arm_1k.jpg", size)
             nor = _read_jpg(d / f"{src}_nor_gl_1k.jpg", size)
+            if name in ("kit_canvas", "kit_sign"):  # weathering: soft water stains and grime
+                stain = smooth_noise(size, 5, 61, 3)
+                alb = alb * (.86 + .14 * stain)[..., None]
+            if name == "kit_blanket":
+                # Trade-blanket bands near each end of the 1 m repeat: green, red, gold, indigo.
+                v = 1 - (np.arange(size) + .5) / size
+                bands = [((.06, .095), (.10, .30, .16)), ((.10, .135), (.55, .09, .06)),
+                         ((.14, .175), (.78, .60, .16)), ((.18, .215), (.10, .14, .34))]
+                lum = (alb.mean(-1) / max(float(alb.mean()), 1e-6))[..., None]
+                for (a, b), col in bands:
+                    for lo, hi in ((a, b), (1 - b, 1 - a)):
+                        m = ((v >= lo) & (v < hi)).astype(float)[:, None, None]
+                        alb = alb * (1 - m) + np.clip(np.array(col) * lum, 0, 1) * m
+            if name == "kit_paint":
+                # Dark paint worn through to the grey wood on the board edges and high spots.
+                # Kept dark: worn spots must not read as lettering (store_probes board probe).
+                wood = grade(raw, .9, .62, None, 0)
+                wear = np.clip((smooth_noise(size, 18, 64, 3) - .72) * 3.5, 0, 1) * np.clip((raw.mean(-1) - .2) * 4, 0, 1)
+                alb = alb * (1 - wear[..., None]) + wood * wear[..., None]
+            if name == "kit_sign":
+                # The stall's sign: painted letters (ink mask, 1024 x 256) on a strip of canvas.
+                ink = np.asarray(_load_png(labels_dir / "sign.png"), dtype=np.float64)[..., 0]
+                h = ink.shape[0]
+                alb, arm, nor = alb[:h], arm[:h], nor[:h]
+                paint = np.array([.11, .05, .035])
+                alb = alb * (1 - ink[..., None] * .92) + paint * (ink[..., None] * .92)
+                arm = arm.copy()
+                arm[..., 1] = arm[..., 1] * (1 - .3 * ink)
             mats.append(kit_material(name, _image(name + "_albedo", alb, True, tmp),
                                      _image(name + "_orm", arm, False, tmp),
                                      _image(name + "_normal", nor, False, tmp), double))
+        # Printed paper labels (opaque atlas, 4 x 4 cells).
+        lab = np.asarray(_load_png(labels_dir / "labels.png"), dtype=np.float64)[..., :3]
+        grain = smooth_noise(512, 60, 65)
+        grain = np.tile(grain, (1, 2))
+        lh, lw = lab.shape[:2]
+        orm = np.stack([np.full((lh, lw), .95), .9 + .05 * grain[:lh, :lw], np.zeros((lh, lw))], -1)
+        mats.append(kit_material("kit_labels", _image("kit_labels_albedo", lab, True, tmp),
+                                 _image("kit_labels_orm", orm, False, tmp),
+                                 _image("kit_labels_normal", height_to_normal(grain[:lh, :lw], 3.0), False, tmp), False))
+        # Shipping-mark stencils: an alpha mask the game's decal shader reads (no JPEG alpha).
+        mask = np.asarray(_load_png(labels_dir / "stencil.png"), dtype=np.float64)[..., 0]
+        _save_grey(mask, ASSETS / "props" / "stencil_mask.png")
         for i, (name, (kind, size)) in enumerate(PROC.items()):
             alb, rough, metal, h, strength = _proc(kind, size, 1848 + 37 * i)
+            if name == "kit_slate":  # wiped sums ghost on the counter slate
+                ghost = np.asarray(_load_png(labels_dir / "chalk.png"), dtype=np.float64)[..., 0]
+                alb = alb + np.array([.75, .75, .72]) * (ghost * .85)[..., None]
             rough = np.broadcast_to(rough, (size, size))
             orm = np.stack([.75 + .25 * np.clip(h, 0, 1), rough, np.broadcast_to(metal, (size, size))], -1)
             mats.append(kit_material(name, _image(name + "_albedo", np.clip(alb, 0, 1), True, tmp),
