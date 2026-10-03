@@ -56,10 +56,12 @@ const TREE_VARIANTS := {"ponderosa": 3, "incense_cedar": 3, "douglas_fir": 3, "b
 const BARK_LAYER := {"ponderosa": 0, "incense_cedar": 1, "douglas_fir": 2, "fir_sapling": 2,
 	"black_oak": 3, "toyon": 3, "alder": 4, "willow": 4, "deerbrush": 4, "manzanita": 5}
 ## Seasonal leaf response: autumn colour (sRGB), season window (0 = June 26, 1 = first snow),
-## strength, leaf-drop start, atlas mean luminance (linear). Black oak is yellow by October;
-## grass is gold by August; chaparral and conifers barely change.
+## strength, leaf-drop start, atlas mean luminance (linear), and optionally the timing spread
+## per instance / per card / toward the outer crown (foliage.gdshader `timing_spread`).
+## Black oak turns through late September and October, crown by crown and outside in; grass
+## is gold by August; chaparral and conifers barely change; leaf litter is always last year's.
 const SEASON := {
-	"black_oak": [Color(.72, .55, .16), Vector2(.56, .74), 1.0, .86, .075],
+	"black_oak": [Color(.74, .58, .17), Vector2(.60, .86), 1.0, .9, .075, Vector3(.10, .14, .16)],
 	"ponderosa": [Color(.55, .52, .28), Vector2(.25, .75), .10, 2.0, .10],
 	"incense_cedar": [Color(.55, .50, .26), Vector2(.25, .75), .10, 2.0, .11],
 	"douglas_fir": [Color(.50, .50, .30), Vector2(.25, .75), .08, 2.0, .065],
@@ -67,13 +69,28 @@ const SEASON := {
 	"fern": [Color(.60, .40, .20), Vector2(.55, .85), .85, 2.0, .10],
 	"sedge": [Color(.70, .62, .36), Vector2(.45, .95), .6, 2.0, .09],
 	"shrub": [Color(.58, .56, .36), Vector2(.10, .60), .22, 2.0, .10],
-	"riparian": [Color(.78, .68, .22), Vector2(.62, .88), 1.0, .97, .10],
+	"riparian": [Color(.76, .64, .25), Vector2(.62, .88), 1.0, .97, .10, Vector3(.10, .12, .10)],
+	"litter": [Color(.43, .31, .17), Vector2(-2.0, -1.0), .92, 2.0, .075],
 }
-## Understory meshes (assets/plants/) -> [season key, atlas]. Saplings use their species atlas.
+## Understory meshes (assets/plants/) -> season key. Saplings use their species atlas; leaf
+## litter lies flat and uses the oak atlas (UNDERSTORY_ATLAS).
 const UNDERSTORY := {"grass_clump": "grass", "sedge_clump": "sedge", "fern": "fern",
 	"manzanita": "shrub", "toyon": "shrub", "deerbrush": "shrub",
 	"willow": "riparian", "alder": "riparian",
-	"fir_sapling": "douglas_fir"}
+	"fir_sapling": "douglas_fir", "oak_sapling": "black_oak", "leaf_litter": "litter"}
+const UNDERSTORY_ATLAS := {"leaf_litter": "black_oak"}
+## Per-plant overrides on the shared leaf material: white alder darker and bluer than the
+## grey-green willow, later and duller in autumn.
+const PLANT_LOOK := {
+	"alder": {"leaf_tint": Vector3(.72, .84, .80), "autumn_color": Color(.58, .52, .26), "autumn_window": Vector2(.70, .98), "autumn_strength": .7},
+	"willow": {"leaf_tint": Vector3(1.1, 1.08, .92)},
+	"oak_sapling": {"leaf_tint": Vector3(1.05, 1.08, .95)},
+	"leaf_litter": {"flat_cards": true},
+}
+## Bark grade per layer of the bark array: [gain, saturation, normal depth, cavity, mean linear
+## luminance of the layer]. The oak scan reads grey-brown and keeps its plates in crown shade.
+const BARK_LOOK := {0: [1.0, 1.0, 1.2, .45, .097], 1: [1.1, .95, 1.2, .45, .041], 2: [1.1, .95, 1.2, .45, .041],
+	3: [1.3, .4, 1.7, .85, .104], 4: [1.15, .8, 1.3, .5, .087], 5: [1.0, 1.0, 1.0, .3, .10]}
 
 static func _bark_material(layer: int, bark_color: Color) -> ShaderMaterial:
 	# Callers pass a bark colour; on scanned bark it is only a gentle hue hint.
@@ -86,6 +103,8 @@ static func _bark_material(layer: int, bark_color: Color) -> ShaderMaterial:
 	result.set_shader_parameter("bark_normal", load("res://assets/textures/bark_normal.png"))
 	result.set_shader_parameter("layer", float(layer))
 	result.set_shader_parameter("tint", Color.WHITE.lerp(hint, .15))
+	var look: Array = BARK_LOOK.get(layer, [1.0, 1.0, 1.2, 0.0, .1])
+	for i in 5: result.set_shader_parameter(["gain", "saturation", "normal_depth", "cavity", "mean_luma"][i], look[i])
 	materials[key] = result
 	return result
 
@@ -103,6 +122,7 @@ static func _leaf_material(atlas_name: String, season_key: String) -> ShaderMate
 	result.set_shader_parameter("autumn_strength", s[2])
 	result.set_shader_parameter("drop_start", s[3])
 	result.set_shader_parameter("atlas_luma", s[4])
+	if s.size() > 5: result.set_shader_parameter("timing_spread", s[5])
 	result.set_shader_parameter("flutter", .025 if season_key in ["black_oak", "riparian", "shrub"] else .012)
 	materials[key] = result
 	return result
@@ -126,18 +146,20 @@ static func plant(species: String, bark_color: Color, atlas := true, distant := 
 
 ## Stem colour of one-surface understory plants (sRGB): manzanita's red-brown is the tell.
 const STEM := {"manzanita": Color(.45, .17, .1), "toyon": Color(.33, .27, .22), "deerbrush": Color(.42, .4, .33),
-	"willow": Color(.38, .32, .25), "alder": Color(.5, .48, .44), "fir_sapling": Color(.3, .22, .16)}
+	"willow": Color(.38, .32, .25), "alder": Color(.56, .55, .52), "fir_sapling": Color(.3, .22, .16), "oak_sapling": Color(.34, .3, .26)}
 
 ## Shrubs, saplings, ferns and grass clumps from assets/plants/ (Stage 4 understory): one
 ## surface each, stems flagged in vertex colour (tools/art/build_trees.mjs).
 static func understory(plant_name: String) -> ArrayMesh:
 	var result := mesh("res://assets/plants/%s.glb" % plant_name)
 	var season_key: String = UNDERSTORY[plant_name]
-	var atlas_name := season_key if season_key in TREE_VARIANTS else "understory"
+	var atlas_name: String = UNDERSTORY_ATLAS.get(plant_name, season_key if season_key in TREE_VARIANTS else "understory")
 	var key := "understory_" + plant_name
 	if not materials.has(key):
 		var material := _leaf_material(atlas_name, season_key).duplicate() as ShaderMaterial
 		material.set_shader_parameter("stem_color", STEM.get(plant_name, Color(.32, .26, .2)))
+		var look: Dictionary = PLANT_LOOK.get(plant_name, {})
+		for parameter in look: material.set_shader_parameter(parameter, look[parameter])
 		materials[key] = material
 	for surface in result.get_surface_count():
 		result.surface_set_material(surface, materials[key])

@@ -13,10 +13,13 @@ const SEASON_DAYS := 132.0
 ## Understory (Stage 4): plant -> [visibility range m, chunk size m, shadows near the bar].
 ## Chunks are spatial MultiMeshes (one surface each); a range is measured to the chunk's
 ## centre, so it covers about range - 0.7 x chunk. Only chunks near the bar cast shadows.
+## Wave C: understory shadows cost 0.5-0.7 GPU ms (artifacts/perf_probe/attribution.md); only
+## the bar's oak saplings keep them, where they fall on the walked ground under the oaks.
 const UNDERSTORY := {
 	"grass_clump": [65.0, 48.0, false], "sedge_clump": [90.0, 64.0, false], "fern": [65.0, 48.0, false],
-	"manzanita": [125.0, 64.0, true], "toyon": [125.0, 64.0, true], "deerbrush": [125.0, 64.0, true],
-	"fir_sapling": [150.0, 90.0, true], "willow": [220.0, 120.0, true], "alder": [240.0, 150.0, true]}
+	"manzanita": [125.0, 64.0, false], "toyon": [125.0, 64.0, false], "deerbrush": [125.0, 64.0, false],
+	"fir_sapling": [150.0, 90.0, false], "willow": [220.0, 120.0, false], "alder": [240.0, 150.0, false],
+	"oak_sapling": [70.0, 48.0, true], "leaf_litter": [45.0, 48.0, false]}
 const SHADOW_REACH := 60.0
 var placements: Dictionary = {}
 ## Stage 4 understory and wall plants: name -> Array[Transform3D]. Kept apart from
@@ -108,6 +111,7 @@ func _ready() -> void:
 	var variety := RandomNumberGenerator.new()
 	variety.seed = 184811
 	var full_forest := "--full-forest" in OS.get_cmdline_user_args()
+	var proxies := {}
 	for i in SPECIES.size():
 		var species: String = SPECIES[i]
 		var kinds: int = Assets.TREE_VARIANTS[species]
@@ -137,6 +141,9 @@ func _ready() -> void:
 		var group := _instances(species,Assets.plant(species,BARK[i]),near_trees+rest)
 		group.multimesh.visible_instance_count=near_trees.size()
 		if not far_trees.is_empty():_instances(species+"_distant",Assets.plant(species,BARK[i],true,true),far_trees)
+		proxies[species] = []
+		for v in kinds: proxies[species].append_array(far[v])
+	_shadow_proxies(proxies)
 	# River cobbles: ten scans, 5-25 cm, a rock colour per instance (scripts/cobbles.gd).
 	# It replays the legacy draws on rng, so the ground cover below is unchanged.
 	preload("res://scripts/cobbles.gd").build(self,rng)
@@ -186,20 +193,31 @@ func _instances(label: String, mesh: ArrayMesh, transforms: Array, distance_limi
 	multi.transform_format = MultiMesh.TRANSFORM_3D
 	multi.mesh = mesh
 	var tree := label.get_slice("_v",0).trim_suffix("_distant") in SPECIES
+	var oak := label.begins_with("black_oak")
 	# Trees get a per-instance tone (custom data x) from their position, not from any RNG.
+	# Oaks also get a wide season timing (y) and a warm or lemon autumn (z), so the bar's
+	# oaks turn one by one rather than on the same day.
 	multi.use_custom_data = tree
 	multi.instance_count = transforms.size()
 	for i in transforms.size():
 		multi.set_instance_transform(i,transforms[i])
 		if tree:
 			var o: Vector3 = transforms[i].origin
-			multi.set_instance_custom_data(i,Color(fposmod(sin(o.x*12.9898+o.z*78.233)*43758.547,1.0)*.4-.2,fposmod(sin(o.x*39.346+o.z*11.135)*24634.634,1.0)-.5,0,0))
+			var timing := fposmod(sin(o.x*39.346+o.z*11.135)*24634.634,1.0)-.5
+			var hue := pow(fposmod(sin(o.x*7.137+o.z*3.917)*9631.27,1.0),1.5) if oak else 0.0
+			multi.set_instance_custom_data(i,Color(fposmod(sin(o.x*12.9898+o.z*78.233)*43758.547,1.0)*.4-.2,timing*(2.2 if oak else 1.0),hue,0))
 	group.multimesh = multi
 	group.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	if tree: group.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_DOUBLE_SIDED
+	# Trees past 60 m: their alpha-tested crowns cost 0.25-0.9 GPU ms in the shadow pass
+	# (artifacts/perf_probe/attribution.md); an opaque cone stands in (_shadow_proxies).
+	if tree and label.ends_with("_distant"): group.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	if label in ["grass","lupine","poppy","yarrow"]: group.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	if label.begins_with("black_oak"): group.lod_bias=4.0
-	group.gi_mode = GeometryInstance3D.GI_MODE_STATIC
+	# SDFGI voxelises a crown's cards as a solid blob, which left the oak trunks and crown
+	# undersides with almost no indirect light (near-black bark in crown shade). The bar oaks
+	# still receive GI and cast sun shadows; they just do not occlude it.
+	group.gi_mode = GeometryInstance3D.GI_MODE_DISABLED if oak else GeometryInstance3D.GI_MODE_STATIC
 	group.visibility_range_end = distance_limit
 	group.visibility_range_end_margin = 5 if distance_limit>0 else 0
 	group.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
@@ -387,42 +405,8 @@ func _build_understory(ground: Node3D) -> void:
 				tufts += 1
 				if d<12.0 and n.y>.72 and random.randf()<.18:
 					_add(sets,"fern",random,p-Vector3(0,.02,0),n,random.randf_range(.7,1.1),.6,-.8)
-	# Riparian: willow and alder thickets at the far wall's foot, sedge at the water.
-	made = 0
-	var sedges := 0
-	for attempt in 6000:
-		if made>=150 and sedges>=200: break
-		var x := random.randf_range(-150,150)
-		# Thickets come in runs along the bank.
-		if sin(x*.11)+sin(x*.037+1.3)<-.4: continue
-		var hit := _wall(ground,x,random.randf_range(.1,3.4),true)
-		if hit.is_empty(): continue
-		var p: Vector3 = hit[0]
-		if p.y<.25: continue
-		if made<150 and random.randf()<.45:
-			var roll := random.randf()
-			_add(sets,"alder" if roll<.22 else "willow",random,p-Vector3(0,.12,0),hit[1],random.randf_range(.65,1.3),.15)
-			made += 1
-		elif sedges<200:
-			_add(sets,"sedge_clump",random,p-Vector3(0,.03,0),hit[1],random.randf_range(.8,1.4),.5,-1.5)
-			sedges += 1
-	# Past the ends of the bar (|x| > 46, outside the walkable claim): the near bank's strip.
-	made = 0
-	sedges = 0
-	for attempt in 4000:
-		if made>=70 and sedges>=110: break
-		var x := random.randf_range(46,150)*(1 if random.randf()<.5 else -1)
-		var width := Layout.canyon_width_at(x)
-		var hit := _wall(ground,x,random.randf_range(-width+1.0,2.5),false)
-		if hit.is_empty(): continue
-		var p: Vector3 = hit[0]
-		if p.y<.2: continue
-		if made<70 and random.randf()<.4:
-			_add(sets,"willow",random,p-Vector3(0,.12,0),hit[1],random.randf_range(.65,1.25),.15)
-			made += 1
-		elif sedges<110:
-			_add(sets,"sedge_clump",random,p-Vector3(0,.03,0),hit[1],random.randf_range(.8,1.4),.5,-1.5)
-			sedges += 1
+	_riparian(ground,sets)
+	_oak_floor(sets,oaks,camp)
 	var parent := Node3D.new()
 	parent.name = "Understory"
 	add_child(parent)
@@ -430,7 +414,231 @@ func _build_understory(ground: Node3D) -> void:
 	for plant in UNDERSTORY:
 		understory[plant] = sets[plant][0]
 		if not sets[plant][0].is_empty(): _chunked(parent,plant,sets[plant][0],sets[plant][1])
+	for plant in ["willow","alder"]: _blob_shadows(parent,plant,sets[plant][0])
+	_rim_trees(ground,parent)
 
+
+## One understory instance with explicit custom data (x tone, y season timing, z warm hue),
+## standing `lean` of the way from plumb toward `up`.
+func _put(sets: Dictionary, plant: String, p: Vector3, up: Vector3, lean: float, yaw: float, scale_value: float, custom: Color) -> void:
+	var basis := Basis(Vector3.UP,yaw)
+	if lean>0: basis = Basis(Quaternion(Vector3.UP,Vector3.UP.lerp(up.normalized(),lean).normalized()))*basis
+	sets[plant][0].append(Transform3D(basis.scaled(Vector3.ONE*scale_value),p))
+	sets[plant][1].append(custom)
+
+## Riparian thickets (Wave C), with their own RNG: clumps and gaps along the far wall's foot
+## in three depths up the talus apron (sedge at the water; willow, young to 5 m, in front;
+## white alder, 8-13 m and darker, behind or alone in a gap), leaning out over the water.
+## A clump shares part of its season timing, so thickets turn one after another. Past the
+## ends of the bar (|x| > 46, outside the walkable claim) the near bank gets the same.
+func _riparian(ground: Node3D, sets: Dictionary) -> void:
+	var random := RandomNumberGenerator.new()
+	random.seed = 184831
+	for bank in [[true,-150.0,150.0],[false,46.0,150.0],[false,-150.0,-46.0]]:
+		var far: bool = bank[0]
+		var x: float = bank[1]
+		var river := Vector3(0,1,.2 if far else -.2)
+		while x<bank[2]:
+			var gap := random.randf_range(2.5,11.0)
+			# Sedge and the odd lone alder or young willow in the gap.
+			for k in int(gap*.7):
+				_riparian_plant(ground,sets,random,"sedge_clump",x+random.randf()*gap,far,random.randf_range(.1,1.3),river,Color(random.randf_range(-.12,.12),random.randf_range(-2.0,-.8),random.randf()*random.randf(),0))
+			if random.randf()<.22:
+				var lone := "alder" if random.randf()<.5 else "willow"
+				_riparian_plant(ground,sets,random,lone,x+random.randf_range(.3,.7)*gap,far,random.randf_range(.6,4.5),river,Color())
+			x += gap
+			var length := random.randf_range(5.0,19.0)
+			var clump_timing := random.randf_range(-1.3,1.3)
+			for k in int(length/.9)+random.randi_range(0,2):
+				var depth := random.randf_range(.25,2.6) if random.randf()<.7 else random.randf_range(2.4,4.6)
+				var custom := Color(random.randf_range(-.06,.14),clamp(clump_timing+random.randf_range(-.5,.5),-2.0,2.0),random.randf()*random.randf()*.8,0)
+				_riparian_plant(ground,sets,random,"willow",x+random.randf()*length,far,depth,river,custom)
+			if random.randf()<.6:
+				for k in random.randi_range(1,int(length/6.0)+1):
+					var custom := Color(random.randf_range(-.16,0),clamp(clump_timing*.5+random.randf_range(-.4,.4),-2.0,2.0),random.randf()*.3,0)
+					_riparian_plant(ground,sets,random,"alder",x+random.randf()*length,far,random.randf_range(3.2,6.5),river,custom)
+			for k in int(length*1.1):
+				_riparian_plant(ground,sets,random,"sedge_clump",x+random.randf()*length,far,random.randf_range(.1,1.2),river,Color(random.randf_range(-.12,.12),random.randf_range(-2.0,-.8),random.randf()*random.randf(),0))
+			x += length
+
+## Seats one riparian plant `depth` metres up from the bank's water edge (far bank: the wall
+## foot; near bank: the shore line). Willow scale 0.3-1.25 (a sixth are young), alder 1.25-1.9.
+func _riparian_plant(ground: Node3D, sets: Dictionary, random: RandomNumberGenerator, plant: String, x: float, far: bool, depth: float, river: Vector3, custom: Color) -> void:
+	var d := depth if far else depth-Layout.canyon_width_at(x)+1.0
+	var hit := _wall(ground,x,d,far)
+	if hit.is_empty(): return
+	var p: Vector3 = hit[0]
+	if p.y<(.2 if plant=="sedge_clump" else .25): return
+	if not far and d>2.5: return
+	var yaw := random.randf()*TAU
+	match plant:
+		"sedge_clump": _put(sets,plant,p-Vector3(0,.03,0),hit[1],.5,yaw,random.randf_range(.8,1.5),custom)
+		"willow":
+			var size := random.randf_range(.3,.5) if random.randf()<.16 else random.randf_range(.55,1.25)
+			if custom==Color(): custom = Color(random.randf_range(-.06,.14),random.randf_range(-1.3,1.3),random.randf()*random.randf()*.8,0)
+			_put(sets,plant,p-Vector3(0,.12,0),river,random.randf_range(.2,.9),yaw,size,custom)
+		"alder":
+			if custom==Color(): custom = Color(random.randf_range(-.16,0),random.randf_range(-.8,.8),random.randf()*.3,0)
+			_put(sets,plant,p-Vector3(0,.15,0),river,random.randf_range(0,.4),yaw,random.randf_range(1.25,1.9),custom)
+
+## Ground life under the ten bar oaks (Wave C), with its own RNG, inside the canopy radius
+## (4.6 m, where the terrain's duff circle lies): fallen leaves, grass at the trunk foot and
+## the drip line, ferns on the inland side, a few seedlings. Not within 12 m of the water,
+## not in camp, not on boulders; no collision, so the walking lanes stay open.
+func _oak_floor(sets: Dictionary, oaks: Array, camp: Vector3) -> void:
+	var random := RandomNumberGenerator.new()
+	random.seed = 184827
+	for o in oaks:
+		# [plant, count, inner and outer radius, how many of them on the river side].
+		for spec in [["leaf_litter",12,0.0,4.4,0],["grass_clump",8,.7,1.6,0],["grass_clump",11,2.4,4.6,4],["fern",6,1.0,4.2,2],["oak_sapling",4,1.2,4.4,2]]:
+			var plant: String = spec[0]
+			for k in spec[1]:
+				var a := random.randf()*TAU
+				var river_side: bool = k<spec[4]
+				# The river side of the crown's edge, where the bar's views meet the oak, gets
+				# the taller plants (saplings, ferns, big bunchgrass); ferns otherwise keep to the
+				# inland, shaded side of the trunk.
+				if river_side: a = -PI*.5+random.randf_range(-1.15,.6)
+				elif plant=="fern": a = PI*.5+random.randf_range(-1.3,1.3)
+				var r := lerpf(spec[2],spec[3],sqrt(random.randf()))
+				if river_side: r = maxf(r,2.6)
+				var q := Vector3(o.x+cos(a)*r,0,o.z+sin(a)*r)
+				var yaw := random.randf()*TAU
+				var size := random.randf_range(.75,1.3)*(1.4 if river_side and plant=="grass_clump" else 1.0)
+				var timing := random.randf_range(-1.0,1.0)
+				var clear := true
+				for other in oaks: clear = clear and Vector2(q.x-other.x,q.z-other.z).length()>.75
+				if not clear or q.z-Layout.shore_z(q.x)<12.0 or q.z>Layout.back_z(q.x)-.3: continue
+				if normal_at(q.x,q.z).y<.71 or not clear_of_boulders(q,.4) or _in_camp(q,camp): continue
+				var n := normal_at(q.x,q.z)
+				q.y = _surface(q.x,q.z).w
+				match plant:
+					"leaf_litter": _put(sets,plant,q+Vector3(0,.012,0),n,1.0,yaw,size,Color(random.randf_range(-.12,.1),0,random.randf(),0))
+					"grass_clump": _put(sets,plant,q-Vector3(0,.03,0),n,.7,yaw,size*1.25,Color(random.randf_range(-.12,.12),random.randf_range(-2.0,-1.0),random.randf()*random.randf(),0))
+					"fern": _put(sets,plant,q-Vector3(0,.02,0),n,.6,yaw,size*1.15,Color(random.randf_range(-.12,.08),timing,0,0))
+					"oak_sapling": _put(sets,plant,q-Vector3(0,.04,0),n,.15,yaw,random.randf_range(.7,1.25),Color(random.randf_range(-.1,.1),timing,random.randf()*random.randf(),0))
+
+## Willow and alder near the bar cast their shadows on the talus through opaque ellipsoids
+## sized to the crown (shadow pass only): the cards' own alpha-tested shadows cost about
+## 0.3 GPU ms (artifacts/perf_probe/attribution.md).
+func _blob_shadows(parent: Node3D, plant: String, transforms: Array) -> void:
+	var near: Array = transforms.filter(func(t): return Vector2(t.origin.x,t.origin.z).distance_to(Vector2(0,15))<SHADOW_REACH+30.0)
+	if near.is_empty(): return
+	var box := Assets.understory(plant).get_aabb()
+	var blob := SphereMesh.new()
+	blob.radius = .5
+	blob.height = 1.0
+	blob.radial_segments = 8
+	blob.rings = 4
+	# Crown: the upper 70 % of the plant, a little narrower than its card extent.
+	var crown := Transform3D(Basis().scaled(Vector3(box.size.x*.62,box.size.y*.62,box.size.z*.62)),Vector3(0,box.position.y+box.size.y*.6,0))
+	var group := MultiMeshInstance3D.new()
+	group.name = plant+"_shadow"
+	var multi := MultiMesh.new()
+	multi.transform_format = MultiMesh.TRANSFORM_3D
+	multi.mesh = blob
+	multi.instance_count = near.size()
+	for i in near.size(): multi.set_instance_transform(i,near[i]*crown)
+	group.multimesh = multi
+	group.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+	group.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
+	parent.add_child(group)
+
+## Rim conifers (Wave C), with their own RNG: the far wall's rim and the first 22 m behind it,
+## seen against the sky from the whole bar, were thin. Seventy more ponderosa, Douglas fir and
+## incense cedar there, at least 4.5 m from any tree, drawn with the distant meshes (all stand
+## more than 60 m out). These are wall dressing like the live oaks: the 600 Milestone 5
+## conifers in `placements` are unchanged.
+func _rim_trees(ground: Node3D, parent: Node3D) -> void:
+	var random := RandomNumberGenerator.new()
+	random.seed = 184837
+	var taken: Array = []
+	for species in ["ponderosa","incense_cedar","douglas_fir"]:
+		for t in placements[species]: taken.append(t.origin)
+	var groups := {}
+	var made := 0
+	for attempt in 3000:
+		if made>=70: break
+		var x := random.randf_range(-120,120)
+		var band := 7.0+2.0*sin(x*.04)
+		band *= 1.0-.55*exp(-pow((x-64.0)/22.0,2.0))
+		var rim := 8.0+2.0*sin(x*.055)+3.0*band+6.0
+		var hit := _wall(ground,x,random.randf_range(rim-1.0,rim+22.0),true)
+		if hit.is_empty() or hit[1].y<.8: continue
+		var p: Vector3 = hit[0]-Vector3(0,.2,0)
+		if Vector2(p.x,p.z).length()<=60.0: continue
+		var spaced := true
+		for o in taken: spaced = spaced and Vector2(o.x-p.x,o.z-p.z).length()>4.5
+		if not spaced: continue
+		taken.append(p)
+		var roll := random.randf()
+		var species := "ponderosa" if roll<.55 else ("douglas_fir" if roll<.8 else "incense_cedar")
+		var v := random.randi_range(0,Assets.TREE_VARIANTS[species]-1)
+		var key := "rim_%s_v%d" % [species,v+1]
+		if not groups.has(key): groups[key] = [species,v,[]]
+		var basis := Basis(Quaternion(Vector3.UP,Vector3.UP.lerp(hit[1],.06).normalized()))*Basis(Vector3.UP,random.randf()*TAU)
+		groups[key][2].append(Transform3D(basis.scaled(Vector3.ONE*random.randf_range(.75,1.15)),p))
+		made += 1
+	understory["rim_conifer"] = []
+	var proxies := {}
+	var keys := groups.keys()
+	keys.sort()
+	for key in keys:
+		var g: Array = groups[key]
+		var group := MultiMeshInstance3D.new()
+		group.name = key
+		var multi := MultiMesh.new()
+		multi.transform_format = MultiMesh.TRANSFORM_3D
+		multi.use_custom_data = true
+		multi.mesh = Assets.plant(g[0],BARK[SPECIES.find(g[0])],true,true,g[1])
+		multi.instance_count = g[2].size()
+		for j in g[2].size():
+			var o: Vector3 = g[2][j].origin
+			multi.set_instance_transform(j,g[2][j])
+			multi.set_instance_custom_data(j,Color(fposmod(sin(o.x*12.9898+o.z*78.233)*43758.547,1.0)*.4-.2,fposmod(sin(o.x*39.346+o.z*11.135)*24634.634,1.0)-.5,0,0))
+		group.multimesh = multi
+		group.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		group.gi_mode = GeometryInstance3D.GI_MODE_STATIC
+		parent.add_child(group)
+		understory.rim_conifer.append_array(g[2])
+		if not proxies.has(g[0]): proxies[g[0]] = []
+		proxies[g[0]].append_array(g[2])
+	_shadow_proxies(proxies,parent,"rim_")
+
+## Opaque cones that cast the shadows of the conifers past 60 m (their own crowns cast
+## none): one MultiMesh per species, shadow pass only, crown base and width from the
+## species' distant mesh.
+func _shadow_proxies(far: Dictionary, parent: Node3D = null, prefix := "") -> void:
+	if parent==null: parent = self
+	for species in far:
+		var transforms: Array = far[species]
+		if transforms.is_empty(): continue
+		var mesh := Assets.plant(species,BARK[SPECIES.find(species)],true,true)
+		var leaves: PackedVector3Array = mesh.surface_get_arrays(1)[Mesh.ARRAY_VERTEX]
+		var low := INF
+		var high := -INF
+		var reach := 0.0
+		for v in leaves:
+			low = minf(low,v.y); high = maxf(high,v.y); reach = maxf(reach,Vector2(v.x,v.z).length())
+		var cone := CylinderMesh.new()
+		cone.top_radius = .15
+		cone.bottom_radius = reach*.5
+		cone.height = high-low
+		cone.radial_segments = 7
+		cone.rings = 0
+		cone.cap_top = false
+		var group := MultiMeshInstance3D.new()
+		group.name = prefix+species+"_shadow"
+		var multi := MultiMesh.new()
+		multi.transform_format = MultiMesh.TRANSFORM_3D
+		multi.mesh = cone
+		multi.instance_count = transforms.size()
+		var lift := Transform3D(Basis(),Vector3(0,low+cone.height*.5,0))
+		for i in transforms.size(): multi.set_instance_transform(i,transforms[i]*lift)
+		group.multimesh = multi
+		group.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+		group.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
+		parent.add_child(group)
 
 ## Canyon live oaks on the talus, benches and rim of both walls: the black oaks' distant
 ## meshes at 40-70 % size (they stand 30 m and more from the bar), darker and evergreen

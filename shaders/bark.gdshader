@@ -8,6 +8,15 @@ uniform sampler2DArray bark_normal : hint_normal, filter_linear_mipmap, repeat_e
 uniform float layer=3.0;
 // Gentle multiplier from the caller's bark colour (Assets.plant normalises it).
 uniform vec3 tint : source_color=vec3(1.0);
+// Per-layer grade (Assets.BARK_LOOK): albedo gain and saturation, normal depth, and how much
+// the scan's own dark furrows occlude indirect light. A trunk in crown shade is lit only
+// indirectly, so the furrows (cavity) are what keep its plates readable there.
+uniform float gain=1.0;
+uniform float saturation=1.0;
+uniform float normal_depth=1.2;
+uniform float cavity=0.0;
+// Mean linear luminance of the layer, the furrow reference.
+uniform float mean_luma=.1;
 uniform float review_time=-1.0;
 varying vec3 local;
 varying float brightness;
@@ -24,8 +33,12 @@ void vertex(){
 }
 void fragment(){
  vec3 uvw=vec3(UV,layer);
- ALBEDO=texture(bark_albedo,uvw).rgb*tint*brightness;
+ vec3 a=texture(bark_albedo,uvw).rgb;
+ float l=dot(a,vec3(.2126,.7152,.0722));
+ ALBEDO=mix(vec3(l),a,saturation)*gain*tint*brightness;
  NORMAL_MAP=texture(bark_normal,uvw).rgb;
- NORMAL_MAP_DEPTH=1.2;
+ NORMAL_MAP_DEPTH=normal_depth;
+ AO=mix(1.0,clamp(pow(l/mean_luma,.8),.3,1.0),cavity);
+ AO_LIGHT_AFFECT=cavity*.35;
  ROUGHNESS=.92;
 }

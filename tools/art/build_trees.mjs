@@ -91,6 +91,11 @@ const PLANTS = {
   fir_sapling: { crown: 'cone', distant: false, height: 2.2, trunk: .04, bark: [.3, .3], tiles: QUAD, preset: 'Pine Small', seed: 5801, o: {
     branch: { children: { 0: 22 }, sections: { 0: 4, 1: 1 }, segments: { 0: 4, 1: 3 }, start: { 1: .1 }, length: { 1: 11 } },
     leaves: { billboard: 'double', count: 6, size: 3.4, sizeVariance: .3, angle: 35 } } },
+  // Wave C: black oak sapling for the ground under the bar oaks (black oak atlas and season).
+  oak_sapling: { crown: 'round', distant: false, height: 1.3, trunk: .025, bark: [.3, .3], tiles: QUAD, preset: 'Oak Small', seed: 5903, o: {
+    branch: { levels: 2, children: { 0: 5, 1: 2 }, sections: { 0: 4, 1: 2, 2: 1 }, segments: { 0: 4, 1: 3, 2: 3 },
+      length: { 0: 28, 1: 11, 2: 6 }, start: { 1: .3, 2: .2 }, angle: { 1: 48, 2: 40 }, gnarliness: { 0: .1, 1: .12 } },
+    leaves: { billboard: 'double', count: 4, size: 7.5, sizeVariance: .3, angle: 45, start: .15 } } },
 };
 
 
@@ -326,7 +331,34 @@ function cardPlant(name, kind, tiles, seed, size) {
   return { leaves: { pos, nrm, uv, col, idx }, bark: null, H: size[1] };
 }
 
+// Leaf litter: eight cards lying on the ground, each a leafy corner of an oak atlas spray
+// (beside its stem), in a patch about 1.2 m across; the foliage shader colours it dry.
+function litterPatch(seed) {
+  const random = rng(seed);
+  const pos = [], nrm = [], uv = [], col = [], idx = [];
+  for (let k = 0; k < 8; k++) {
+    const tile = QUAD[Math.floor(random() * 4)];
+    const side = random() < 0.5 ? 0.03 : 0.25;
+    const sub = [tile[0] + side * tile[2] * 2, tile[1] + (0.12 + random() * 0.38) * tile[3], 0.22 * tile[2] * 2, 0.22 * tile[2] * 2];
+    const a = random() * 2 * Math.PI, r = Math.sqrt(random()) * 0.42;
+    const c = [Math.cos(a) * r, 0.004 + 0.012 * random(), Math.sin(a) * r];
+    const size = 0.28 + 0.14 * random(), spin = random() * 2 * Math.PI;
+    const tilt = (random() - 0.5) * 0.25;
+    const u = [Math.cos(spin) * size / 2, 0, Math.sin(spin) * size / 2], v = [-Math.sin(spin) * size / 2, tilt * size, Math.cos(spin) * size / 2];
+    const b = pos.length / 3, g = random();
+    for (const [su, sv, tu, tv] of [[-1, -1, 0, 1], [1, -1, 1, 1], [1, 1, 1, 0], [-1, 1, 0, 0]]) {
+      pos.push(c[0] + u[0] * su + v[0] * sv, Math.max(0.002, c[1] + v[1] * sv), c[2] + u[2] * su + v[2] * sv);
+      nrm.push(0, 1, 0);
+      uv.push(sub[0] + 0.002 + tu * (sub[2] - 0.004), sub[1] + 0.002 + tv * (sub[3] - 0.004));
+      col.push(0, Math.round(g * 255), 0, 255);
+    }
+    idx.push(b, b + 2, b + 1, b, b + 3, b + 2);
+  }
+  return { leaves: { pos, nrm, uv, col, idx }, bark: null, H: 0.05 };
+}
+
 const GROUND = {
+  leaf_litter: () => litterPatch(6501),
   grass_clump: () => cardPlant('grass_clump', 'grass', R(['grass_0', 'grass_1', 'grass_2', 'grass_3', 'grass_4']), 6101, [0.75, 0.42]),
   sedge_clump: () => cardPlant('sedge_clump', 'grass', R(['sedge_0', 'sedge_1', 'sedge_2']), 6307, [0.6, 0.6]),
   fern: () => cardPlant('fern', 'fern', R(['fern_0', 'fern_1', 'fern_2', 'fern_3']), 6401, [0.32, 0.85]),

@@ -1,5 +1,8 @@
 shader_type spatial;
-render_mode cull_disabled, alpha_to_coverage, diffuse_lambert, specular_disabled;
+// Alpha scissor, not alpha-to-coverage: A2C cost 0.5-0.9 GPU ms across the claim's foliage
+// (artifacts/perf_probe/attribution.md). TAA resolves the scissored edges; cards seen edge-on
+// fade out (below) so they do not read as stretched strips.
+render_mode cull_disabled, diffuse_lambert, specular_disabled;
 #include "res://shaders/wind.gdshaderinc"
 // Calendar progress, 0 = June 26 ... 1 = November 5 (first snow); see scripts/vegetation.gd.
 global uniform float season;
@@ -8,12 +11,17 @@ uniform bool leaves=false;
 uniform bool use_atlas=true;
 uniform float review_time=-1.0;
 uniform vec3 tint : source_color=vec3(.2,.35,.08);
+// Per-species multiplier on the atlas colour (alder darker and bluer than willow).
+uniform vec3 leaf_tint=vec3(1.0);
 // Seasonal response: leaves move toward autumn_color (keeping their luminance detail) over the
 // season window x..y, weighted by autumn_strength; past drop_start, cards fall away in random order.
 uniform vec3 autumn_color : source_color=vec3(.62,.5,.18);
 uniform vec2 autumn_window=vec2(2.0,3.0);
 uniform float autumn_strength=1.0;
 uniform float drop_start=2.0;
+// Season timing spread: per instance (custom data y), per card (COLOR.g) and toward the outer
+// crown (COLOR.r, the wind weight), so a crown or a thicket turns branch by branch.
+uniform vec3 timing_spread=vec3(.10,.10,0.0);
 // Luminance of the atlas's mean leaf colour (linear), so the autumn colour keeps texture detail.
 uniform float atlas_luma=.08;
 // Leaf flutter on top of the shared sway (metres at full wind weight).
@@ -22,6 +30,8 @@ uniform float flutter=.025;
 uniform vec2 bloom_window=vec2(2.0,3.0);
 // Understory stems share the leaf surface (one draw): COLOR.b = 1 marks opaque bark.
 uniform vec3 stem_color : source_color=vec3(.32,.26,.2);
+// Leaf litter and other cards that lie flat skip the edge-on fade.
+uniform bool flat_cards=false;
 varying vec3 local;
 varying float distance_fade;
 varying float timing;
@@ -44,7 +54,7 @@ void vertex(){
  // Per-instance variation (MultiMesh custom data; zero for plain MeshInstance3D):
  // x brightness, y season timing, z hue. Per-card COLOR.g adds timing spread inside a crown.
  variation=INSTANCE_CUSTOM.xyz;
- timing=INSTANCE_CUSTOM.y*.10+(COLOR.g-.5)*.10;
+ timing=INSTANCE_CUSTOM.y*timing_spread.x+(COLOR.g-.5)*timing_spread.y+(COLOR.r-.6)*timing_spread.z;
 }
 void fragment(){
  if(leaves){
@@ -54,17 +64,27 @@ void fragment(){
      c=vec4(stem_color*grain*(1.0+variation.x*.35),1.0);
    }else if(use_atlas){
      c=texture(leaf_atlas,UV);
+     c.rgb*=leaf_tint;
      // Mip levels lose alpha coverage; lower the cut with distance so crowns keep their mass.
      c.a=clamp(c.a*mix(1.0,1.45,distance_fade),0.0,1.0);
      float s=season+timing;
      float turn=smoothstep(autumn_window.x,autumn_window.y,s)*autumn_strength;
      float detail=clamp(dot(c.rgb,vec3(.2126,.7152,.0722))/atlas_luma,.35,1.8);
-     // Some cards turn browner than others.
-     vec3 autumn=mix(autumn_color,autumn_color*vec3(.78,.55,.45),step(.72,fract(COLOR.g*7.13)));
-     c.rgb=mix(c.rgb,autumn*detail,turn);
+     // Cards go green -> yellow-green -> the autumn colour; some end browner, and warm
+     // instances (custom data z) lean orange.
+     float card=fract(COLOR.g*7.13);
+     vec3 autumn=autumn_color*mix(vec3(1.0),vec3(1.06,.86,.7),clamp(variation.z,0.0,1.0));
+     autumn=mix(autumn,autumn*vec3(.78,.55,.45),step(.72,card)*smoothstep(.55,1.0,turn));
+     vec3 early=mix(c.rgb,autumn*detail,.45)*vec3(1.05,1.08,.8);
+     c.rgb=mix(mix(c.rgb,early,smoothstep(0.0,.45,turn)),autumn*detail,smoothstep(.4,1.0,turn));
      if(s>drop_start && fract(COLOR.g*13.7)<(s-drop_start)*3.0) c.a=0.0;
      c.rgb*=1.0+variation.x*.35;
-     c.rgb=mix(c.rgb,c.rgb*vec3(1.12,1.04,.78),clamp(variation.z,0.0,1.0));
+     c.rgb=mix(c.rgb,c.rgb*vec3(1.12,1.04,.78),clamp(variation.z,0.0,1.0)*(1.0-turn));
+     // Cards seen nearly edge-on smear the spray into a long strip: fade them out.
+     if(!flat_cards){
+       vec3 card_normal=normalize(cross(dFdx(VERTEX),dFdy(VERTEX)));
+       c.a*=smoothstep(.07,.30,abs(dot(card_normal,normalize(VERTEX))));
+     }
    }else{
      c=vec4(COLOR.b>0.0?tint:vec3(.19,.23,.095),1);
      if(COLOR.b==0.0) {
@@ -76,7 +96,7 @@ void fragment(){
        c.a*=1.0-smoothstep(bloom_window.x,bloom_window.y,season);
      }
    }
-   ALBEDO=c.rgb; ALPHA=c.a; ALPHA_SCISSOR_THRESHOLD=.38; ALPHA_ANTIALIASING_EDGE=.25; ALPHA_TEXTURE_COORDINATE=UV*2048.0;
+   ALBEDO=c.rgb; ALPHA=c.a; ALPHA_SCISSOR_THRESHOLD=.38;
    // Card normals are bent outward from the crown; keep them outward on back faces too.
    if(use_atlas && stem<.5 && !FRONT_FACING) NORMAL=-NORMAL;
    BACKLIGHT=c.rgb*.32*(1.0-stem);
@@ -87,4 +107,17 @@ void fragment(){
    ALBEDO=tint*plate*(1.0-fissure*.58);
    ROUGHNESS=.93;
  }
+}
+// Godot's Lambert and leaf transmission (LIGHT_COLOR carries energy x PI), except that a low
+// sun's colour reaches leaves partly desaturated (luminance kept): the deep orange of the last
+// light times the atlas's yellow-green made sunlit crowns over the camp glow lime at dusk.
+void light(){
+ float ndl=clamp(dot(NORMAL,LIGHT),0.0,1.0);
+ vec3 light_color=LIGHT_COLOR;
+ if(LIGHT_IS_DIRECTIONAL){
+   float sun_height=(INV_VIEW_MATRIX*vec4(LIGHT,0.0)).y;
+   light_color=mix(vec3(dot(light_color,vec3(.2126,.7152,.0722))),light_color,mix(.25,1.0,smoothstep(.05,.25,sun_height)));
+   light_color*=mix(.75,1.0,smoothstep(.05,.2,sun_height));
+ }
+ DIFFUSE_LIGHT+=light_color*ATTENUATION*(ndl+(1.0-ndl)*BACKLIGHT)/PI;
 }
