@@ -2,13 +2,15 @@ shader_type spatial;
 // Tri-planar scan set for boulders, cobbles, bedrock ledges and small props
 // (Assets.rock()). Maps: albedo, RGTC normal (Z rebuilt), ORM = AO, roughness,
 // height. Height darkens crevices; world-space noise adds grey/warm/rust families
-// and moss on north-facing (+Z) upper faces; rock at the river line is wet.
+// and moss on north-facing (+Z) upper faces; rock at the river line is wet, and rain
+// (global rain_wetness, scripts/rain.gd) darkens and glosses every face that meets it.
 uniform sampler2D albedo_map : source_color, repeat_enable, filter_linear_mipmap_anisotropic;
 uniform sampler2D normal_map : hint_normal, repeat_enable, filter_linear_mipmap_anisotropic;
 uniform sampler2D orm_map : repeat_enable, filter_linear_mipmap_anisotropic;
 uniform float tile = 4.0;
 // Live river height (Assets.set_water_level); the default keeps props dry.
 uniform float water_level = -1000.0;
+global uniform float rain_wetness;
 varying vec3 world;
 varying vec3 normal_world;
 float hash(vec2 p) {
@@ -37,7 +39,8 @@ void fragment(){
  albedo=mix(albedo,vec3(.06,.075,.032),moss*.6);
  float above=world.y-water_level;
  float wet=1.0-smoothstep(.04+(h-.5)*.06,.22,above+(noise(world.xz*1.3)-.5)*.06);
- ALBEDO=albedo*mix(1.0,.5,wet);
+ float rain=rain_wetness*smoothstep(-.4,.4,normal_world.y)*mix(1.0,.75,smoothstep(.4,.8,h));
+ ALBEDO=albedo*mix(1.0,.5,max(wet,rain*.8));
  NORMAL=normalize((VIEW_MATRIX*vec4(normalize(mix(normal_world,n,.6*(1.0-smoothstep(40.0,70.0,distance(world,CAMERA_POSITION_WORLD))))),0)).xyz);
- ROUGHNESS=mix(mix(o.g,.95,moss),.3,wet); AO=o.r;
+ ROUGHNESS=mix(mix(o.g,.95,moss),.25,max(wet,rain)); AO=o.r;
 }

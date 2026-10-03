@@ -13,6 +13,12 @@ blender/normalize_asset.py (which joins every mesh it imports).
   --rotate   Euler degrees applied before export (e.g. stand a slab on edge).
   --round    Water wear: N smoothing passes (factor 0.6) round a blocky scan's
              fracture edges; the scan's normal map keeps the grain in the bake.
+  --cast     River rounding before --round: pull every vertex this share of the way
+             toward the ellipsoid of the piece's own bounding box (Blender's Cast
+             modifier on the box-normalised mesh). Smoothing alone turns a fractured
+             block into a pillow with sheer sides and a flat top; cast 0.4-0.5 gives
+             the domed, egg-shaped section of a tumbled boulder and keeps the scan's
+             lumps at reduced height.
   --fit      Uniform scale so the larger horizontal half-extent is this many metres
              (the bar boulders' unit-footprint convention is --fit 1; normalise the
              result with --scale 1).
@@ -43,6 +49,7 @@ def parse():
     ap.add_argument("--rotate", help="x,y,z degrees")
     ap.add_argument("--fit", type=float, help="scale so the larger horizontal half-extent is this many metres")
     ap.add_argument("--round", type=int, default=0, help="smoothing iterations (water wear) before --fit")
+    ap.add_argument("--cast", type=float, default=0.0, help="0..1 pull toward the bounding ellipsoid (river rounding)")
     return ap.parse_args(argv)
 
 
@@ -72,6 +79,24 @@ def main():
         r = [math.radians(float(v)) for v in a.rotate.split(",")]
         keep.rotation_euler = r
         bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
+    if a.cast:
+        # River rounding: normalise the piece to a unit box, cast toward a sphere
+        # (that is, toward the ellipsoid of the original box), scale back. Positions
+        # alone decide the move, so coincident seam vertices stay together.
+        co = np.empty(len(keep.data.vertices) * 3, dtype=np.float64)
+        keep.data.vertices.foreach_get("co", co)
+        co = co.reshape(-1, 3)
+        lo, hi = co.min(0), co.max(0)
+        centre, size = (lo + hi) / 2, np.maximum(hi - lo, 1e-6)
+        keep.data.vertices.foreach_set("co", ((co - centre) / size).ravel())
+        mod = keep.modifiers.new("river_cast", "CAST")
+        mod.cast_type = "SPHERE"
+        mod.factor = a.cast
+        bpy.ops.object.modifier_apply(modifier=mod.name)
+        keep.data.vertices.foreach_get("co", co.ravel())
+        keep.data.vertices.foreach_set("co", (co * size + centre).ravel())
+        keep.data.update()
+        print("river cast: %.2f toward the bounding ellipsoid" % a.cast)
     if a.round:
         # Water wear: Laplacian-style relaxation of the scan surface rounds the
         # fracture edges of a blocky scan into a river boulder. The source normal map

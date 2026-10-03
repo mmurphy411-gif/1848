@@ -11,19 +11,36 @@ const BOULDER_PATH := "res://assets/boulders/boulder_%02d.glb"
 ## Per bar boulder (Layout.BOULDERS index): yaw offset from flow alignment,
 ## lichen amount, rust staining. boulder_02 is the white quartz boulder.
 const BAR_LOOK := [
-	[.35, .55, .10], [-.20, .10, .0], [.15, .45, .12], [-.30, .35, .35],
-	[.25, .50, .30], [-.10, .40, .45], [.40, .60, .08],
+	[3.2, .55, .10], [.30, .10, .0], [.15, .45, .12], [-.30, .35, .30],
+	[.25, .50, .25], [-.10, .40, .45], [.40, .60, .08],
 ]
-## The narrow side of an elongated scan is stretched to at least this share of
-## the footprint radius, and heights stretch at most this much from natural.
-const ROUNDNESS := .78
-const STRETCH := Vector2(.85, 1.35)
+## Granite character per boulder file (scan_rock.gdshader): crystal grain and quartz
+## veins. boulder_02 is quartz (faint grain, no veins), boulder_11 dark slate (none).
+const GRAIN := {1: [1.0, .6], 2: [.35, 0.0], 3: [1.0, .8], 4: [1.0, .5], 5: [1.0, .7], 6: [.8, .3],
+	7: [1.0, .6], 8: [1.0, .5], 9: [1.0, .4], 10: [.8, .4], 11: [0.0, 0.0], 12: [1.0, .3], 13: [1.0, .5]}
+## The narrow side of an elongated scan is stretched to at least this share of the
+## footprint radius, and heights stretch at most this much from natural. Wave C: the
+## river-rounded scans keep close to their own proportions (the old .78 and 1.35 turned
+## a fractured block into a sheer-sided, flat-topped "quarry block").
+const ROUNDNESS := .62
+const STRETCH := Vector2(.85, 1.12)
+## Visible height target as a share of the layout's vertical radius (the domes stood 1.35).
+const HEIGHT := 1.1
 const MARGIN_SEED := 184830
+## Far-bank margin rocks: x along the reach and the scan for each (every margin scan
+## shows across the river from the bar).
+const FAR_BANK_X := [-36.0, -27.0, -19.0, -11.0, -3.0, 5.0, 13.0, 22.0, 32.0]
+const FAR_BANK_MESH := [10, 12, 9, 13, 8, 12, 10, 11, 9]
 const GIRTH_BINS := 20
 static var _materials: Dictionary = {}
 ## Per bar boulder after fitting: visible height, old dome height, vertical stretch, buried share.
 static var fits: Dictionary = {}
 static var water := 0.0
+## Ground outline of each fitted bar boulder for the terrain shader's contact shading and
+## sand drifts: centre x, z, mean radius, top height; and the outline's Fourier terms
+## (cos, sin, cos 2a, sin 2a) of radius against angle.
+static var outline_at := PackedVector4Array()
+static var outline_shape := PackedVector4Array()
 
 ## One ShaderMaterial per scan file, built from the GLB's own baked maps.
 static func material(path: String, lichen := .45, stain := .0) -> ShaderMaterial:
@@ -38,6 +55,10 @@ static func material(path: String, lichen := .45, stain := .0) -> ShaderMaterial
 	result.set_shader_parameter("lichen", lichen)
 	result.set_shader_parameter("stain", stain)
 	result.set_shader_parameter("water_level", water)
+	var number := int(path.get_file().get_basename().get_slice("_", 1)) if path.get_file().begins_with("boulder_") else 0
+	if GRAIN.has(number):
+		result.set_shader_parameter("granite", GRAIN[number][0])
+		result.set_shader_parameter("veins", GRAIN[number][1])
 	_materials[key] = result
 	return result
 
@@ -46,8 +67,10 @@ static func set_water_level(level: float) -> void:
 	water = level
 	for key in _materials: _materials[key].set_shader_parameter("water_level", level)
 
-## Copy surface 0 through an affine transform: vertices, normals and tangents.
-static func baked(mesh: ArrayMesh, transform: Transform3D) -> ArrayMesh:
+## Copy surface 0 through an affine transform: vertices, normals and tangents. With
+## `origin` (the node's world position) UV2 carries the world ground height under each
+## vertex and a flag, for the shader's contact shading.
+static func baked(mesh: ArrayMesh, transform: Transform3D, origin := Vector3(NAN, 0, 0)) -> ArrayMesh:
 	var arrays := mesh.surface_get_arrays(0)
 	var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 	var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
@@ -62,6 +85,12 @@ static func baked(mesh: ArrayMesh, transform: Transform3D) -> ArrayMesh:
 			tangents[i*4] = t.x; tangents[i*4+1] = t.y; tangents[i*4+2] = t.z
 	arrays[Mesh.ARRAY_VERTEX] = vertices
 	arrays[Mesh.ARRAY_NORMAL] = normals
+	if not is_nan(origin.x):
+		var ground := PackedVector2Array()
+		ground.resize(vertices.size())
+		for i in vertices.size():
+			ground[i] = Vector2(Layout.height_at(origin.x + vertices[i].x, origin.z + vertices[i].z), 1.0)
+		arrays[Mesh.ARRAY_TEX_UV2] = ground
 	if tangents.size() == vertices.size() * 4: arrays[Mesh.ARRAY_TANGENT] = tangents
 	var result := ArrayMesh.new()
 	result.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
@@ -109,7 +138,7 @@ static func fit_bar_boulder(index: int) -> ArrayMesh:
 	var foot := 0
 	while foot < GIRTH_BINS - 1 and girth[foot] < widest * .92: foot += 1
 	var footing := minf(float(foot) / GIRTH_BINS, .3)
-	var target := data.w * 1.35
+	var target := data.w * HEIGHT
 	var bury := (ground - lowest) + maxf(.25, target * .12)
 	var natural := box.size.y * k
 	var stretch := clampf(maxf(target + bury, target / (1.0 - footing)) / natural, STRETCH.x, STRETCH.y)
@@ -119,7 +148,47 @@ static func fit_bar_boulder(index: int) -> ArrayMesh:
 	fits[index] = Vector4(visible, target, stretch, footing)
 	var scale := Basis.from_scale(Vector3(sx, sy, sz))
 	var offset := Vector3(0, visible - (box.end.y - center.y) * sy, 0) - scale * center
-	return baked(mesh, Transform3D(scale * rotation, offset))
+	var origin := Vector3(data.x, ground, data.y)
+	var result := baked(mesh, Transform3D(scale * rotation, offset), origin)
+	_record_outline(index, result, origin, visible)
+	return result
+
+## The rock's outline where it meets the ground, as a radius-against-angle curve
+## r(a) = r0 + c1 cos a + s1 sin a + c2 cos 2a + s2 sin 2a about the layout centre, handed
+## to the terrain shader (Assets.terrain(): boulder_at, boulder_shape).
+static func _record_outline(index: int, mesh: ArrayMesh, origin: Vector3, top: float) -> void:
+	const BINS := 24
+	var reach := PackedFloat32Array()
+	reach.resize(BINS)
+	var vertices: PackedVector3Array = mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+	for v in vertices:
+		var above := origin.y + v.y - Layout.height_at(origin.x + v.x, origin.z + v.z)
+		if above < -.15 or above > .3: continue
+		var bin := posmod(int(floor((atan2(v.z, v.x) + PI) / TAU * BINS)), BINS)
+		reach[bin] = maxf(reach[bin], Vector2(v.x, v.z).length())
+	# Empty bins (sparse vertices) borrow from their nearest filled neighbours.
+	for pass_index in BINS:
+		var filled := true
+		for i in BINS:
+			if reach[i] > 0.0: continue
+			filled = false
+			reach[i] = maxf(reach[(i + 1) % BINS], reach[(i + BINS - 1) % BINS]) * .98
+		if filled: break
+	var terms := PackedFloat32Array([0, 0, 0, 0, 0])
+	for i in BINS:
+		var a := (i + .5) / BINS * TAU - PI
+		terms[0] += reach[i] / BINS
+		terms[1] += reach[i] * cos(a) * 2.0 / BINS
+		terms[2] += reach[i] * sin(a) * 2.0 / BINS
+		terms[3] += reach[i] * cos(2.0 * a) * 2.0 / BINS
+		terms[4] += reach[i] * sin(2.0 * a) * 2.0 / BINS
+	var count := Layout.BOULDERS.size()
+	if outline_at.size() != count:
+		outline_at.resize(count); outline_shape.resize(count)
+	outline_at[index] = Vector4(origin.x, origin.z, terms[0], origin.y + top)
+	outline_shape[index] = Vector4(terms[1], terms[2], terms[3], terms[4])
+	Assets.terrain().set_shader_parameter("boulder_at", outline_at)
+	Assets.terrain().set_shader_parameter("boulder_shape", outline_shape)
 
 ## Partly buried mid-size scans outside the playable bar: both bar ends, the
 ## far-bank waterline under the cliff, and the back edge of the bar (these can be
@@ -138,10 +207,13 @@ static func build_margin(parent: Node3D, oaks: Array) -> Node3D:
 			var shore := Layout.canyon_shore_z(x)
 			spots.append(Vector4(x, shore + rng.randf_range(-1.5, Layout.canyon_width_at(x) + 3.0), rng.randf_range(1.2, 2.8), 0))
 	# The far bank drops 2.1 m per metre into the pool; keep these on the wall's foot.
+	# Wave C: spread along the reach the bar looks across (the across-river, far-wall,
+	# wildlife and crew views), one of each margin scan in view, instead of anywhere in
+	# |x| < 75 where they fell out of every tour view.
 	for i in 9:
-		var x := rng.randf_range(-75.0, 75.0)
+		var x: float = FAR_BANK_X[i] + rng.randf_range(-2.5, 2.5)
 		var foot := Layout.canyon_shore_z(x) - 27.27619 - Layout.canyon_far_offset(x)
-		spots.append(Vector4(x, foot - rng.randf_range(-.3, 2.2), rng.randf_range(1.0, 2.4), 1))
+		spots.append(Vector4(x, foot - rng.randf_range(-.3, 1.4), rng.randf_range(1.6, 2.6), 1))
 	var tries := 0
 	while spots.size() < 10 + 9 + 6 and tries < 200:
 		tries += 1
@@ -158,7 +230,7 @@ static func build_margin(parent: Node3D, oaks: Array) -> Node3D:
 	var batches: Dictionary = {}
 	for i in spots.size():
 		var s: Vector4 = spots[i]
-		var file: int = meshes[i % meshes.size()]
+		var file: int = meshes[i % meshes.size()] if s.w != 1 else FAR_BANK_MESH[i - 10]
 		var path := BOULDER_PATH % file
 		var mesh := Assets.mesh(path)
 		var box := _bounds(mesh, Basis.IDENTITY)
@@ -176,7 +248,9 @@ static func build_margin(parent: Node3D, oaks: Array) -> Node3D:
 		var look := rng.randf_range(.92, 1.08)
 		var tint := Color(look, look * rng.randf_range(.97, 1.0), look * rng.randf_range(.93, 1.0), rng.randf_range(.6, 1.2))
 		if not batches.has(file): batches[file] = []
-		batches[file].append([Transform3D(basis, Vector3(s.x, ground + sink, s.y)), tint])
+		# Ground plane under the rock (height at its centre and slope) for contact shading.
+		var slope := Vector2(Layout.height_at(s.x + .5, s.y) - Layout.height_at(s.x - .5, s.y), Layout.height_at(s.x, s.y + .5) - Layout.height_at(s.x, s.y - .5))
+		batches[file].append([Transform3D(basis, Vector3(s.x, ground + sink, s.y)), tint, Color(ground, slope.x, slope.y, 1.0)])
 		if s.w == 2:
 			# Reachable: a unit-scale convex body baked from the same placement.
 			var body := StaticBody3D.new()
@@ -193,11 +267,13 @@ static func build_margin(parent: Node3D, oaks: Array) -> Node3D:
 		var multi := MultiMesh.new()
 		multi.transform_format = MultiMesh.TRANSFORM_3D
 		multi.use_colors = true
+		multi.use_custom_data = true
 		multi.mesh = Assets.mesh(BOULDER_PATH % file)
 		multi.instance_count = items.size()
 		for j in items.size():
 			multi.set_instance_transform(j, items[j][0])
 			multi.set_instance_color(j, items[j][1])
+			multi.set_instance_custom_data(j, items[j][2])
 		node.multimesh = multi
 		node.material_override = material(BOULDER_PATH % file, .5, .15 if file == 11 else .0)
 		node.gi_mode = GeometryInstance3D.GI_MODE_STATIC

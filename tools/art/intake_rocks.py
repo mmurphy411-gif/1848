@@ -30,44 +30,53 @@ ROOT = Path(__file__).resolve().parents[2]
 BLENDER = r"C:\Program Files\Blender Foundation\Blender 5.2\blender.exe"
 WORK = ROOT / "artifacts" / "intake_rocks"
 
-GRANITE = "0.62,0.62,0.60"
 # name: (source id, resolution, piece or None, crop, extract args, normalize args)
 RECIPES: dict[str, dict] = {}
 
 
 def recipe(name, src, res, piece=None, crop=False, fit=1.0, rotate=None, wear=0, tris=3000, tex=1024,
-           tint=None, saturation=1.0, value=1.0, origin="center"):
+           tint=None, saturation=1.0, value=1.0, origin="center", cast=0.0):
     RECIPES[name] = dict(src=src, res=res, piece=piece, crop=crop, fit=fit, rotate=rotate, wear=wear, tris=tris,
-                         tex=tex, tint=tint, saturation=saturation, value=value, origin=origin)
+                         tex=tex, tint=tint, saturation=saturation, value=value, origin=origin, cast=cast)
 
 
+SET1 = ("rock_moss_set_01", "4k")
 SET2 = ("rock_moss_set_02", "4k")
-SET2_8K = ("rock_moss_set_02", "8k")  # 2k crops for the two boulders the camera meets closest
-# --- Bar boulders: Layout.BOULDERS index i uses boulder_{i+1}. Pale granite with water-worn
-# edges (`wear` smoothing passes), one white quartz boulder; boulder_04/05/06 keep some of
-# their scan's iron staining as the rust accent.
-recipe("boulders/boulder_01", *SET2_8K, "rock_moss_set_02_rock11", crop=True, wear=70, tex=2048, tint=GRANITE + ",0.92",
-       saturation=0.4)
-recipe("boulders/boulder_02", "stone_01", "1k", "stone_01", wear=30, tint="0.64,0.62,0.59,0.80", saturation=0.85)
-recipe("boulders/boulder_03", *SET2_8K, "rock_moss_set_02_rock13", crop=True, wear=90, tex=2048, tint=GRANITE + ",0.92",
-       saturation=0.4)
-recipe("boulders/boulder_04", "boulder_01", "1k", "boulder_01", wear=40, tint="0.58,0.56,0.52,0.80")
-recipe("boulders/boulder_05", "namaqualand_boulder_06", "1k", "namaqualand_boulder_06", wear=15,
-       tint="0.57,0.55,0.52,0.78")
-recipe("boulders/boulder_06", "namaqualand_boulder_04", "1k", "boulder_04", wear=15, tint="0.60,0.56,0.51,0.62")
-recipe("boulders/boulder_07", *SET2, "rock_moss_set_02_rock12", crop=True, wear=70, tint=GRANITE + ",0.92", saturation=0.4)
-recipe("boulders/boulder_08", *SET2, "rock_moss_set_02_rock07", crop=True, wear=60, tint=GRANITE + ",0.92", saturation=0.4)
+SET2_8K = ("rock_moss_set_02", "8k")  # 2k crop for boulder_01, which the bear view meets close
+# --- Bar boulders: Layout.BOULDERS index i uses boulder_{i+1}; boulder_08 rings the store and
+# joins the margin rocks. Wave C: every bar boulder comes from a different scan and is river
+# rounded (`cast` pulls the piece toward its bounding ellipsoid, then `wear` smooths), so
+# none keeps the sheer sides and flat top of a fractured block. Granite tint about 0.28
+# linear; scan_rock.gdshader adds the crystal grain, quartz veins and iron staining.
+# boulder_02 is the white quartz boulder; boulder_06 keeps its scan's iron staining.
+GRANITE = "0.575,0.57,0.55"
+recipe("boulders/boulder_01", *SET2_8K, "rock_moss_set_02_rock11", crop=True, cast=0.45, wear=20, tex=2048,
+       tint=GRANITE + ",0.92", saturation=0.4)
+recipe("boulders/boulder_02", "stone_01", "1k", "stone_01", cast=0.5, wear=20, tint="0.66,0.645,0.62,0.85",
+       saturation=0.6)
+recipe("boulders/boulder_03", "namaqualand_boulders_01", "4k", "namaqualand_rocks_01_a", crop=True, cast=0.25,
+       wear=15, tex=2048, tint=GRANITE + ",0.9", saturation=0.45)
+recipe("boulders/boulder_04", *SET1, "rock_moss_set_01_rock04", crop=True, cast=0.45, wear=20,
+       tint=GRANITE + ",0.92", saturation=0.4)
+recipe("boulders/boulder_05", *SET1, "rock_moss_set_01_rock01", crop=True, cast=0.45, wear=20,
+       tint=GRANITE + ",0.92", saturation=0.4)
+recipe("boulders/boulder_06", "namaqualand_boulder_04", "1k", "boulder_04", cast=0.4, wear=20,
+       tint="0.56,0.53,0.49,0.6")
+recipe("boulders/boulder_07", *SET1, "rock_moss_set_01_rock05", crop=True, cast=0.45, wear=20,
+       tint=GRANITE + ",0.92", saturation=0.4)
+recipe("boulders/boulder_08", "namaqualand_boulder_06", "1k", "namaqualand_boulder_06", cast=0.45, wear=20,
+       tint="0.56,0.545,0.52,0.8")
 # --- Margin rocks (partly buried at the bar ends, back edge and far bank); less worn.
 MARGIN = dict(tris=2000, tex=512)
-recipe("boulders/boulder_09", *SET2, "rock_moss_set_02_rock10", crop=True, wear=20, tint=GRANITE + ",0.92", saturation=0.4,
-       **MARGIN)
-recipe("boulders/boulder_10", "namaqualand_boulder_05", "1k", "namaqualand_boulder_05", wear=10,
-       tint="0.60,0.58,0.54,0.80", **MARGIN)
+recipe("boulders/boulder_09", *SET2, "rock_moss_set_02_rock10", crop=True, cast=0.25, wear=20, tint=GRANITE + ",0.92",
+       saturation=0.4, **MARGIN)
+recipe("boulders/boulder_10", "namaqualand_boulder_05", "1k", "namaqualand_boulder_05", cast=0.2, wear=10,
+       tint="0.58,0.56,0.52,0.80", **MARGIN)
 recipe("boulders/boulder_11", "rock_09", "1k", "rock_09_LOD0", wear=10, tint="0.36,0.37,0.37,0.55", **MARGIN)
-recipe("boulders/boulder_12", "namaqualand_boulders_01", "1k", "namaqualand_rocks_01_b", wear=10,
+recipe("boulders/boulder_12", "namaqualand_boulders_01", "1k", "namaqualand_rocks_01_b", cast=0.2, wear=10,
        tint=GRANITE + ",0.80", **MARGIN)
-recipe("boulders/boulder_13", *SET2, "rock_moss_set_02_rock09", crop=True, wear=20, tint=GRANITE + ",0.92", saturation=0.4,
-       **MARGIN)
+recipe("boulders/boulder_13", *SET1, "rock_moss_set_01_rock02", crop=True, cast=0.4, wear=20, tint=GRANITE + ",0.92",
+       saturation=0.4, **MARGIN)
 # --- Cobbles: well rounded, neutral grey; the MultiMesh colour sets the rock type.
 COBBLE = dict(tris=180, tex=256, tint="0.66,0.66,0.65,0.85")
 recipe("boulders/cobble_01", *SET2, "rock_moss_set_02_rock08", crop=True, wear=60, **COBBLE)
@@ -90,6 +99,10 @@ recipe("clutter/driftwood_03", "dry_branches_medium_01", "1k", "dry_branches_med
        tex=512, tint=WOOD, origin="base")
 recipe("clutter/driftwood_log", "dead_tree_trunk", "1k", "dead_tree_trunk", fit=None, tris=1200, tex=512,
        tint=WOOD, origin="base")
+# Wave C: a big split snag (4 m, 1 m across the fork) that reads as flood debris from the
+# far end of the bar; placed along the spring high-water line and against inland boulders.
+recipe("clutter/driftwood_snag", "dead_tree_trunk_02", "1k", "dead_tree_trunk_02", fit=None, tris=1500, tex=512,
+       tint="0.60,0.58,0.54,0.75", origin="base")
 recipe("clutter/stump_01", "tree_stump_01", "1k", "tree_stump_01", fit=None, tris=1500, tex=512, origin="base",
        tint="0.42,0.37,0.31,0.45")
 recipe("clutter/bark_01", "bark_debris_01", "1k", "bark_debris_01_a", crop=True, fit=None, tris=300, tex=256,
@@ -121,6 +134,8 @@ def build(name, r, dry, out_dir=None):
         extract += ["--fit", str(r["fit"])]
     if r["rotate"]:
         extract += ["--rotate", r["rotate"]]
+    if r["cast"]:
+        extract += ["--cast", str(r["cast"])]
     if r["wear"]:
         extract += ["--round", str(r["wear"])]
     norm = [BLENDER, "--background", "--python", str(ROOT / "blender/normalize_asset.py"), "--", str(piece),

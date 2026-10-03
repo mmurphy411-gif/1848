@@ -12,14 +12,16 @@ const MESHES := 10
 const SEED := 184841
 const LEGACY := 600
 const EXTRA := 220
-## Linear albedo multipliers on the grey scans (mean about 0.35), with weights.
+## Linear albedo multipliers on the grey scans (mean about 0.35), with weights. Wave C:
+## fewer and greyer white stones, browner tan and rust, more dark slate and greenstone
+## (the bar read as orange-and-white garden gravel).
 const KINDS := [
-	[Color(.74, .72, .68), .32],  # granite
-	[Color(.84, .70, .52), .20],  # tan
-	[Color(.80, .52, .33), .12],  # iron-stained
-	[Color(.34, .36, .37), .14],  # slate
-	[Color(.42, .50, .43), .08],  # greenstone
-	[Color(1.02, 1.0, .96), .14],  # white quartz
+	[Color(.70, .69, .66), .30],  # granite
+	[Color(.74, .66, .54), .18],  # tan
+	[Color(.68, .49, .35), .12],  # iron-stained
+	[Color(.32, .34, .35), .20],  # slate
+	[Color(.40, .46, .41), .13],  # greenstone
+	[Color(.88, .87, .84), .07],  # white quartz
 ]
 ## Meshes that read best for a type (index 1-based); others draw from all ten.
 const QUARTZ_MESHES := [9, 6, 7]

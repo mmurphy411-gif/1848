@@ -250,7 +250,8 @@ func _visual_triangle(surfaces: Array[SurfaceTool], analytic: Array, rendered: A
 			surface.set_uv(Vector2(above[i], 0.0))
 			surface.add_vertex(rendered[i])
 		return
-	surface.set_color(Color(float(mini(kind, 3)) / 4.0, 0, 0, 1))
+	# Kind 4 (river bed) stays 4: the terrain shader draws it as bar cobble, not wall talus.
+	surface.set_color(Color(float(kind if kind < MATERIAL_COUNT else 3) / 4.0, 0, 0, 1))
 	for point in [a, b, c]:
 		surface.add_vertex(point)
 
