@@ -30,12 +30,18 @@ var ground: Node3D
 ## Mesh key -> Array of Transform3D.
 var placements: Dictionary = {}
 var pieces: Dictionary = {}
+## Far-wall stretches a tall piece covers: Vector3(x from, x to, lowest band).
+var tall_spans: Array = []
+## The far wall's foot is dressed with fallen rock this far along the valley.
+const TOE_REACH := 175.0
 
 func build(greybox: Node3D, colliders: Array) -> void:
 	ground = greybox
 	for piece in CLIFFS.keys() + TALUS: pieces[piece] = _piece(piece)
+	_tall_cliffs()
 	_cliffs()
 	_talus(colliders)
+	_toe()
 	_seam_trees()
 	_commit()
 	_treeline()
@@ -135,9 +141,81 @@ func _cliffs() -> void:
 				var proud := rng.randf_range(0.2, 0.9) - float(info.front) * scale
 				var origin: Vector3 = mid.point + band_normal * proud - basis * Vector3(info.centroid)
 				var keep := rng.randf() > (0.2 if absf(x) <= Canyon.BEND_START + 10.0 else 0.5)
+				if far:
+					for span: Vector3 in tall_spans:
+						if x > span.x and x < span.y and band_index >= span.z and band_index <= span.z + 1: keep = false
 				if keep and (far or absf(x) <= Canyon.BEND_START + 10.0):
 					_add(_key(piece, x, far), Transform3D(basis, origin))
 				x += width * rng.randf_range(0.55, 0.85)
+
+## Wave C: tall faces on the far wall. Every 40-80 m a slate scan spans two cliff bands
+## and the bench between them, so the wall reads as one high face broken by ledges, not
+## three regular terraces. The band pieces it covers are left out.
+func _tall_cliffs() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 184829
+	var info: Dictionary = pieces["cliff_slate"]
+	var size: Vector3 = info.size
+	var x := -150.0 + rng.randf() * 25.0
+	while x < 150.0:
+		var apron := 8.0 + 2.0 * sin(x * 0.055)
+		var band := (7.0 + 2.0 * sin(x * 0.04)) * (1.0 - 0.55 * exp(-pow((x - 64.0) / 22.0, 2.0)))
+		var lower := rng.randi_range(0, 1)
+		var start := apron + lower * (band + 3.0)
+		var depth := 2.0 * band + 3.0
+		var rise := 2.0 * band * BAND_SLOPE + 3.0 * 0.27
+		# A slab stretched up the face: vertical joints, not a scan blown up 3.5 times.
+		var scale := sqrt(rise * rise + depth * depth) * rng.randf_range(0.55, 0.62) / size.y
+		var stretch := rng.randf_range(0.8, 1.0)
+		var tall := rng.randf_range(1.45, 1.6)
+		var width := size.x * scale * stretch
+		var mid := _wall(x, start + depth * 0.5, true)
+		var outward := Vector3(mid.normal.x, 0.0, mid.normal.z)
+		outward = outward.normalized() if outward.length() > 0.2 else Vector3(0, 0, 1)
+		var plane := (outward * (rise / depth) + Vector3.UP).normalized()
+		var basis := Basis(plane, rng.randf_range(-0.2, 0.2)) * Basis(Quaternion(info.face, plane))
+		basis = basis * Basis.from_scale(Vector3(scale * stretch, scale * tall, scale))
+		var proud := rng.randf_range(1.4, 2.2) - float(info.front) * scale
+		var origin: Vector3 = mid.point + plane * proud - basis * Vector3(info.centroid)
+		_add(_key("tall:cliff_slate", x, true), Transform3D(basis, origin))
+		tall_spans.append(Vector3(x - width * 0.42, x + width * 0.42, lower))
+		x += width + rng.randf_range(15.0, 45.0)
+
+## Wave C: the far wall's foot. Rock fallen to the waterline, some of it standing in the
+## shallows, in runs with gaps, so the foot of the wall is not one straight line along
+## the water; now and then a big block.
+func _toe() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 184828
+	var x := -TOE_REACH
+	while x < TOE_REACH:
+		x += rng.randf_range(0.8, 2.6)
+		var run := Canyon.relief_noise().get_noise_2d(x * 0.07, 3100.0)
+		if rng.randf() > 0.55 + 0.9 * run: continue
+		var d := rng.randf_range(-1.2, 1.6)
+		var spot := _wall(x, d, true)
+		if rng.randf() < 0.12:
+			# A low bluff of bedrock standing out of the water, its face to the river.
+			var bluff: String = "cliff_face_01" if rng.randf() < 0.6 else "cliff_face_02"
+			var shell: Dictionary = pieces[bluff]
+			var outward := Vector3(spot.normal.x, 0.0, spot.normal.z)
+			outward = outward.normalized() if outward.length() > 0.2 else Vector3(0, 0, 1)
+			var facing := (outward + Vector3.UP * 0.6).normalized()
+			var size := rng.randf_range(1.0, 1.6) * (1.4 if bluff == "cliff_face_02" else 1.0)
+			var shell_basis := (Basis(facing, rng.randf_range(-0.4, 0.4)) * Basis(Quaternion(shell.face, facing))).scaled(Vector3.ONE * size)
+			var base: Vector3 = spot.point + Vector3.DOWN * shell.size.y * size * 0.3
+			_add(_key(bluff, x, true), Transform3D(shell_basis, base - shell_basis * Vector3(shell.centroid.x, 0.0, shell.centroid.z)))
+			continue
+		var piece: String = TALUS[rng.randi_range(0, TALUS.size() - 1)]
+		var info: Dictionary = pieces[piece]
+		var extent: Vector3 = info.size
+		var scale := rng.randf_range(2.6, 3.6) if rng.randf() < 0.08 else rng.randf_range(0.9, 2.0) * (1.0 + 0.4 * maxf(run, 0.0))
+		# Rocks in the water must be big enough to stand out of it.
+		if d < 0.3: scale = maxf(scale, rng.randf_range(1.8, 3.0))
+		var normal: Vector3 = spot.normal.lerp(Vector3.UP, 0.55).normalized()
+		var basis := _seated(info, normal, rng.randf() * TAU, scale)
+		var origin: Vector3 = spot.point - normal * extent.y * scale * rng.randf_range(0.25, 0.4)
+		_add(_key(piece, x, true), Transform3D(basis, origin))
 
 ## Basis turning a rock's open side (if any) into the slope, spun about the slope.
 func _seated(info: Dictionary, normal: Vector3, spin: float, scale: float) -> Basis:
@@ -200,7 +278,9 @@ func _seam_trees() -> void:
 			var p: Vector3 = spot.point
 			if spot.normal.y < cos(deg_to_rad(40)) or rng.randf() > exp(-p.y / 125.0): continue
 			if s > FOREST_SEAM * 0.5 and rng.randf() < (s - FOREST_SEAM * 0.5) / (FOREST_SEAM * 0.5): continue
-			var species := "ponderosa" if p.y > 45 or (far and rng.randf() < .55) else ("incense_cedar" if rng.randf() < .5 else "douglas_fir")
+			# Wave C: fir and cedar only. The distant ponderosa is a long bare trunk under
+			# a small crown, which read as a pole at 150-250 m.
+			var species := "incense_cedar" if rng.randf() < .45 else "douglas_fir"
 			var basis := Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3.ONE * rng.randf_range(0.8, 1.2))
 			_add("tree:%s|%d" % [species, int(side)], Transform3D(basis, p - Vector3.UP * 0.18))
 			placed += 1
@@ -218,25 +298,30 @@ func _treeline() -> void:
 		var normals := PackedVector3Array()
 		var colors := PackedColorArray()
 		var count := 0
-		for attempt in 20000:
-			if count >= 2000: break
+		for attempt in 30000:
+			if count >= 2600: break
 			var s := FOREST_SEAM * 0.6 + rng.randf() * 420.0
 			var x: float = side * (Canyon.BEND_START + s)
-			var far := rng.randf() < 0.72
+			var far := rng.randf() < 0.68
 			var rim := Canyon.rim(x, far)
-			var crest_row := far and rng.randf() < 0.55
-			var u := rng.randf_range(-rim + 10.0, 420.0)
-			if crest_row:
-				var k := rng.randi_range(0, Canyon.CRESTS.size() - 1)
-				u = Canyon.CRESTS[k].x + 18.0 * Canyon.noise().get_noise_2d(x * 0.009, 40.0 + k * 31.0) + rng.randfn(0.0, 9.0)
+			var u := rng.randf_range(-rim + 10.0, 440.0)
 			# Fade in past the seam trees.
 			if s < FOREST_SEAM and rng.randf() > (s - FOREST_SEAM * 0.6) / (FOREST_SEAM * 0.4): continue
 			var z := Canyon.far_foot(x) - rim - u if far else Canyon.near_foot(x) + rim + u
 			if Vector2(x, Canyon.remap_z(x, z)).length() > TREE_RADIUS: continue
+			# Wave C: trees stand where canyon.gd's ground cover holds them - clumped, thick
+			# in the draws, open on spurs and crests, none on rock, scree or steep ground.
+			var cover := Canyon.cover_at(x, rim + u, far) if u > 0.0 else Color(0.3, 0, 0, 0)
+			if rng.randf() > cover.r: continue
 			var spot := _wall(x, rim + u, far)
-			# Thin where the slope steepens; none on cliffs.
-			if spot.normal.y < 0.55 or rng.randf() > smoothstep(0.55, 0.8, spot.normal.y) + (0.5 if crest_row else 0.0): continue
-			_spire(vertices, normals, colors, spot.point, rng)
+			if rng.randf() > smoothstep(0.42, 0.66, spot.normal.y): continue
+			# Oaks on the lower sunny (south, -Z) faces; conifers taller in the draws.
+			var sunny: bool = spot.normal.z < -0.12 and spot.point.y < 150.0
+			if sunny and rng.randf() < 0.3:
+				_dome(vertices, normals, colors, spot.point, rng)
+			else:
+				# Below the rim only small trees hold on the benches.
+				_spire(vertices, normals, colors, spot.point, rng, 1.0 + 0.3 * cover.g if u > 0.0 else 0.5)
 			count += 1
 		arrays[Mesh.ARRAY_VERTEX] = vertices
 		arrays[Mesh.ARRAY_NORMAL] = normals
@@ -251,9 +336,39 @@ func _treeline() -> void:
 		line.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
 		add_child(line)
 
-func _spire(vertices: PackedVector3Array, normals: PackedVector3Array, colors: PackedColorArray, base: Vector3, rng: RandomNumberGenerator) -> void:
-	var height := rng.randf_range(14.0, 27.0)
-	var radius := height * rng.randf_range(0.16, 0.24)
+## Canyon live oak or black oak crown at distance: a low six-sided dome (24 triangles).
+func _dome(vertices: PackedVector3Array, normals: PackedVector3Array, colors: PackedColorArray, base: Vector3, rng: RandomNumberGenerator) -> void:
+	var radius := rng.randf_range(3.5, 7.5)
+	var height := radius * rng.randf_range(0.9, 1.3)
+	var tint := rng.randf()
+	var turn := rng.randf() * TAU
+	base.y -= 0.4
+	# COLOR: r = tint, g = 1 treeline mesh, b = height on the crown, a = 0.5 marks a dome.
+	var rings := [Vector3(0.0, 1.0, 1.0), Vector3(0.78, 0.72, 0.75), Vector3(1.0, 0.32, 0.3), Vector3(0.0, 0.0, 0.0)]
+	for ring in 3:
+		var top: Vector3 = rings[ring]
+		var bottom: Vector3 = rings[ring + 1]
+		for i in 6:
+			var a0 := turn + TAU * i / 6.0
+			var a1 := turn + TAU * (i + 1) / 6.0
+			var quad := []
+			for corner in [[top, a0], [top, a1], [bottom, a0], [bottom, a1]]:
+				var r: Vector3 = corner[0]
+				var a: float = corner[1]
+				quad.append(base + Vector3(cos(a) * r.x * radius, r.y * height, sin(a) * r.x * radius))
+			var faces := [[quad[0], quad[2], quad[3]], [quad[0], quad[3], quad[1]]] if ring > 0 else [[quad[0], quad[2], quad[3]]]
+			if ring == 2: faces = [[quad[0], quad[2], quad[1]]]
+			for face in faces:
+				for point: Vector3 in face:
+					var out := point - base - Vector3(0, height * 0.3, 0)
+					normals.append((Vector3(out.x, 0.0, out.z).normalized() + Vector3.UP * 0.9).normalized() if out.y > -height * 0.25 else Vector3.DOWN)
+					vertices.append(point)
+					colors.append(Color(tint, 1.0, clampf((point.y - base.y) / height, 0.0, 1.0), 0.5))
+
+func _spire(vertices: PackedVector3Array, normals: PackedVector3Array, colors: PackedColorArray, base: Vector3, rng: RandomNumberGenerator, vigour := 1.0) -> void:
+	# Wave C: a wide spread of sizes (most young, a few big old trees), not one size.
+	var height := lerpf(9.0, 33.0, pow(rng.randf(), 1.5)) * vigour
+	var radius := height * rng.randf_range(0.15, 0.25)
 	var tint := rng.randf()
 	var turn := rng.randf() * TAU
 	base.y -= 0.6
@@ -283,6 +398,8 @@ func _commit() -> void:
 		var multi := MultiMesh.new()
 		multi.transform_format = MultiMesh.TRANSFORM_3D
 		var tree := piece.begins_with("tree:")
+		var tall := piece.begins_with("tall:")
+		if tall: piece = piece.get_slice(":", 1)
 		if tree:
 			var species := piece.get_slice(":", 1)
 			multi.mesh = Assets.plant(species, BARK[CONIFERS.find(species)], true, true)
@@ -299,10 +416,12 @@ func _commit() -> void:
 		var near_wall := label.get_slice("|", 2) == "near"
 		var shadow_reach := 75.0 if piece.begins_with("cliff") else 25.0
 		group.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if not tree and near_wall and centre <= shadow_reach else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		group.gi_mode = GeometryInstance3D.GI_MODE_STATIC if not tree and centre <= 75.0 else GeometryInstance3D.GI_MODE_DISABLED
+		# Tall faces stay out of GI: their shells, a dozen metres deep, darkened their own light.
+		group.gi_mode = GeometryInstance3D.GI_MODE_STATIC if not tree and not tall and centre <= 75.0 else GeometryInstance3D.GI_MODE_DISABLED
 		# Scans carry baked normal maps, so their imported LODs can switch early;
-		# talus is a speck beyond the claim reach and drops out there.
-		if not tree: group.lod_bias = 0.45
+		# talus is a speck beyond the claim reach and drops out there. Wave C: 0.45 -> 0.25
+		# paid for the far-wall toe and tall faces (0.03 ms at the bar, 0.07 in the overview).
+		if not tree: group.lod_bias = 0.25
 		if piece.begins_with("talus"):
 			group.visibility_range_end = 170.0
 			group.visibility_range_end_margin = 15.0
