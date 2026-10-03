@@ -370,28 +370,166 @@ def hair_keys(hair,parts,cards):
         set_key(hair,'hair_capped',under_cap()),set_key(hair,'beard_long',beard(3.0,.06)),
         set_key(hair,'beard_bushy',beard(0,.22)),set_key(hair,'moustache_walrus',walrus())]
 
-def shirt_keys(body,parts):
-    """Sleeves rolled above the elbow, or let down to the wrist."""
+# Wave C: a plain working-shirt sleeve, radius (m) along the arm chain (0 shoulder, 1 elbow,
+# 2 wrist). The miner's own sleeve puffs to 7.4 cm at the shoulder, which reads as a
+# Renaissance or leg-of-mutton sleeve once let down.
+SLEEVE_PROFILE=[(0.0,.053),(0.12,.052),(0.5,.050),(0.8,.050),(1.0,.053),(1.2,.054),(1.5,.050),(1.8,.045)]
+
+def _interp(table,s):
+    if s<=table[0][0]:return table[0][1]
+    for (s0,r0),(s1,r1) in zip(table,table[1:]):
+        if s<=s1:return r0+(r1-r0)*(s-s0)/max(1e-6,s1-s0)
+    return table[-1][1]
+
+def arm_clearance(skin,skin_part):
+    """Largest radius of the arm skin about the arm chain, per 0.05 of chain, so a slimmed
+    sleeve never cuts into the forearm it covers."""
+    me=skin.data;vpart=[0]*len(me.vertices)
+    for p in me.polygons:
+        for i in p.vertices:vpart[i]=skin_part[p.index]
+    best={}
+    for i,v in enumerate(me.vertices):
+        if vpart[i]!=HANDS or abs(v.co.x)<.2 or v.co.z<.7:continue
+        s,_,_=arm_coordinates(v.co,'Left' if v.co.x>0 else 'Right')
+        a=_axis_point('Left' if v.co.x>0 else 'Right',s);key=round(s*20)
+        best[key]=max(best.get(key,0.0),(v.co-a).length)
+    return [(k/20.0,r) for k,r in sorted(best.items())]
+
+def _axis_point(side,v):
+    seg=0 if v<=1 else 1;a,b=ARMS[side][seg],ARMS[side][seg+1]
+    return a+(b-a)*(v-seg)
+
+def shirt_keys(body,parts,clearance):
+    """Sleeves rolled above the elbow, or hanging plain at the miner's length (the shirt's
+    puffed upper sleeve slimmed to an ordinary sleeve in both). Sleeves let down to the
+    wrist are painted on the forearm in crew.gdshader: a key cannot move the cuff to the
+    wrist without dragging upper-arm skin weights onto the forearm."""
     me=body.data;co=[v.co.copy() for v in me.vertices];vpart=[0]*len(co)
     for p in me.polygons:
         for i in p.vertices:vpart[i]=parts[p.index]
     sleeve=[vpart[i]==SHIRT and is_sleeve(co[i]) for i in range(len(co))]
     cuff=max(arm_coordinates(co[i],'Left' if co[i].x>0 else 'Right')[0] for i in range(len(co)) if sleeve[i])
+    station={};radial={}
+    for i,p in enumerate(co):
+        if not sleeve[i]:continue
+        side='Left' if p.x>0 else 'Right'
+        s,_,_=arm_coordinates(p,side);station[i]=(side,s);radial[i]=p-_axis_point(side,s)
+    # Median sleeve radius per 0.05 of chain: the shape of the cloth is kept, its puff is not.
+    bins={}
+    for i,(side,s) in station.items():bins.setdefault(round(s*20),[]).append(radial[i].length)
+    median=[(k/20.0,float(np.median(v))) for k,v in sorted(bins.items())]
+    def plain_radius(s):
+        clear=_interp(clearance,s)+.007 if clearance and s>=clearance[0][0]-.05 else 0.0
+        return max(_interp(SLEEVE_PROFILE,s),clear)
     def move(target,bunch):
         out=[]
         for i,p in enumerate(co):
             if not sleeve[i]:out.append(p.copy());continue
-            side='Left' if p.x>0 else 'Right'
-            s,_,_=arm_coordinates(p,side)
-            if s<=.80:out.append(p.copy());continue
-            k=(s-.80)/max(1e-4,cuff-.80);ns=.80+k*(target-.80)
-            def axis_point(v):
-                seg=0 if v<=1 else 1;a,b=ARMS[side][seg],ARMS[side][seg+1]
-                return a+(b-a)*(v-seg)
-            a0=axis_point(s);a1=axis_point(ns)
-            out.append(a1+(p-a0)*(1+bunch*k))
+            side,s=station[i];rv=radial[i];r=max(1e-5,rv.length)
+            if s<=.80:k=0.0;ns=s
+            else:k=(s-.80)/max(1e-4,cuff-.80);ns=.80+k*(target-.80)
+            # Slim toward the plain profile, keeping a little of the cloth's own variation;
+            # the shoulder seam stays where the torso has it.
+            # Full from just off the shoulder seam (|x| .205), where the sleeve head puffs.
+            w=max(min(1.0,max(0.0,(s+.02)/.1)),min(1.0,max(0.0,(abs(p.x)-.207)/.015)));w=w*w*(3-2*w)
+            plain=plain_radius(ns)*(r/max(1e-5,_interp(median,s)))**.35
+            scale=(1-w)+w*plain/r
+            out.append(_axis_point(side,ns)+rv*scale*(1+bunch*k))
         return out
-    return [set_key(body,'sleeves_rolled',move(.92,.18)),set_key(body,'sleeves_down',move(1.80,-.38))],float(cuff)
+    return [set_key(body,'sleeves_rolled',move(.92,.18)),set_key(body,'sleeves_slim',move(cuff,0.0))],float(cuff)
+
+# Few enough passes that only ridges a couple of edges wide relax; the leg keeps its shape.
+SMOOTH_ITERATIONS=20
+
+def flatten_trousers(body,parts):
+    """Wave C: the miner's trouser legs carry crossed fold ridges from knee to boot top (and
+    creases on the boot shafts) that read as cross-gartering on every hired hand. Written
+    into the kit's own basis (the hero keeps his): a few passes of umbrella smoothing of
+    each leg's radius about its own axis, on the welded surface (open edges such as the
+    knee tear and hems, and seams with other garments, hold), so the ridges go and the leg
+    keeps its silhouette; normals follow the new surface. Runs before any Body shape key
+    is added."""
+    me=body.data;n=len(me.vertices);co=np.array([v.co[:] for v in me.vertices])
+    vpart=np.zeros(n,dtype=np.int32)
+    for p in me.polygons:
+        for i in p.vertices:vpart[i]=parts[p.index]
+    z=co[:,2]
+    def ramp(x,a,b):
+        t=np.clip((x-a)/(b-a),0,1);return t*t*(3-2*t)
+    weight=np.zeros(n)
+    trousers=vpart==TROUSERS;boots=vpart==BOOTS
+    weight[trousers]=ramp(z[trousers],.40,.44)*(1-ramp(z[trousers],.62,.70))
+    weight[boots]=.8*ramp(z[boots],.12,.18)*(1-ramp(z[boots],.33,.37))
+    # The game mesh is split at UV and normal seams: weld by position for the topology,
+    # so only true open edges (the knee tear, hems) count as edges of the cloth.
+    _,weld=np.unique(np.round(co*1e5).astype(np.int64),axis=0,return_inverse=True)
+    weld=weld.reshape(-1)
+    edge_faces={}
+    for poly in me.polygons:
+        vs=[int(weld[i]) for i in poly.vertices]
+        for k in range(len(vs)):
+            e=(min(vs[k],vs[(k+1)%len(vs)]),max(vs[k],vs[(k+1)%len(vs)]))
+            edge_faces[e]=edge_faces.get(e,0)+1
+    m=int(weld.max())+1
+    neighbours=[[] for _ in range(m)];fixed=np.zeros(m,dtype=bool)
+    upart=np.zeros(m,dtype=np.int32);uw=np.zeros(m)
+    for i in range(n):upart[weld[i]]=vpart[i];uw[weld[i]]=max(uw[weld[i]],weight[i])
+    mixed=np.zeros(m,dtype=bool)
+    for i in range(n):
+        if upart[weld[i]]!=vpart[i]:mixed[weld[i]]=True
+    for (a,b),count in edge_faces.items():
+        if count!=2:fixed[a]=fixed[b]=True
+        neighbours[a].append(b);neighbours[b].append(a)
+    for i in range(m):
+        # Seams with other garments (boot tops, belt line) stay put.
+        if mixed[i] or (uw[i]>0 and any(upart[j]!=upart[i] for j in neighbours[i])):fixed[i]=True
+    # Each leg is a tube about its own axis (the middle of each 1 cm slice of the original
+    # surface, smoothed along the leg). Only the radius is smoothed, over the welded
+    # surface's own neighbours, with height and bearing held: folds and ridges relax, the
+    # cloth cannot slide or shorten, and open edges and seams hold.
+    uco=np.zeros((m,3));uco[weld]=co
+    centre=np.zeros((m,2));radius=np.zeros(m);bearing=np.zeros((m,2))
+    for part in (TROUSERS,BOOTS):
+        for side in (1,-1):
+            whole=np.nonzero((upart==part)&(np.sign(uco[:,0])==side))[0]
+            if len(whole)<10:continue
+            bins=np.round(uco[whole,2]/.01).astype(int)
+            mid={k:(uco[whole][bins==k][:,:2].min(0)+uco[whole][bins==k][:,:2].max(0))/2 for k in np.unique(bins)}
+            keys=sorted(mid);arr=np.array([mid[k] for k in keys]);sm=arr.copy()
+            for i in range(len(keys)):
+                lo,hi=max(0,i-3),min(len(keys),i+4);sm[i]=arr[lo:hi].mean(0)
+            lookup=dict(zip(keys,sm))
+            centre[whole]=np.array([lookup[k] for k in bins])
+            rel=uco[whole,:2]-centre[whole];radius[whole]=np.linalg.norm(rel,axis=1)
+            bearing[whole]=rel/np.maximum(1e-9,radius[whole])[:,None]
+    region=np.nonzero((uw>0)&~fixed)[0]
+    nb=[np.array(neighbours[i]) for i in region]
+    rate=.5*uw[region]
+    r=radius.copy()
+    for it in range(SMOOTH_ITERATIONS):
+        avg=np.array([r[j].mean() for j in nb])
+        r[region]+=(avg-r[region])*rate
+    p=uco.copy()
+    p[region,:2]=centre[region]+bearing[region]*r[region][:,None]
+    out=p[weld]
+    moved=np.linalg.norm(out-co,axis=1)>1e-6
+    corner=[Vector(c.vector) for c in me.corner_normals] if me.has_custom_normals else None
+    for v,c in zip(me.vertices,out):v.co=Vector(c)
+    me.update()
+    # Smooth normals of the new surface, shared across the split seams.
+    acc=np.zeros((m,3))
+    for poly in me.polygons:
+        fn=np.array(poly.normal[:])*poly.area
+        for i in poly.vertices:acc[weld[i]]+=fn
+    acc/=np.maximum(1e-12,np.linalg.norm(acc,axis=1))[:,None]
+    region=np.zeros(m,dtype=bool);region[weld[moved]]=True
+    if corner is not None:
+        normals=[]
+        for loop in me.loops:
+            u=weld[loop.vertex_index]
+            normals.append(Vector(acc[u]) if region[u] else corner[loop.index])
+        me.normals_split_custom_set(normals)
+    return {'moved':int(moved.sum()),'mean_mm':round(float(np.linalg.norm(out-co,axis=1)[moved].mean()*1000),2),'custom_normals':corner is not None}
 
 def part_colours(objs,parts_by_obj):
     """Mean linear albedo and luminance per part, sampled at face corners in the atlases."""
@@ -604,7 +742,9 @@ def main():
     report['beard_shell']={'faces':len(shell_faces),'vertices':len(shell_verts)}
     report['keys']['Hat'],report['hat']=hat_keys(hat)
     report['keys']['Hair']=hair_keys(objs['Hair'],hair_part,cards)
-    report['keys']['Body'],report['sleeve_cuff']=shirt_keys(objs['Body'],body_part)
+    report['trousers_flattened']=flatten_trousers(objs['Body'],body_part)
+    clearance=arm_clearance(objs['Skin'],skin_part)
+    report['keys']['Body'],report['sleeve_cuff']=shirt_keys(objs['Body'],body_part,clearance)
     for name,o in objs.items():
         material=bpy.data.materials.new('Crew_'+name);o.data.materials.clear();o.data.materials.append(material)
         counts={}

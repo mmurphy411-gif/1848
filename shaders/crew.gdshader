@@ -24,8 +24,13 @@ instance uniform vec4 skin = vec4(1.0, 1.0, 1.0, 0.0);   // rgb tone multiplier,
 instance uniform vec4 scalp = vec4(0.0);                 // a: bald crown
 instance uniform vec4 hair = vec4(0.0);
 instance uniform vec4 beard = vec4(0.0, 0.0, 0.0, 15.0); // a: shown regions, bits moustache, chin, jaw, cheek
+// Wave C: boot and belt leather (rgb zero keeps the miner's brown). belt.a: shirt sleeves let
+// down to the wrist, drawn as a cloth layer on the forearm skin (a shape key cannot carry
+// the cuff to the wrist: its vertices keep the upper arm's skin weights).
+instance uniform vec4 boots = vec4(0.0);
+instance uniform vec4 belt = vec4(0.0);
 
-const int SHIRT = 1; const int VEST = 2; const int TROUSERS = 3; const int SCARF = 5; const int LEATHER = 6;
+const int SHIRT = 1; const int VEST = 2; const int TROUSERS = 3; const int BOOTS = 4; const int SCARF = 5; const int LEATHER = 6;
 const int HAT = 7; const int BAND = 8; const int FACE = 9; const int HANDS = 10; const int SCALP = 12;
 const int MOUSTACHE = 13; const int CHEEK = 16; const int STRAPS = 17; const int KNEE = 18;
 const vec3 LUMA = vec3(.2126, .7152, .0722);
@@ -37,6 +42,15 @@ varying flat int part;
 varying flat int trim;
 varying vec2 pattern;
 varying vec3 rest;
+varying float sleeve;
+// The forearm in rest space (Blender axes, the left arm; the right mirrors in x).
+const vec3 ELBOW = vec3(.35, 0.0, 1.08);
+const vec3 WRIST = vec3(.45, -.015, .765);
+
+float forearm_t(vec3 p) {
+	vec3 q = vec3(abs(p.x), p.y, p.z);
+	return dot(q - ELBOW, WRIST - ELBOW) / dot(WRIST - ELBOW, WRIST - ELBOW);
+}
 
 void vertex() {
 	// Garment ids are stored as id / 255 (normalised bytes in the kit).
@@ -49,10 +63,17 @@ void vertex() {
 	if (part == VEST) { shown = vest.a > .5; }
 	else if (part == SCARF) { shown = scarf.a > .5; }
 	else if (part == STRAPS) { shown = braces.a > .5; }
-	else if (part == KNEE) { shown = trousers.a < .5; }
+	// The knee skin under the tear is kept: patched or whole, it is drawn as the cloth over
+	// the hole (hiding it showed the dark inside of the trouser leg).
 	else if (part >= MOUSTACHE && part <= CHEEK) { shown = ((int(beard.a + .5) >> (part - MOUSTACHE)) & 1) == 1; }
 	// Collapse what the man is not wearing: degenerate triangles are never rasterised.
 	if (!shown) { VERTEX = vec3(0.0); }
+	// Sleeves to the wrist: the forearm skin (already skinned here) stands off as cloth.
+	sleeve = 0.0;
+	if (part == HANDS && belt.a > .5 && abs(rest.x) > .2) {
+		sleeve = 1.0 - smoothstep(.885, .9, forearm_t(rest));
+		VERTEX += NORMAL * .009 * sleeve;
+	}
 }
 
 // Box-filtered pulse train (duty d): a woven stripe that greys out instead of aliasing.
@@ -74,34 +95,61 @@ vec3 dye(vec3 base, vec3 target, int p) {
 	return target * clamp(dot(base, LUMA) / REF[p], 0.0, 2.6);
 }
 
+// The shirt's woven colour at cloth coordinates uv (metres round and along).
+vec3 shirt_weave(vec2 uv) {
+	float size = max(shirt_b.a, .01);
+	float kind = shirt.a;
+	float mixv = 0.0;
+	if (kind > 2.5) {
+		// Plaid: a broad check with a narrow over-check.
+		mixv = .5 * (weave(uv.x / size, .5) + weave(uv.y / size, .5));
+		mixv = max(mixv, .9 * max(weave(uv.x / size + .25, .12), weave(uv.y / size + .25, .12)));
+	} else if (kind > 1.5) {
+		mixv = weave(uv.x / size, .42);
+	} else if (kind > .5) {
+		mixv = .5 * (weave(uv.x / size, .5) + weave(uv.y / size, .5));
+	}
+	return mix(shirt.rgb, shirt_b.rgb, mixv);
+}
+
+// What covers the torn knee: the trousers' own cloth (whole) or a sewn-on patch of paler,
+// coarser cloth (patched; a dark patch read as a hole).
+vec3 knee_cloth(bool whole) {
+	vec3 tone = dyed(trousers) ? trousers.rgb : vec3(.13, .072, .032);
+	if (whole) { return tone * 1.02; }
+	return mix(tone, vec3(dot(tone, LUMA)), .3) * vec3(1.2, 1.15, 1.06) * (.9 + .1 * weave(rest.x / .006, .5));
+}
+
 vec3 cloth(vec3 base, int p) {
 	if (p == SHIRT && dyed(shirt)) {
-		float size = max(shirt_b.a, .01);
-		float kind = shirt.a;
-		float mixv = 0.0;
-		if (kind > 2.5) {
-			// Plaid: a broad check with a narrow over-check.
-			mixv = .5 * (weave(pattern.x / size, .5) + weave(pattern.y / size, .5));
-			mixv = max(mixv, .9 * max(weave(pattern.x / size + .25, .12), weave(pattern.y / size + .25, .12)));
-		} else if (kind > 1.5) {
-			mixv = weave(pattern.x / size, .42);
-		} else if (kind > .5) {
-			mixv = .5 * (weave(pattern.x / size, .5) + weave(pattern.y / size, .5));
-		}
-		return dye(base, mix(shirt.rgb, shirt_b.rgb, mixv), p);
+		return dye(base, shirt_weave(pattern), p);
 	}
+	if (p == BOOTS && dyed(boots)) { return dye(base, boots.rgb, p); }
 	if (p == VEST && dyed(vest)) { return dye(base, vest.rgb, p); }
 	if (p == TROUSERS) {
-		vec3 c = dyed(trousers) ? dye(base, trousers.rgb, p) : base;
+		vec3 c = base;
+		if (dyed(trousers)) {
+			// The miner's fold lines are painted into the cloth as well as modelled (the
+			// kit lays the modelled folds flat); on the legs, and on pale cloth
+			// everywhere, the painted lines are softened so they do not read as
+			// cross-gartering or stonewash.
+			float k = dot(base, LUMA) / REF[p];
+			float soften = max(1.0 - smoothstep(.78, .86, rest.z), smoothstep(.1, .35, dot(trousers.rgb, LUMA)));
+			k = mix(k, 1.0 + (k - 1.0) * .35, soften);
+			c = trousers.rgb * clamp(k, 0.0, 2.6);
+		}
 		if (trousers.a > .5) {
 			// The torn right knee: a square patch sewn over it (1), or a whole pair (2).
 			bool whole = trousers.a > 1.5;
 			vec2 d = abs(vec2(rest.x + .108, rest.z - .618)) - vec2(.058, .046);
 			float edge = whole ? .02 : .002;
 			float patch = (1.0 - smoothstep(-.003 - edge, edge, max(d.x, d.y))) * (1.0 - smoothstep(-.03, -.01, rest.y));
-			vec3 cloth_tone = dyed(trousers) ? trousers.rgb : vec3(.13, .072, .032);
-			if (!whole) { cloth_tone *= vec3(.8, .85, .9) * (.9 + .1 * weave(rest.x / .006, .5)); }
-			c = mix(c, cloth_tone, patch);
+			if (whole) {
+				// Mended so it does not show: only the painted tear (darker than the
+				// cloth) is filled, at the cloth's own tone.
+				patch *= 1.0 - smoothstep(.45, .85, dot(base, LUMA) / REF[TROUSERS]);
+			}
+			c = mix(c, knee_cloth(whole), patch);
 		}
 		return c;
 	}
@@ -151,9 +199,24 @@ void fragment() {
 		c = tone * mix(.45, 1.55, strand) * mix(.8, 1.15, value_noise(vec2(rest.x, rest.z) * 110.0));
 		roughness = .82;
 		normal_map = vec3(.5, .5, 1.0);
+	} else if (sleeve > .5) {
+		// Let-down sleeve over the forearm: the shirt's cloth round and along the arm,
+		// a darker hem at the cuff.
+		vec3 q = vec3(abs(rest.x), rest.y, rest.z);
+		vec3 axis = normalize(WRIST - ELBOW);
+		float along = dot(q - ELBOW, axis);
+		vec3 r = q - ELBOW - axis * along;
+		vec2 uv = vec2(atan(r.y, r.x) * .045, along);
+		vec3 tone = dyed(shirt) ? shirt_weave(uv) : vec3(.32);
+		float t = forearm_t(rest);
+		float shade = mix(.86, 1.0, value_noise(vec2(along * 60.0, atan(r.y, r.x) * 3.0))) * (1.0 - .25 * smoothstep(.845, .875, t));
+		c = tone * shade;
+		roughness = .88;
+		normal_map = vec3(.5, .5, 1.0);
 	} else if (trim == 0) {
 		if (part >= SHIRT && part <= SCARF) { c = cloth(base, part); }
 		if (part == STRAPS && dyed(braces)) { c = dye(base, braces.rgb, part); }
+		if (part == LEATHER && dyed(belt)) { c = dye(base, belt.rgb, part); }
 		if (part == HAT && dyed(hat)) {
 			c = dye(base, hat.rgb, part);
 			roughness = mix(roughness, .95, hat.a);
@@ -166,8 +229,7 @@ void fragment() {
 					* (1.0 - smoothstep(.066, .084, abs(rest.x))) * (1.0 - smoothstep(-.02, .02, rest.y));
 				float dark = smoothstep(.0, .5, 1.0 - dot(c, LUMA) / dot(CHEEK_TONE, LUMA));
 				vec3 cheek = mix(CHEEK_TONE, vec3(dot(CHEEK_TONE, LUMA)), .22);
-				c = mix(c, cheek * (.96 + .08 * dot(base, LUMA) / REF[FACE]), skin.a * jaw * dark);
-				// Bald crown, or the painted hairline toned to the man's own hair.
+				c = mix(c, cheek * (.96 + .08 * dot(base, LUMA) / REF[FACE]), skin.a * jaw * dark);				// Bald crown, or the painted hairline toned to the man's own hair.
 				float crown = smoothstep(1.635, 1.66, rest.z) * smoothstep(-.085, -.06, rest.y);
 				if (scalp.a > .5) {
 					c = mix(c, CHEEK_TONE * vec3(1.05, 1.0, .98), crown);
@@ -178,6 +240,12 @@ void fragment() {
 				}
 			}
 			c *= skin.rgb;
+			if (part == KNEE && trousers.a > .5) {
+				// Patched or mended: cloth over the tear, not skin.
+				c = knee_cloth(trousers.a > 1.5) * (.92 + .08 * value_noise(rest.xz * 400.0));
+				roughness = .9;
+				normal_map = vec3(.5, .5, 1.0);
+			}
 		}
 		if (part == SCALP && dyed(hair)) { c = dye(base, hair.rgb, part); }
 		if (part >= MOUSTACHE && part <= CHEEK) {

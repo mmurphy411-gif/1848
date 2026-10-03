@@ -346,9 +346,12 @@ func wildlife() -> void:
 	await open_claim({"day": "99", "hour": "6.5", "weather": "clear"}, 8.5, 6.5)
 	walker.position = Vector3(38, Layout.height_at(38, 0) + .05, 0)
 	var heights := {"bear": .64, "deer": .88, "squirrel": .22, "quail": .18, "jay": .21}
+	# Wave C: the jay and the squirrel are judged for species readability, so each is
+	# moved to the nearest open, sunlit spot of its range and seen at 9 m through a
+	# longer lens (they were dark blobs in oak shade, or hidden by the oak's leaves).
 	var plan := [["wildlife_deer", "deer", 10.0, 40.0], ["wildlife_deer_close", "deer", 3.0, 50.0],
-		["wildlife_bear", "bear", 10.0, 40.0], ["wildlife_jay", "jay", 8.0, 40.0],
-		["wildlife_quail", "quail", 8.0, 40.0], ["wildlife_squirrel", "squirrel", 8.0, 40.0]]
+		["wildlife_bear", "bear", 10.0, 40.0], ["wildlife_jay", "jay", 9.0, 18.0],
+		["wildlife_quail", "quail", 8.0, 40.0], ["wildlife_squirrel", "squirrel", 9.0, 18.0]]
 	for item in plan:
 		if not await begin(item[0]): continue
 		var actor: Node3D = null
@@ -356,15 +359,17 @@ func wildlife() -> void:
 			if candidate.species == item[1]: actor = candidate; break
 		if actor == null:
 			missing.append(item[0]); push_error("No %s present for %s" % [item[1], item[0]]); continue
+		var in_light: bool = item[1] in ["jay", "squirrel"]
+		if in_light: actor.position = sunlit_spot(actor)
 		var target: Vector3 = actor.position + Vector3(0, heights[item[1]], 0)
 		var distance: float = item[2]
-		var eye := wildlife_eye(actor, target, distance, 1.25 if distance < 5 else 1.7)
+		var eye := open_eye(actor, target, distance, 1.3) if in_light else wildlife_eye(actor, target, distance, 1.25 if distance < 5 else 1.7)
 		var d := Vector3(target.x - eye.x, 0, target.z - eye.z).normalized()
 		# Broadside, turned a little toward the camera.
 		actor.rotation.y = atan2(-d.z, d.x) + .35
 		freeze_actor(actor)
 		view(eye, target, item[3])
-		await shot(item[0], "%s at %.1f m, eye %.2f m above ground, broadside" % [item[1], eye.distance_to(target), eye.y - Layout.height_at(eye.x, eye.z)])
+		await shot(item[0], "%s%s at %.1f m, eye %.2f m above ground, broadside" % [item[1], " (moved to the nearest sunlit open ground)" if in_light else "", eye.distance_to(target), eye.y - Layout.height_at(eye.x, eye.z)])
 	await close_claim()
 
 ## Standing point around the animal (inland side first) with dry footing and a clear
@@ -388,6 +393,65 @@ func wildlife_eye(subject: Node3D, target: Vector3, distance: float, height: flo
 	if best == Vector3.INF:
 		best = target + Vector3(0, 0, distance); best.y = Layout.height_at(best.x, best.z) + height
 	return best
+
+## Tree crowns as spheres (centre height, radius at scale 1) for the sunlit-spot search.
+const CROWNS := {"black_oak": [6.0, 7.5], "ponderosa": [12.0, 4.5], "incense_cedar": [9.0, 4.0], "douglas_fir": [11.0, 4.5]}
+
+func crowns() -> Array:
+	var vegetation: Node = claim.get_node("Vegetation")
+	var out: Array = []
+	for species in CROWNS:
+		for t: Transform3D in vegetation.placements.get(species, []):
+			var s: float = t.basis.get_scale().y
+			out.append([t.origin + Vector3(0, CROWNS[species][0] * s, 0), CROWNS[species][1] * s])
+	for name in ["willow", "alder"]:
+		for t: Transform3D in vegetation.understory.get(name, []):
+			out.append([t.origin + Vector3(0, 2.6, 0), 2.4])
+	return out
+
+## True when the segment (or ray, length INF) from `from` along `direction` misses every crown.
+func clear_of_crowns(from: Vector3, direction: Vector3, length: float, all: Array) -> bool:
+	for crown in all:
+		var to: Vector3 = crown[0] - from
+		var along := clampf(to.dot(direction), 0.0, length)
+		if (to - direction * along).length() < crown[1]: return false
+	return true
+
+## Nearest spot to the animal, on ground its species may use, in direct sun (no tree
+## crown or solid between it and the sun).
+func sunlit_spot(actor: Node3D) -> Vector3:
+	var sun: Vector3 = light.get_node("Sun").global_basis.z.normalized()
+	var all := crowns()
+	var wildlife: Node = claim.get_node("Wildlife")
+	var space := claim.get_world_3d().direct_space_state
+	for ring in range(0, 12):
+		for k in 16:
+			var angle := TAU * k / 16.0 + ring * .37
+			var p: Vector3 = actor.position + Vector3(cos(angle), 0, sin(angle)) * ring * 1.25
+			p.y = Layout.height_at(p.x, p.z)
+			if not wildlife.safe(p, actor.species): continue
+			var head := p + Vector3(0, .25, 0)
+			if not clear_of_crowns(head, sun, INF, all): continue
+			var query := PhysicsRayQueryParameters3D.create(head, head + sun * 80.0)
+			query.exclude = [walker.get_rid()]
+			if not space.intersect_ray(query).is_empty(): continue
+			return p
+	return actor.position
+
+## A standing point at `distance` with a clear, crown-free line of sight to the animal.
+func open_eye(subject: Node3D, target: Vector3, distance: float, height: float) -> Vector3:
+	var all := crowns()
+	for angle in [0.0, .5, -.5, 1.0, -1.0, 1.5, -1.5, 2.0, -2.0, 2.6, -2.6, PI]:
+		var eye := target + Vector3(sin(angle), 0, cos(angle)) * distance
+		eye.y = Layout.height_at(eye.x, eye.z) + height
+		if absf(eye.x) > 40 or eye.z > Layout.back_z(eye.x) - 1 or eye.z < River.shore_z(eye.x, game.water_level()) + .3: continue
+		var line := target - eye
+		if not clear_of_crowns(eye, line.normalized(), line.length(), all): continue
+		var query := PhysicsRayQueryParameters3D.create(eye, target)
+		query.exclude = [walker.get_rid()]
+		if not claim.get_world_3d().direct_space_state.intersect_ray(query).is_empty(): continue
+		return eye
+	return wildlife_eye(subject, target, distance, height)
 
 func store_scene() -> void:
 	await at_slot(view_index("store"))

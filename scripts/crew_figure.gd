@@ -6,6 +6,7 @@ extends Node3D
 ## The kit faces +Z like Lambert's old rig; crew hands turn it round as they did the miner.
 const Look=preload("res://scripts/crew_look.gd")
 const Build=preload("res://scripts/crew_build.gd")
+const Pose=preload("res://scripts/crew_pose.gd")
 const KIT:="res://assets/crew/crew_kit.glb"
 const MINER:="res://assets/miner/intrepid/miner.glb"
 ## Kit mesh -> miner atlas whose textures it samples.
@@ -19,6 +20,7 @@ var kit: Node3D
 var skeleton: Skeleton3D
 var player: AnimationPlayer
 var build: Node
+var pose: Node
 var meshes: Dictionary={}
 var equipment: Dictionary={}
 var look: Dictionary={}
@@ -51,6 +53,8 @@ func dress(man: Dictionary, library: AnimationLibrary=null) -> void:
 		if EQUIPMENT.has(part): equipment[EQUIPMENT[part]]=node
 	meshes.Hat.visible=man.get("hat","slouch")!="none"
 	for item in equipment: equipment[item].visible=bool(man.get(item,false))
+	# Off-duty pose (relaxed hands, seats, a cup) runs first; the build then only scales.
+	pose=Pose.new();pose.name="Pose";skeleton.add_child(pose);pose.configure("")
 	build=Build.new();build.name="Build";skeleton.add_child(build)
 	var body: Dictionary=Look.BUILDS.get(man.get("build","average"),{}).duplicate()
 	if man.has("head"): body["head"]=man.head

@@ -12,7 +12,12 @@ extends RefCounted
 ##   skin: a tone in SKINS; shaven (0-1, lifts the painted stubble); bald
 ##   shirt, shirt_b, pattern ("plain","check","stripe","plaid"), check (repeat, m), sleeves
 ##   vest (colour or ""), trousers, scarf (colour or ""), braces (colour or ""), sash
+##   sleeves: "rolled" above the elbow, "" plain to below the elbow, "down" to the wrist
+##   boots, belt: leather colours ("" keeps the miner's brown)
 ##   knee: the miner's torn knee "torn", "patched" or "whole"
+## Wave C: no two men share hat or headwear, shirt colour or pattern and one of vest,
+## trousers or beard; no hand wears the miner's open knee tear (with the miner's fold
+## lines it read as modern ripped jeans): it is patched or mended.
 ##   build: in BUILDS; head: skull width, length, depth; height; pack, satchel, canteen
 const HATS:={
 	"slouch":{"brim_droop":.55},
@@ -24,6 +29,8 @@ const HATS:={
 	"chilean":{"crown_low":.8,"brim_wide":.45,"brim_flat":1.0},
 	"watch_cap":{"cap":1.0},
 	"tuque":{"cap":1.0,"tuque":1.0},
+	# A soldier's forage cap: low flat crown on a short stiff peak.
+	"forage":{"crown_low":1.0,"brim_narrow":1.0,"brim_flat":1.0},
 }
 ## Skin: a multiplier on the miner's sun-browned albedo (linear).
 const SKINS:={"pale":Vector3(1.22,1.30,1.32),"fair":Vector3(1.12,1.16,1.16),"ruddy":Vector3(1.14,1.03,.99),
@@ -39,74 +46,77 @@ const BUILDS:={
 }
 const MEN:={
 	# A sailor off a ship abandoned in the Bay: navy watch cap, striped frock, duck trousers.
-	"pike":{"head":Vector3(0.97,1.02,0.98),"hat":"watch_cap","hat_colour":"2a3550","knit":true,"hair":"4a3524","cut":{"hair_short":.6},
+	"pike":{"head":Vector3(0.97,1.02,0.98),"knee":"whole","hat":"watch_cap","hat_colour":"2a3550","knit":true,"hair":"4a3524","cut":{"hair_short":.6},
 		"beard_style":"goatee","beard_shape":{},"skin":"ruddy","shaven":.6,
 		"shirt":"d9d4c4","shirt_b":"2c3a5e","pattern":"stripe","check":.035,"sleeves":"rolled",
-		"vest":"","trousers":"cfc6ad","scarf":"1d2433","build":"lean","height":.98,"canteen":true},
+		"vest":"","trousers":"c8bea3","scarf":"1d2433","boots":"1b1918","belt":"1d1b19","build":"lean","height":.98,"canteen":true},
 	# Mormon Battalion veteran: chin-curtain beard, butternut shirt on braces, grey slouch.
 	"boyle":{"head":Vector3(1,1.01,1),"knee":"patched","hat":"slouch","hat_colour":"5f5a52","band":"2a2622","hair":"6a5236","beard_style":"chin_curtain",
 		"beard_shape":{"beard_long":.45},"skin":"fair","shaven":.8,
 		"shirt":"8c6c3c","pattern":"plain","sleeves":"",
 		"vest":"","trousers":"4f4a40","scarf":"","braces":"3b2a1d","build":"average","height":1.01,"satchel":true},
-	# A Californio vaquero: flat wide hat, crimson faja, dark short vest, moustache.
+	# A Californio vaquero: flat black hat, indigo shirt under a short dark vest, crimson faja.
 	"soto":{"head":Vector3(0.96,1.03,0.97),"knee":"whole","hat":"vaquero","hat_colour":"1e1a17","band":"6b5a3a","hair":"161210","beard_style":"moustache",
 		"beard_shape":{"moustache_walrus":.35},"skin":"tan","shaven":1.0,
-		"shirt":"e2dccb","pattern":"plain","sleeves":"down",
-		"vest":"2b1d17","trousers":"3a2f28","scarf":"8a2a1c","sash":"8f1d1d","sash_kind":1,"build":"lean","height":1.0},
+		"shirt":"34425e","pattern":"plain","sleeves":"down",
+		"vest":"2b1d17","trousers":"3a2f28","scarf":"8a2a1c","sash":"8f1d1d","sash_kind":1,"boots":"5e3a22","build":"lean","height":1.0},
 	# From Honolulu on the brig Euphemia: low straw hat, long black hair, red check.
-	"kalama":{"head":Vector3(1.05,1,1.03),"hat":"wide_awake","hat_colour":"b89d62","band":"2f2a26","hair":"0f0d0c","cut":{"hair_long":.8},
+	"kalama":{"head":Vector3(1.05,1,1.03),"knee":"whole","hat":"wide_awake","hat_colour":"b89d62","band":"2f2a26","hair":"0f0d0c","cut":{"hair_long":.8},
 		"beard_style":"clean","skin":"brown","shaven":1.0,
 		"shirt":"7a2a22","shirt_b":"d2c8b4","pattern":"check","check":.045,"sleeves":"rolled",
-		"vest":"","trousers":"5d5648","scarf":"","build":"broad","height":1.03},
-	# A voyageur, Lambert's cousin: blue wool cap, arrow sash in blue, dark full beard.
-	"roux":{"head":Vector3(1.04,0.97,1.02),"knee":"patched","hat":"watch_cap","hat_colour":"2d4566","knit":true,"hair":"231812","beard_style":"full",
+		"vest":"","trousers":"5d5648","scarf":"","belt":"7a5a3a","build":"broad","height":1.03},
+	# A voyageur, Lambert's cousin: madder-red knitted toque, arrow sash in blue, dark full beard.
+	"roux":{"head":Vector3(1.04,0.97,1.02),"knee":"patched","hat":"tuque","hat_colour":"7a2c22","knit":true,"hair":"231812","beard_style":"full",
 		"beard_shape":{"beard_bushy":.6},"skin":"olive",
-		"shirt":"5b6d7c","pattern":"plain","sleeves":"rolled",
-		"vest":"","trousers":"3f3a33","scarf":"b3872c","sash":"23406e","sash_kind":2,"build":"stocky","height":.95,"canteen":true},
+		"shirt":"3f4c38","pattern":"plain","sleeves":"rolled",
+		"vest":"","trousers":"5e5a52","scarf":"b3872c","sash":"23406e","sash_kind":2,"boots":"7c5e40","build":"stocky","height":.95},
 	# An Oregon farmer come south with the first wagons: long greying beard, drooping slouch.
 	"whitcomb":{"head":Vector3(0.98,1.03,1),"knee":"patched","hat":"slouch","hat_colour":"6b5136","band":"3a2a1c","hair":"7d746a","beard":"8f8a82",
 		"beard_style":"full","beard_shape":{"beard_long":1.0},"cut":{"hair_long":.4},"skin":"weathered",
 		"shirt":"8a8370","shirt_b":"4c4436","pattern":"check","check":.06,"sleeves":"",
 		"vest":"3a3026","trousers":"5a4a35","scarf":"","build":"average","height":1.05,"satchel":true,"canteen":true},
-	# Of Stevenson's New York Volunteers, discharged: army sky-blue trousers, ginger chops.
-	"doyle":{"head":Vector3(1.04,0.98,1.03),"hat":"slouch","hat_colour":"2e2b28","band":"171514","hair":"8a3e1c","beard_style":"mutton_chops",
+	# Of Stevenson's New York Volunteers, discharged: army forage cap and dark blue kersey
+	# trousers (whole, not the miner's torn knee), slate shirt, ginger mutton-chops.
+	"doyle":{"head":Vector3(1.04,0.98,1.03),"knee":"whole","hat":"forage","hat_colour":"262c3a","band":"161616","hair":"8a3e1c","beard_style":"mutton_chops",
 		"beard_shape":{"beard_bushy":.3},"skin":"ruddy","cut":{"hair_short":.5},
-		"shirt":"4e4f55","pattern":"plain","sleeves":"rolled",
-		"vest":"","trousers":"7f97b0","scarf":"","braces":"2a2522","build":"stocky","height":.97},
+		"shirt":"5a5c62","pattern":"plain","sleeves":"rolled",
+		"vest":"","trousers":"2f3646","scarf":"","braces":"2a2522","boots":"1b1918","belt":"1d1b19","build":"stocky","height":.97},
 	# A cooper from Bremen, the camp cook: heavy, fair, bushy blond beard, blue check.
-	"brandt":{"head":Vector3(1.06,1,1.04),"knee":"patched","hat":"wide_awake","hat_colour":"5d564b","band":"25221f","hair":"b8964f","beard_style":"full",
+	"brandt":{"head":Vector3(1.06,1,1.04),"knee":"whole","hat":"wide_awake","hat_colour":"5d564b","band":"25221f","hair":"b8964f","beard_style":"full",
 		"beard_shape":{"beard_bushy":1.0,"beard_long":.35},"skin":"fair",
 		"shirt":"d7d2c3","shirt_b":"3a4f73","pattern":"check","check":.028,"sleeves":"rolled",
-		"vest":"4a3a2c","trousers":"4a4136","scarf":"d8d3c6","build":"heavy","height":1.0},
+		"vest":"4a3a2c","trousers":"7a7466","scarf":"d8d3c6","build":"heavy","height":1.0},
 	# A gambusino from the placers of Sonora: tall straw sombrero, white manta, moustache.
-	"ruiz":{"head":Vector3(1.02,0.98,1),"hat":"sombrero","hat_colour":"c4ab6e","band":"3c2b1e","hair":"141110","beard_style":"moustache",
+	"ruiz":{"head":Vector3(1.02,0.98,1),"knee":"whole","hat":"sombrero","hat_colour":"c4ab6e","band":"3c2b1e","hair":"141110","beard_style":"moustache",
 		"beard_shape":{},"skin":"tan","shaven":1.0,
-		"shirt":"ece6d6","pattern":"plain","sleeves":"",
-		"vest":"","trousers":"d7cfbb","scarf":"6d1f1a","sash":"5a1a14","sash_kind":1,"build":"stocky","height":.94},
-	# A ship's cook from New Bedford: black low hat, grey-flecked short beard, red neckerchief.
-	"freeman":{"head":Vector3(1,1.02,1.02),"knee":"whole","hat":"wide_awake","hat_colour":"151413","band":"5c2a20","hair":"1a1614","beard":"3a3633",
+		"shirt":"e6dfcc","pattern":"plain","sleeves":"down",
+		"vest":"","trousers":"d2c9b2","scarf":"6d1f1a","sash":"5a1a14","sash_kind":1,"boots":"7c5e40","build":"stocky","height":.94},
+	# A ship's cook from New Bedford: brown felt hat, hickory-striped shirt on braces, navy
+	# trousers, grey-flecked short beard, red neckerchief.
+	"freeman":{"head":Vector3(1,1.02,1.02),"knee":"whole","hat":"farmer","hat_colour":"4a3626","band":"1e1712","hair":"1a1614","beard":"3a3633",
 		"beard_style":"full","beard_shape":{},"skin":"dark","cut":{"hair_short":1.0},
-		"shirt":"cfcabb","pattern":"plain","sleeves":"rolled",
-		"vest":"1f1d1c","trousers":"3b3934","scarf":"a1241b","build":"average","height":1.02},
+		"shirt":"cdc3ad","shirt_b":"4a3a2a","pattern":"stripe","check":.016,"sleeves":"rolled",
+		"vest":"","trousers":"283247","scarf":"a1241b","braces":"5a4630","boots":"1b1918","build":"average","height":1.02},
 	# A Missouri hog farmer, late for Oregon: straw farmer's hat, red flannel, braces, lanky.
-	"lacy":{"head":Vector3(0.95,1.04,0.97),"knee":"patched","hat":"farmer","hat_colour":"cdb47c","band":"5e4b32","hair":"9c7646","beard_style":"clean",
+	"lacy":{"head":Vector3(0.95,1.04,0.97),"knee":"whole","hat":"farmer","hat_colour":"cdb47c","band":"5e4b32","hair":"9c7646","beard_style":"clean",
 		"skin":"fair","shaven":.3,"cut":{"hair_short":.3},
 		"shirt":"9b2f24","pattern":"plain","sleeves":"",
-		"vest":"","trousers":"6b5a3e","scarf":"","braces":"7b6a55","build":"lean","height":1.06},
+		"vest":"","trousers":"806236","scarf":"","braces":"7b6a55","boots":"5e3a22","belt":"7a5a3a","build":"lean","height":1.06},
 	# From the silver country above Copiapo: flat-brimmed dark felt, full black beard, broad.
-	"ortuzar":{"head":Vector3(1.04,1,1.03),"hat":"chilean","hat_colour":"2f2620","band":"7a1f1f","hair":"120f0e","beard_style":"full",
+	"ortuzar":{"head":Vector3(1.04,1,1.03),"knee":"patched","hat":"chilean","hat_colour":"2f2620","band":"7a1f1f","hair":"120f0e","beard_style":"full",
 		"beard_shape":{"beard_long":.6},"skin":"olive",
 		"shirt":"6f5d4a","shirt_b":"2c241c","pattern":"plaid","check":.07,"sleeves":"rolled",
 		"vest":"","trousers":"2f2a26","scarf":"c9b48a","build":"broad","height":.99},
-	# A careful Yankee clerk from Hartford: black plug hat, clean-shaven, white shirt, black vest.
+	# A careful Yankee clerk from Hartford: black plug hat, pinstriped white shirt, black vest.
 	"fisk":{"head":Vector3(0.95,1.03,0.98),"knee":"whole","hat":"plug","hat_colour":"141312","band":"0c0b0b","hair":"5e4632","beard_style":"clean","skin":"pale","shaven":1.0,
-		"cut":{"hair_short":.8},"shirt":"ece9e0","pattern":"plain","sleeves":"down",
-		"vest":"191818","trousers":"34332f","scarf":"141414","build":"lean","height":1.04,"satchel":true},
-	# A Methodist exhorter who signs the pledge: bare bald head, white chin-curtain beard.
+		"cut":{"hair_short":.8},"shirt":"eeece6","shirt_b":"8d96a4","pattern":"stripe","check":.012,"sleeves":"down",
+		"vest":"191818","trousers":"34332f","scarf":"141414","boots":"1b1918","belt":"1d1b19","build":"lean","height":1.04,"satchel":true},
+	# A Methodist exhorter who signs the pledge: bare bald head, white chin-curtain beard,
+	# a buff shirt on black braces, black trousers.
 	"price":{"head":Vector3(0.98,1.01,1),"knee":"whole","hat":"none","hair":"b9b3a9","beard_style":"chin_curtain","beard_shape":{"beard_long":.7},
 		"skin":"fair","shaven":1.0,"bald":true,
-		"shirt":"e6e1d4","pattern":"plain","sleeves":"down",
-		"vest":"1d1c1b","trousers":"2a2927","scarf":"","build":"average","height":.96},
+		"shirt":"bba57a","pattern":"plain","sleeves":"",
+		"vest":"","trousers":"252428","scarf":"","braces":"1a1918","boots":"1b1918","build":"average","height":.96},
 }
 ## Lambert: a French-Canadian ex-Hudson's Bay voyageur at French Camp. Red tuque, red
 ## ceinture flechee, grey walrus moustache and side-whiskers, checked shirt, no vest.
@@ -153,6 +163,9 @@ static func uniforms(man: Dictionary) -> Dictionary:
 	var hair:=linear(man.get("hair",""));out.hair=Vector4(hair.r,hair.g,hair.b,0)
 	var beard:=linear(man.get("beard",""))
 	out.beard=Vector4(beard.r,beard.g,beard.b,float(BEARDS.get(man.get("beard_style","full"),15)))
+	var boots:=linear(man.get("boots",""));out.boots=Vector4(boots.r,boots.g,boots.b,0)
+	# belt.a: sleeves let down to the wrist (painted on the forearm by the shader).
+	var belt:=linear(man.get("belt",""));out.belt=Vector4(belt.r,belt.g,belt.b,1.0 if man.get("sleeves","")=="down" else 0.0)
 	return out
 
 ## Blend-shape weights per kit mesh.
@@ -163,8 +176,9 @@ static func shapes(man: Dictionary) -> Dictionary:
 	if man.get("hat","slouch") in ["watch_cap","tuque"]: hair["hair_capped"]=1.0
 	# The beard shell on the face takes the same beard keys as the strands.
 	var skin: Dictionary=man.get("beard_shape",{}).duplicate()
+	# Sleeves hang plain; let down to the wrist, the forearm is painted (crew.gdshader).
+	# (The kit's trousers are laid flat in its basis: the miner's crossed fold ridges read
+	# as garters.)
 	var body:={}
-	match man.get("sleeves",""):
-		"rolled": body["sleeves_rolled"]=1.0
-		"down": body["sleeves_down"]=1.0
+	body["sleeves_rolled" if man.get("sleeves","")=="rolled" else "sleeves_slim"]=1.0
 	return {"Hat":hat,"Hair":hair,"Skin":skin,"Body":body}

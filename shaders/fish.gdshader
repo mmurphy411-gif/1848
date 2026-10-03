@@ -39,7 +39,7 @@ void vertex(){
 void fragment(){
 	vec3 flank=texture(scales,UV).rgb;
 	float h=clamp(local.y/max(half_depth,.001),-1.0,1.0);
-	float dorsal=smoothstep(-.05,.85,h);
+	float dorsal=smoothstep(-.15,.75,h);
 	float belly=smoothstep(.05,-.8,h);
 	vec3 col=mix(flank,back_color*(.7+.6*flank),dorsal*countershade);
 	col=mix(col,belly_color*(.75+.25*flank/max(max(flank.r,flank.g),max(flank.b,.05))),belly*countershade*.8);
@@ -49,6 +49,11 @@ void fragment(){
 	float spot=1.0-smoothstep(.16,.24,cells(sp));
 	spot*=step(hash(floor(sp)+3.1),spot_density)*smoothstep(-.35,.1,h);
 	col*=1.0-.72*spot;
+	// Wave C: a pale lateral line along mid-flank with a soft sheen round it, which
+	// reads against the dark back and the bed (a lighter tone, not an emission).
+	float lateral=1.0-smoothstep(.05,.13,abs(h-.04));
+	float sheen=1.0-smoothstep(.1,.45,abs(h-.04));
+	col=mix(col,col*1.5+vec3(.05,.05,.045),lateral*.55*(1.0-spot));
 	// Overlapping scale rows: a crescent relief that fades out where texels shrink.
 	vec2 sc=vec2(local.x/length_m*95.0,around*11.0);
 	sc.y+=floor(sc.x)*.5;
@@ -61,10 +66,11 @@ void fragment(){
 	// Opaque dither fade keeps fish in the screen/depth snapshot the existing
 	// water shader refracts. Alpha blending would draw fish over the water.
 	if(fract(sin(dot(FRAGCOORD.xy,vec2(12.9898,78.233)))*43758.5453)>visibility)discard;
-	METALLIC=silver*(1.0-dorsal*.75);
-	ROUGHNESS=mix(.40,.26,belly);
-	SPECULAR=.55;
-	CLEARCOAT=.35;
+	METALLIC=silver*(1.0-dorsal*.75)*(1.0+.4*sheen);
+	ROUGHNESS=mix(mix(.40,.26,belly),.22,sheen*.6);
+	// Seen from above the back is matte: a sky-blue sheen on it hid the fish against the bed.
+	SPECULAR=mix(.55,.3,dorsal);
+	CLEARCOAT=.35*(1.0-.8*dorsal);
 	CLEARCOAT_ROUGHNESS=.14;
 	if(eye){ALBEDO=vec3(.015,.014,.012);METALLIC=0.0;ROUGHNESS=.08;NORMAL_MAP=vec3(.5,.5,1.0);}
 }

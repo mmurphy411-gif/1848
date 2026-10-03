@@ -11,6 +11,10 @@ const Look=preload("res://scripts/crew_look.gd")
 const FIRE_OFFSET:=Vector3(7.5,0,.6)
 const BUNK_SPOTS:=[Vector3(6.2,0,5.2),Vector3(9.8,0,5.6),Vector3(5.6,0,8.6),Vector3(9.4,0,9.0)]
 const TUNES:=["tune_susanna","tune_traveler","tune_home"]
+## Evening at the fire, by place in the ring (the first man plays the harmonica): seated
+## on a round, crate or stool with a cup or with his forearms on his knees, eating off a
+## tin plate on the ground, standing with a cup, stretched out.
+const SUPPER:=["sup_sit","sup_sit_cup","eat","sup_sit","sup_cup","sup_lean","lie_down","eat","sup_sit_cup","sup_cup","sup_lean","sup_sit","eat","sup_sit_cup"]
 var library:=AnimationLibrary.new()
 var hands: Dictionary={}
 var waiting: Dictionary={}
@@ -195,8 +199,9 @@ func _schedule(snap := false) -> void:
 			if i<sheltered: point=camp.global_position+BUNK_SPOTS[mini(i/4,3)];point.y=Layout.height_at(point.x,point.z);clip=""
 			else: point=_ring(i,ids.size(),2.6);yaw=_face(point,fire_point());clip="lie_down"
 		elif evening:
-			point=_ring(i,ids.size());yaw=_face(point,fire_point())
-			clip="harmonica" if i==0 and ids.size()>=2 else "idle"
+			# Supper: each man has his own way of sitting out the evening (crew_hand.gd).
+			clip="harmonica" if i==0 and ids.size()>=2 else SUPPER[i%SUPPER.size()]
+			point=_ring(i,ids.size(),2.45 if clip=="lie_down" else 2.1);yaw=_face(point,fire_point())
 		elif working and ready and h.job!="rest":
 			match h.job:
 				"pan":

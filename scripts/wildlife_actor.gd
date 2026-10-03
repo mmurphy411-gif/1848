@@ -19,6 +19,19 @@ const SKELETAL := {
 	"squirrel": {"parts": {"Head": "Head", "Tail": "Tail", "FrontL": "Arm_L", "FrontR": "Arm_R", "HindL": "Leg_L", "HindR": "Leg_R"},
 		"feet": {"HindL": "Leg_L.003", "HindR": "Leg_R.003"}, "walk_clip": "run", "walk_speed": .65, "run_speed": .65},
 }
+## Wave C: the deer's coat is laid out by wildlife.gdshader from rest-pose landmarks, per
+## model (the mesh's node name): shader parameters, surfaces that keep their own colours
+## (hooves and nose, the eyes' pupil and glint), the doe's ear lift (radians about each
+## ear root's own axis: the clip holds them out sideways like a cow's), a narrower skull
+## (Head bone x scale) and the buck's smaller, darker rack.
+const DEER := {
+	"Deer": {"torso": Vector4(.6, 1.03, .16, 1.0), "rear": Vector4(.66, .9, .1, .38),
+		"fore": Vector4(-.45, -.27, -.05, 1.14), "face": Vector4(-.75, 1.33, .07, 0.0),
+		"keep": ["Hooves", "Eye_Black", "Eye_White"], "ears": .42, "head_width": .9},
+	"Stag": {"torso": Vector4(.68, 1.2, .21, 1.12), "rear": Vector4(.82, 1.03, .12, .5),
+		"fore": Vector4(-.55, -.25, -.05, 1.2), "face": Vector4(-.9, 1.42, .1, 0.0),
+		"keep": ["Material.001", "Material.011"], "head_width": .84, "antlers": .82},
+}
 static var materials: Dictionary={}
 static var foot_offsets: Dictionary={}
 var species := "deer"
@@ -53,18 +66,49 @@ static func model_path(kind: String, identity := "") -> String:
 ## coat texture); eyes keep their glossy imported material. Shared per species and surface.
 static func coat(model: Node3D, kind: String) -> void:
 	for mesh_instance in model.find_children("*","MeshInstance3D",true,false):
+		var deer: Dictionary=DEER.get(String(mesh_instance.name),{})
+		if mesh_instance.name=="Stag_Horns":
+			# Black-tailed bucks carry a smaller rack than the source's red-deer shape.
+			mesh_instance.basis=mesh_instance.basis*Basis.from_scale(Vector3.ONE*float(DEER.Stag.antlers))
 		for surface in mesh_instance.mesh.get_surface_count():
 			var source: Material=mesh_instance.mesh.surface_get_material(surface)
-			if not source is StandardMaterial3D or "Eye" in source.resource_name: continue
-			var key: String=kind+":"+mesh_instance.name+":"+source.resource_name
+			if not source is StandardMaterial3D: continue
+			var surface_name: String=source.resource_name
+			var procedural: bool=not deer.is_empty() and not surface_name in deer.keep
+			# The doe's dark eye-patch surface is coat now; the eyes themselves keep theirs.
+			if "Eye" in surface_name and not procedural: continue
+			var key: String=kind+":"+mesh_instance.name+":"+surface_name
 			if not materials.has(key):
 				var mat := ShaderMaterial.new();mat.shader=preload("res://shaders/wildlife.gdshader")
 				mat.set_shader_parameter("coat_color",source.albedo_color)
 				mat.set_shader_parameter("rest_uv",source.albedo_texture==null and mesh_instance.mesh.surface_get_format(surface)&Mesh.ARRAY_FORMAT_TEX_UV2!=0)
 				if source.albedo_texture:
 					mat.set_shader_parameter("use_texture",true);mat.set_shader_parameter("coat_texture",source.albedo_texture)
+				if procedural:
+					mat.set_shader_parameter("deer_coat",true)
+					for param in ["torso","rear","fore","face"]: mat.set_shader_parameter(param,deer[param])
+				if mesh_instance.name=="Stag_Horns": mat.set_shader_parameter("antler",true)
 				materials[key]=mat
 			mesh_instance.set_surface_override_material(surface,materials[key])
+
+## Ear carriage and skull width on top of the clip (deer intake models). A modifier, so
+## the skeleton restores the clip's pose before the next pass and nothing accumulates.
+class HeadShape extends SkeletonModifier3D:
+	var head := -1
+	var width := 1.0
+	var ears: Array=[]
+	func setup(skeleton: Skeleton3D, deer: Dictionary) -> void:
+		head=skeleton.find_bone("Head");width=deer.head_width
+		if deer.has("ears"):
+			# Mirrored ear bones: the same lift is about -z for the left ear, +z for the right.
+			for side in [["Ear1.L",Vector3.FORWARD],["Ear1.R",Vector3.BACK]]:
+				var bone:=skeleton.find_bone(side[0])
+				if bone>=0: ears.append([bone,Quaternion(side[1],deer.ears)])
+	func _process_modification() -> void:
+		var skeleton:=get_skeleton()
+		if skeleton==null: return
+		if head>=0: skeleton.set_bone_pose_scale(head,skeleton.get_bone_pose_scale(head)*Vector3(width,1,1))
+		for ear in ears: skeleton.set_bone_pose_rotation(ear[0],skeleton.get_bone_pose_rotation(ear[0])*ear[1])
 
 ## Expedition carcass for a kill record: intake models lie in the last frame of their
 ## death clip; legacy part models are laid on their side as before.
@@ -130,6 +174,10 @@ func _ready_parts() -> void:
 func _ready_skeletal() -> void:
 	var config: Dictionary=SKELETAL[species]
 	coat(visual,species)
+	for mesh_instance in skeleton.find_children("*","MeshInstance3D",true,false):
+		if DEER.has(String(mesh_instance.name)):
+			var shape:=HeadShape.new();shape.name="HeadShape";skeleton.add_child(shape)
+			shape.setup(skeleton,DEER[String(mesh_instance.name)])
 	player=visual.find_children("*","AnimationPlayer",true,false)[0]
 	player.callback_mode_process=AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_MANUAL
 	for name in ["idle","walk","run","graze","alert","headlow"]:

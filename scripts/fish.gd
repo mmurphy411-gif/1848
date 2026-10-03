@@ -10,7 +10,10 @@ var flee_time := -1.0
 var approach := false
 var approach_target := Vector3.ZERO
 var retired := false
-var fade := 0.0
+var fade := 0.0:
+	set(value):
+		fade=value
+		if shadow: shadow.modulate.a=.8*shadow_light*fade
 var material: ShaderMaterial
 var eye_material: ShaderMaterial
 var walker: CharacterBody3D
@@ -18,13 +21,24 @@ var walker: CharacterBody3D
 ## belly tints (sRGB), spot density and flank silvering. Rainbow trout: olive back, black
 ## spots; Chinook in the run: dark olive-grey, spotted back and tail; Sacramento sucker:
 ## brown back, cream-yellow belly; pikeminnow: olive over bright silver; hardhead: bronze.
+## Wave C: the backs are darker (a fish is seen from above as a dark spindle over the
+## paler bed) and the shader adds a pale lateral line with a soft flank sheen.
 const LOOKS := {
-	"trout": [Color(.16,.20,.13),Color(.84,.82,.78),.55,.35],
-	"salmon": [Color(.15,.16,.14),Color(.72,.70,.66),.45,.25],
-	"sucker": [Color(.21,.18,.12),Color(.80,.75,.60),0.0,.15],
-	"pikeminnow": [Color(.19,.22,.14),Color(.86,.86,.82),0.0,.45],
-	"hardhead": [Color(.22,.19,.13),Color(.82,.80,.73),0.0,.40],
+	"trout": [Color(.085,.11,.07),Color(.84,.82,.78),.55,.35],
+	"salmon": [Color(.09,.10,.085),Color(.72,.70,.66),.45,.25],
+	"sucker": [Color(.12,.10,.065),Color(.80,.75,.60),0.0,.15],
+	"pikeminnow": [Color(.10,.12,.075),Color(.86,.86,.82),0.0,.45],
+	"hardhead": [Color(.12,.10,.07),Color(.82,.80,.73),0.0,.40],
 }
+## A soft shadow on the bed under each school fish, cast along the sun: a decal, so it is
+## drawn in the opaque pass the water refracts. One shared fall-off texture.
+static var shadow_texture: GradientTexture2D
+## Occlusion 0, roughness 1, metal 0 under the shadow (masked by its fall-off): black albedo
+## alone left the wet stones' sky glints shining through.
+static var shadow_orm: ImageTexture
+var shadow: Decal
+var shadow_light := 0.0
+var sun: DirectionalLight3D
 ## A fish material for one species and mesh (school fish and the landed trophy).
 static func look(kind: String, source: Mesh) -> ShaderMaterial:
 	var mat := ShaderMaterial.new();mat.shader=preload("res://shaders/fish.gdshader")
@@ -59,6 +73,46 @@ func configure(data: Dictionary,source: Mesh,w: CharacterBody3D) -> void:
 	var looks := dress(self,species);material=looks[0];eye_material=looks[1]
 	set_look("phase",data.index*2.3+home.x)
 	age=Weather.noise(data.index,12,int(home.x))*10
+	sun=walker.get_parent().get_node_or_null("Daylight/Sun")
+	if shadow_texture==null:
+		var ramp:=Gradient.new();ramp.set_color(0,Color(1,1,1,1));ramp.set_color(1,Color(1,1,1,0))
+		ramp.add_point(.45,Color(1,1,1,.8))
+		shadow_texture=GradientTexture2D.new();shadow_texture.gradient=ramp
+		shadow_texture.fill=GradientTexture2D.FILL_RADIAL;shadow_texture.fill_from=Vector2(.5,.5);shadow_texture.fill_to=Vector2(1,.5)
+		shadow_texture.width=64;shadow_texture.height=64
+		var orm:=Image.create(4,4,false,Image.FORMAT_RGBA8);orm.fill(Color(0,1,0,1))
+		shadow_orm=ImageTexture.create_from_image(orm)
+	shadow=Decal.new();shadow.name="Shadow";shadow.texture_albedo=shadow_texture;shadow.texture_orm=shadow_orm
+	shadow.albedo_mix=1.0;shadow.upper_fade=.15;shadow.lower_fade=.3;shadow.normal_fade=.3
+	shadow.distance_fade_enabled=true;shadow.distance_fade_begin=30.0;shadow.distance_fade_length=10.0
+	var size: Vector3=source.get_aabb().size
+	shadow.set_meta("footprint",Vector2(size.x*1.1,maxf(size.z*2.6,size.y*.9)))
+	add_child(shadow)
+
+func _ready() -> void:
+	_place_shadow()
+
+## Where the sun would throw the fish's shadow on the bed, softened and faded with the
+## fish; none at night or under heavy overcast.
+func _place_shadow() -> void:
+	if shadow==null or not is_inside_tree(): return
+	var toward: Vector3=sun.global_basis.z if sun else Vector3.UP
+	shadow_light=smoothstep(.1,.35,toward.y)*(clampf(sun.light_energy/1.4,0,1) if sun and sun.visible else 0.0)
+	shadow.visible=shadow_light>.01
+	if not shadow.visible: return
+	var p: Vector3=global_position
+	var bed: float=Layout.height_at(p.x,p.z)
+	var reach: Vector3=-toward/maxf(toward.y,.2)*maxf(p.y-bed,0.0)
+	reach.y=0;reach=reach.limit_length(1.2)
+	var q: Vector3=p+reach;q.y=Layout.height_at(q.x,q.z)
+	var footprint: Vector2=shadow.get_meta("footprint")*scale.x
+	# The box runs from under the fish's belly down past the bed, turned with the fish.
+	var top: float=maxf(p.y-mesh.get_aabb().size.y*.5*scale.y-.02,q.y+.06)
+	var bottom: float=q.y-.1
+	shadow.global_transform=Transform3D(Basis(Vector3.UP,global_rotation.y),Vector3(q.x,(top+bottom)*.5,q.z))
+	shadow.size=Vector3(footprint.x,top-bottom,footprint.y)
+	shadow.modulate=Color(0,0,0,.8*shadow_light*fade)
+
 func flee() -> void:
 	if flee_time>=0: return
 	flee_time=0
@@ -88,3 +142,4 @@ func _process(delta: float) -> void:
 	var half_height := mesh.get_aabb().size.y*.5*scale.y+.03
 	position.y=clampf(position.y,Layout.height_at(position.x,position.z)+half_height,water-half_height)
 	set_look("pace",3.0 if flee_time>=0 else 1.8 if approach else .7)
+	_place_shadow()
